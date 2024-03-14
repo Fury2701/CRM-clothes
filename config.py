@@ -1,0 +1,26 @@
+from flask import Flask, request, render_template, jsonify, session, redirect, url_for, send_file
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, func
+from sqlalchemy.orm import sessionmaker, relationship, Session
+from sqlalchemy.ext.declarative import declarative_base
+import secrets, os
+from flask_sqlalchemy import SQLAlchemy
+
+
+
+app = Flask(__name__)
+
+# Визначення URL бази даних
+database_url = 'postgresql+psycopg2://postgres:2701172004@localhost/Crm'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SESSION_COOKIE_SECURE'] = False
+
+
+# Налаштування секретного ключа сесії
+app.secret_key = secrets.token_hex(16)
+
+# Підключення до бази даних
+engine = create_engine(database_url, echo=True)
+
+# Створення сесії
+Session = sessionmaker(bind=engine)
