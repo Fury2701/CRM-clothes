@@ -17,11 +17,11 @@ def admin_validy():
     password = request.form.get("password")
 
     if not (login and password):
-        return jsonify({"error": "Поле паролю або логіну пусте"}), 400
+        return jsonify({"error": "Invalid login or password"}), 400
 
     else:
         user = user_validy(login,password)
         if user== True:
             return redirect(url_for("admin_page"))
         else:
-            return jsonify({"error": "Не вірний логін або пароль"}), 401 
+            return jsonify({"error": "Invalid login or password"}), 401 
