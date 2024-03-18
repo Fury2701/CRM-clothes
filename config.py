@@ -2,6 +2,10 @@ from flask import Flask, request, render_template, jsonify, session, redirect, u
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, func
 from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.ext.declarative import declarative_base
+import requests
+from base64 import b64encode
+import json
+from datetime import datetime, timedelta
 import secrets, os
 from flask_sqlalchemy import SQLAlchemy
 
