@@ -44,7 +44,12 @@ def test():
     print("Access token:", access_token)
 
 def send_sms(phone_number, message_text):
-    access_token_ready = "Bearer " + access_token
+    if access_token is None or token_expiry is None or token_expiry < datetime.now():
+        print("Access token expired or not yet obtained. Authenticating...")
+        authenticate()
+        access_token_ready = "Bearer " + access_token
+    else:
+        access_token_ready = "Bearer " + access_token
     url = f"https://api-gateway.kyivstar.ua/sandbox/rest/{version}/sms"
 
     headers = {
@@ -62,7 +67,7 @@ def send_sms(phone_number, message_text):
 
     if response.status_code == 200:
         message_id = response.json()["msgId"]
-        return("Well done!. Message ID:", message_id)
+        return("Well done!", message_id)
     elif response.status_code == 401:
         print("BAD AUTH", response.status_code)
         get_access_token()
@@ -73,7 +78,13 @@ def send_sms(phone_number, message_text):
         return("FAILED TO SEND SMS", response.status_code)
 
 def check_sms_status(message_id):
-    access_token_ready = "Bearer " + access_token
+    if access_token is None or token_expiry is None or token_expiry < datetime.now():
+        print("Access token expired or not yet obtained. Authenticating...")
+        authenticate()
+        access_token_ready = "Bearer " + access_token
+    else:
+        access_token_ready = "Bearer " + access_token
+    
     url = f"https://api-gateway.kyivstar.ua/sandbox/rest/{version}/sms/{message_id}"
     headers = {
         'Authorization': access_token_ready
