@@ -48,6 +48,8 @@ def send_phone_sms():
     else:
         return jsonify({"error": response}), 400
 
+#Оновлення статусу SMS
+
 @app.route("/update_sms_status", methods=['POST'])
 def update_sms_status():
     # Перевірка чи користувач залогінений в сесії
