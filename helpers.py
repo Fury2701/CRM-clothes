@@ -26,6 +26,15 @@ def update_sms(phone_number, message_text, message_id, status):
     except Exception as e:
         return "Database error" + str(e)
 
+def update_sms_status(message_id):
+    try:
+        with Session() as db_session:
+            sms = db_session.query(Sms_history).filter(Sms_history.message_id == message_id).first()
+            sms.status = "Delivered"
+            db_session.commit()
+    except Exception as e:
+        return "Database error" + str(e)
+
     
 
 
