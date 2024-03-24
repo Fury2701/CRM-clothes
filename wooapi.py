@@ -27,8 +27,12 @@ class WooAPI:
     def delete_product(self, id):
         return self.wcapi.delete(f"products/{id}").json()
 
-    def get_orders(self):
-        return self.wcapi.get("orders").json()
+    def get_wc_orders(self, page=1, per_page=20):
+        params = {
+            "page": page,
+            "per_page": per_page
+        }
+        return self.wcapi.get("orders", params=params).json()
 
     def get_order(self, id):
         return self.wcapi.get(f"orders/{id}").json()

@@ -43,9 +43,9 @@ def update_sms_status(message_id):
 
 # Функції робот з базою даних WooCommerce
 
-def get_wc_orders(): # Функція для отримання замовлень з WooCommerce
+def get_wc_orders(page=1, per_page=20): # Функція для отримання замовлень з WooCommerce
     orders = get_woocomerce()
-    return orders.get_orders()
+    return orders.get_wc_orders(page=page, per_page=per_page)
 
 # Функції прослуховання бази даних Events
 
