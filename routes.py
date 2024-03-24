@@ -12,7 +12,9 @@ def login_page():
 def admin_page():
     if "login" not in session:
         return redirect(url_for("login_page"))
-    return render_template("main.html")
+    orders_json= get_wc_orders()
+    
+    return render_template("main.html", orders=orders_json)
 
 @app.route("/admin_validy", methods=['POST'])
 def admin_validy():
