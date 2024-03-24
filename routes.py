@@ -12,23 +12,36 @@ def login_page():
 def admin_page():
     if "login" not in session:
         return redirect(url_for("login_page"))
+    try:
+        page = request.args.get('page', 1, type=int) # Отримання номеру сторінки з параметрів запиту
+        orders = get_wc_orders(page=page)
 
-    page = request.args.get('page', 1, type=int) # Отримання номеру сторінки з параметрів запиту
-    orders = get_wc_orders(page=page)
+        orders_json = json.dumps(orders)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
-    orders_json = json.dumps(orders)
     return render_template("main.html", orders=orders_json, current_page=page)
 
 @app.route("/logout", methods=['GET'])
 def logout():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
     session.pop("login", None)
     session.pop("password", None)
     return redirect(url_for("login_page"))
 
 @app.route("/dataorders", methods=['GET'])
 def dataorders():
-    page = request.args.get('page', 1, type=int)
-    orders = get_wc_orders(page=page)
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    try:
+
+        page = request.args.get('page', 1, type=int)
+        orders = get_wc_orders(page=page)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
     return jsonify(orders,current_page=page), 200
 
 @app.route("/admin_validy", methods=['POST'])
@@ -116,7 +129,7 @@ def nova_tracking():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route("/uprade_sprav_nova", methods=['POST'])
+@app.route("/update_sprav_nova", methods=['POST'])
 def uprade_sprav_nova():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
