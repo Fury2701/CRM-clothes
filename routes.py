@@ -97,3 +97,18 @@ def nova_tracking():
         return jsonify(shipment_info), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route("/uprade_sprav_nova", methods=['POST'])
+def uprade_sprav_nova():
+    # Перевірка чи користувач залогінений в сесії
+    if "login" not in session:
+        return "User is not logged in.", 401  # Повертаємо 401, щоб показати, що користувач не має доступу
+
+    try:
+        # Отримання списку міст з API Нової Пошти
+        cities = save_cities_to_json()
+        return jsonify(cities), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+

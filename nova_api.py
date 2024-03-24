@@ -1,5 +1,6 @@
 from config import *
 
+api_key = "1e4e49d462079985b99e1b39effc9ae6"
 
 # Налаштування URL та параметрів запиту
 #Трекінг посилок Нової Пошти
@@ -17,7 +18,7 @@ def track_shipments(documents):
     url = "https://api.novaposhta.ua/v2.0/json/"
     model_name = "TrackingDocument"
     called_method = "getStatusDocuments"
-    api_key = "1e4e49d462079985b99e1b39effc9ae6"
+   
 
     payload = {
         "apiKey": api_key,
@@ -42,29 +43,34 @@ def track_shipments(documents):
     return []
 
 
-
-#Пошук відділень Нової Пошти в онлайн-режимі довідника
-def search_settlements(city_name):
-    url = "https://api.novaposhta.ua/v2.0/json/"
-    api_key = "1e4e49d462079985b99e1b39effc9ae6"
-    limit = "15"
-    page = "1"
+def get_cities(): # Отримання списку міст з API Нової Пошти
+    url = "https://api.novaposhta.ua/v2.0/json/"  
     payload = {
         "apiKey": api_key,
         "modelName": "Address",
-        "calledMethod": "searchSettlements",
-        "methodProperties": {
-            "CityName": city_name,
-            "Limit": limit,
-            "Page": page
-        }
+        "calledMethod": "getCities",
+        "methodProperties": {}
     }
     headers = {
         "Content-Type": "application/json"
     }
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return None
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        data = response.json()
+        cities = data.get("data", [])
+        return cities
+    except Exception as e:
+        print("Error:", e)
+        return []
+
+def save_cities_to_json(): # Збереження списку міст в файл cities.json
+    cities= get_cities() # Отримання списку міст
+    directory = "sprav_nova"
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    
+    with open(os.path.join(directory, "cities.json"), "w", encoding='utf-8') as file:
+        json.dump(cities, file, ensure_ascii=False)
+
 
