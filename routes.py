@@ -7,6 +7,7 @@ from nova_api import *
 def login_page():
     return render_template("login.html")
 
+
 @app.route("/admin", methods=['GET'])
 def admin_page():
     if "login" not in session:
@@ -111,4 +112,6 @@ def uprade_sprav_nova():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+
 

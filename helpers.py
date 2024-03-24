@@ -1,9 +1,12 @@
 from models import *
 from config import *
+import time
 
 
 # Створення таблиць
 Base.metadata.create_all(engine)
+Base_second.metadata.create_all(engine_second)
+
 
 def user_validy(login, password):
         with Session() as db_session:
@@ -35,7 +38,23 @@ def update_sms_status(message_id):
     except Exception as e:
         return "Database error" + str(e)
 
+
     
 
 
+
+# Функції прослуховання бази даних Events
+
+
+@event.listens_for(wp_wc_orders, 'after_update')
+def after_update_listener_wp_wc_orders(mapper, connection, target):
+    pass
+
+@event.listens_for(wp_wc_orders, 'after_insert')
+def after_insert_listener_wp_wc_orders(mapper, connection, target):
+    pass
+
+@event.listens_for(wp_wc_orders, 'after_delete')
+def after_delete_listener_wp_wc_orders(mapper, connection, target):
+    pass
 
