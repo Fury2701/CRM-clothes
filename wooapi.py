@@ -12,8 +12,12 @@ class WooAPI:
             version="wc/v3"
         )
 
-    def get_products(self):
-        return self.wcapi.get("products").json()
+    def get_products(self, page=1, per_page=20):
+        params = {
+            "page": page,
+            "per_page": per_page
+        }
+        return self.wcapi.get("products", params=params).json()
 
     def get_product(self, id):
         return self.wcapi.get(f"products/{id}").json()
@@ -34,6 +38,23 @@ class WooAPI:
         }
         return self.wcapi.get("orders", params=params).json()
 
+    def get_wc_status_orders(self, status, page=1, per_page=20):
+        params = {
+            "status": status,
+            "page": page,
+            "per_page": per_page
+        }
+        return self.wcapi.get("orders", params=params).json()
+
+    def get_sorted_new_to_old_orders(self, page=1, per_page=20):
+        params = {
+            "orderby": "date",
+            "order": "desc",
+            "page": page,
+            "per_page": per_page
+        }
+        return self.wcapi.get("orders", params=params).json()
+
     def get_order(self, id):
         return self.wcapi.get(f"orders/{id}").json()
 
@@ -46,8 +67,12 @@ class WooAPI:
     def delete_order(self, id):
         return self.wcapi.delete(f"orders/{id}").json()
     
-    def get_customers(self):
-        return self.wcapi.get("customers").json()
+    def get_customers(self, page=1, per_page=20):
+        params = {
+            "page": page,
+            "per_page": per_page
+        }
+        return self.wcapi.get("customers", params=params).json()
 
     def get_customer(self, id):
         return self.wcapi.get(f"customers/{id}").json()

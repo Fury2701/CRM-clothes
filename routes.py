@@ -30,7 +30,7 @@ def logout():
     session.pop("password", None)
     return redirect(url_for("login_page"))
 
-@app.route("/dataorders", methods=['GET'])
+@app.route("/dataorders", methods=['GET']) #для отримання даних наступних сторінок
 def dataorders():
     if "login" not in session:
         return redirect(url_for("login_page"))
@@ -43,6 +43,193 @@ def dataorders():
         return jsonify({"error": str(e)}), 400
 
     return jsonify(orders,current_page=page), 200
+
+@app.route("/dataordersstatus", methods=['GET']) #для отримання даних наступних сторінок з фільтром по статусу
+def dataordersstatus():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    try:
+        status = request.args.get('status')
+        page = request.args.get('page', 1, type=int)
+        orders = get_wc_status_orders(status, page=page)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(orders,current_page=page), 200
+
+@app.route("/dataordersnewtoold", methods=['GET']) #для отримання даних наступних сторінок відсортованих від нових до старих
+def dataordersnewtoold():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    try:
+        page = request.args.get('page', 1, type=int)
+        orders = get_sorted_new_to_old_orders(page=page)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(orders,current_page=page), 200
+
+@app.route("/create_order", methods=['POST'])
+def create_order():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    data = request.get_json()
+    try:
+        response = create_order(data)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/update_order", methods=['POST'])
+def update_order():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    data = request.get_json()
+    try:
+        response = update_order(data['id'], data)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/delete_order", methods=['POST'])
+def delete_order():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    order_id= request.args.get('id')
+    try:
+        response = delete_order(order_id)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/product", methods=['GET'])
+def product_page():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    try:
+        page = request.args.get('page', 1, type=int)
+        products = get_products(page=page, per_page=20)
+        products_json = json.dumps(products)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return render_template("product.html", products=products_json)
+
+@app.route("/data_products", methods=['GET'])
+def data_products():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    try:
+        page = request.args.get('page', 1, type=int)
+        products = get_products(page=page, per_page=20)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(products,current_page=page), 200
+
+@app.route("/create_product", methods=['POST'])
+def create_product():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    data = request.get_json()
+    try:
+        response = create_product(data)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/update_product", methods=['POST'])
+def update_product():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    data = request.get_json()
+    try:
+        response = update_product(data['id'], data)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/delete_product", methods=['POST'])
+def delete_product():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    product_id = request.args.get('id')
+    try:
+        response = delete_product(product_id)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route(/"customer", methods=['GET'])
+def customer_page():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    try:
+        page = request.args.get('page', 1, type=int)
+        customers = get_customers(page=page)
+        customers_json = json.dumps(customers)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return render_template("customer.html", customers=customers_json)
+
+@app.route("/data_customers", methods=['GET'])
+def data_customers():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    try:
+        page = request.args.get('page', 1, type=int)
+        customers = get_customers(page=page)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(customers,current_page=page), 200
+
+@app.route("/create_customer", methods=['POST'])
+def create_customer():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    data = request.get_json()
+    try:
+        response = create_customer(data)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/update_customer", methods=['POST'])
+def update_customer():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    data = request.get_json()
+    try:
+        response = update_customer(data['id'], data)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/delete_customer", methods=['POST'])
+def delete_customer():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    customer_id = request.args.get('id')
+    try:
+        response = delete_customer(customer_id)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @app.route("/admin_validy", methods=['POST'])
 def admin_validy():
