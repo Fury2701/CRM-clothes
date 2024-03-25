@@ -30,7 +30,7 @@ def logout():
     session.pop("password", None)
     return redirect(url_for("login_page"))
 
-@app.route("/dataorders", methods=['GET']) #для отримання даних наступних сторінок
+@app.route("/dataorders", methods=['GET']) #для отримання даних наступних сторінок(можливе використання фільтрів по ПІБ)
 def dataorders():
     if "login" not in session:
         return redirect(url_for("login_page"))
@@ -38,7 +38,8 @@ def dataorders():
     try:
 
         page = request.args.get('page', 1, type=int)
-        orders = get_wc_orders(page=page)
+        full_name = request.args.get('full_name', None, type=str)
+        orders = get_wc_orders(full_name=full_name,page=page)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 

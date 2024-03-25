@@ -31,11 +31,13 @@ class WooAPI:
     def delete_product(self, id):
         return self.wcapi.delete(f"products/{id}").json()
 
-    def get_wc_orders(self, page=1, per_page=20):
+    def get_wc_orders(self, full_name=None, page=1, per_page=20):
         params = {
             "page": page,
             "per_page": per_page
         }
+        if full_name:
+            params["search"] = full_name
         return self.wcapi.get("orders", params=params).json()
 
     def get_wc_status_orders(self, status, page=1, per_page=20):
