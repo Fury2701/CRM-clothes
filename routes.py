@@ -44,6 +44,19 @@ def dataorders():
 
     return jsonify(orders,current_page=page), 200
 
+@app.route("/dataordersbyid", methods=['GET']) #для отримання даних наступних сторінок по id
+def dataordersbyid():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    try:
+        order_id = request.args.get('id')
+        order = get_order(order_id)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(order), 200
+
 @app.route("/dataordersstatus", methods=['GET']) #для отримання даних наступних сторінок з фільтром по статусу
 def dataordersstatus():
     if "login" not in session:
@@ -120,6 +133,19 @@ def product_page():
 
     return render_template("product.html", products=products_json)
 
+@app.route("/productbyid", methods=['GET'])
+def product_info_page(id):
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    try:
+        product_id = request.args.get('id')
+        product = get_product(product_id) 
+        product_json = json.dumps(product)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return render_template("product_info.html", product=product_json)
+
 @app.route("/data_products", methods=['GET'])
 def data_products():
     if "login" not in session:
@@ -169,7 +195,7 @@ def delete_product():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route(/"customer", methods=['GET'])
+@app.route("/customer", methods=['GET'])
 def customer_page():
     if "login" not in session:
         return redirect(url_for("login_page"))
@@ -181,6 +207,19 @@ def customer_page():
         return jsonify({"error": str(e)}), 400
 
     return render_template("customer.html", customers=customers_json)
+
+@app.route("/customerbyid", methods=['GET'])
+def customer_info_page(id):
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    try:
+        client_id = request.args.get('id')
+        customer = get_customer(client_id) 
+        customer_json = json.dumps(customer)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return render_template("customer_info.html", customer=customer_json)
 
 @app.route("/data_customers", methods=['GET'])
 def data_customers():

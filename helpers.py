@@ -47,6 +47,71 @@ def get_wc_orders(page=1, per_page=20): # Функція для отриманн
     orders = get_woocomerce()
     return orders.get_wc_orders(page=page, per_page=per_page)
 
+def get_wc_status_orders(status, page=1, per_page=20): # Функція для отримання замовлень з WooCommerce за статусом
+    orders = get_woocomerce()
+    return orders.get_wc_status_orders(status, page=page, per_page=per_page)
+
+def get_sorted_new_to_old_orders(page=1, per_page=20): # Функція для отримання замовлень з WooCommerce відсортованих від нових до старих
+    orders = get_woocomerce()
+    return orders.get_sorted_new_to_old_orders(page=page, per_page=per_page)
+
+def get_order(id): # Функція для отримання замовлення з WooCommerce по id
+    orders = get_woocomerce()
+    return orders.get_order(id)
+
+def create_order(data): # Функція для створення замовлення в WooCommerce
+    orders = get_woocomerce()
+    return orders.create_order(data)
+
+def update_order(id, data): # Функція для оновлення замовлення в WooCommerce
+    orders = get_woocomerce()
+    return orders.update_order(id, data)
+
+def delete_order(id): # Функція для видалення замовлення в WooCommerce
+    orders = get_woocomerce()
+    return orders.delete_order(id)
+
+def get_customers(page=1, per_page=20): # Функція для отримання клієнтів з WooCommerce
+    orders = get_woocomerce()
+    return orders.get_customers(page=page, per_page=per_page)
+
+def get_customer(id): # Функція для отримання клієнта з WooCommerce по id
+    orders = get_woocomerce()
+    return orders.get_customer(id)
+
+def create_customer(data): # Функція для створення клієнта в WooCommerce
+    orders = get_woocomerce()
+    return orders.create_customer(data)
+
+def update_customer(id, data): # Функція для оновлення клієнта в WooCommerce
+    orders = get_woocomerce()
+    return orders.update_customer(id, data)
+
+def delete_customer(id): # Функція для видалення клієнта в WooCommerce
+    orders = get_woocomerce()
+    return orders.delete_customer(id)
+
+def get_wc_products(page=1, per_page=20): # Функція для отримання продуктів з WooCommerce
+    orders = get_woocomerce()
+    return orders.get_wc_products(page=page, per_page=per_page)
+
+def get_wc_product(id): # Функція для отримання продукту з WooCommerce по id
+    orders = get_woocomerce()
+    return orders.get_wc_product(id)
+
+def create_product(data): # Функція для створення продукту в WooCommerce
+    orders = get_woocomerce()
+    return orders.create_product(data)
+
+def update_product(id, data): # Функція для оновлення продукту в WooCommerce
+    orders = get_woocomerce()
+    return orders.update_product(id, data)
+
+def delete_product(id): # Функція для видалення продукту в WooCommerce
+    orders = get_woocomerce()
+    return orders.delete_product(id)
+
+
 # Функції прослуховання бази даних Events
 
 
