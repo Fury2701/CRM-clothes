@@ -43,7 +43,7 @@ def dataorders():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return jsonify(orders,current_page=page), 200
+    return jsonify({'orders': orders, 'current_page': page}), 200
 
 @app.route("/dataordersbyid", methods=['GET']) #для отримання даних наступних сторінок по id
 def dataordersbyid():
@@ -70,7 +70,7 @@ def dataordersstatus():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return jsonify(orders,current_page=page), 200
+    return jsonify({'orders': orders, 'current_page': page}), 200
 
 @app.route("/dataordersnewtoold", methods=['GET']) #для отримання даних наступних сторінок відсортованих від нових до старих
 def dataordersnewtoold():
@@ -83,7 +83,7 @@ def dataordersnewtoold():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return jsonify(orders,current_page=page), 200
+    return jsonify({'orders': orders, 'current_page': page}), 200
 
 @app.route("/create_order", methods=['POST'])
 def create_order():
@@ -145,7 +145,7 @@ def product_info_page(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return render_template("product_info.html", product=product_json)
+    return jsonify(product_json), 200
 
 @app.route("/data_products", methods=['GET'])
 def data_products():
@@ -158,7 +158,7 @@ def data_products():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return jsonify(products,current_page=page), 200
+    return jsonify({"products":products,"current_page":page}), 200
 
 @app.route("/create_product", methods=['POST'])
 def create_product():
@@ -220,7 +220,7 @@ def customer_info_page(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return render_template("customer_info.html", customer=customer_json)
+    return jsonify(customer_json), 200
 
 @app.route("/data_customers", methods=['GET'])
 def data_customers():
@@ -233,7 +233,7 @@ def data_customers():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return jsonify(customers,current_page=page), 200
+    return jsonify({"customers":customers,"current_page":page}), 200
 
 @app.route("/create_customer", methods=['POST'])
 def create_customer():
