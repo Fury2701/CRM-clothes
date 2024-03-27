@@ -49,7 +49,7 @@ def get_wc_orders(full_name=None, page=1, per_page=20): # Функція для 
 
 def get_wc_status_orders(status, page=1, per_page=20): # Функція для отримання замовлень з WooCommerce за статусом
     orders = get_woocomerce()
-    return orders.get_wc_status_orders(status, page=page, per_page=per_page)
+    return orders.get_wc_status_orders(status=status, page=page, per_page=per_page)
 
 def get_sorted_new_to_old_orders(page=1, per_page=20): # Функція для отримання замовлень з WooCommerce відсортованих від нових до старих
     orders = get_woocomerce()
@@ -111,6 +111,21 @@ def delete_product(id): # Функція для видалення продук�
     orders = get_woocomerce()
     return orders.delete_product(id)
 
+def get_wc_notes(page=1, per_page=20, id): # Функція для отримання нотаток з WooCommerce
+    orders = get_woocomerce()
+    return orders.get_notes(page=page, per_page=per_page, id=id)
+
+def get_wc_note(id, note_id): # Функція для отримання нотатки з WooCommerce по id
+    orders = get_woocomerce()
+    return orders.get_note(id, note_id)
+
+def create_note(id, data): # Функція для створення нотатки в WooCommerce
+    orders = get_woocomerce()
+    return orders.create_note(id, data)
+
+def delete_note(id, note_id): # Функція для видалення нотатки в WooCommerce
+    orders = get_woocomerce()
+    return orders.delete_note(id, note_id)
 
 # Функції прослуховання бази даних Events
 

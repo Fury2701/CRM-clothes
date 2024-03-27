@@ -88,6 +88,22 @@ class WooAPI:
     def delete_customer(self, id):
         return self.wcapi.delete(f"customers/{id}").json()
 
+    def get_notes(self, page=1, per_page=20, id):
+        params = {
+            "page": page,
+            "per_page": per_page
+        }
+        return self.wcapi.get("orders/{id}/notes", params=params).json()
+
+    def get_note(self, id, note_id):
+        return self.wcapi.get(f"orders/{id}/notes/{note_id}").json()
+
+    def create_note(self, id, data):
+        return self.wcapi.post("orders/{id}/notes", data).json()
+
+    def delete_note(self, id, note_id):
+        return self.wcapi.delete(f"orders/{id}/notes/{note_id}", params={"force":True}).json()
+
 def get_woocomerce():
     url = "https://www.detskietkani.com/"
     consumer_key = "ck_de2030182708c1a8a9bf7ddf3f477df0ee96a0ea"
