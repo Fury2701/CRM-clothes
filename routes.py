@@ -271,6 +271,60 @@ def delete_customer():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route("/notes", methods=['GET'])
+def notes_page():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    try:
+        id_ord = request.args.get('id')
+        page = request.args.get('page', 1, type=int)
+        notes = get_wc_notes(page=page, per_page=20, id_ord=id_ord)
+        notes_json = json.dumps(notes)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return render_template(notes=notes_json)
+
+@app.route("/notebyid", methods=['GET'])
+def note_info_page():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    try:
+        id_ord = request.args.get('id')
+        note_id = request.args.get('note_id')
+        note = get_note(id_ord, note_id) 
+        note_json = json.dumps(note)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(note_json), 200
+
+@app.route("/create_note", methods=['POST'])
+def create_note():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    id_ord = request.args.get('id')
+    data = request.get_json()
+    try:
+        response = create_note(id_ord ,data)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/delete_note", methods=['POST'])
+def delete_note():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    id_ord = request.args.get('id')
+    note_id = request.args.get('note_id')
+    try:
+        response = delete_note(id_ord, note_id)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 @app.route("/admin_validy", methods=['POST'])
 def admin_validy():
     login = request.form.get("login")
