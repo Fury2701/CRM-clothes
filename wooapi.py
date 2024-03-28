@@ -50,7 +50,7 @@ class WooAPI:
 
     def get_sorted_new_to_old_orders(self, page=1, per_page=20):
         params = {
-            "orderby": "date",
+            "orderby": "date_created",
             "order": "desc",
             "page": page,
             "per_page": per_page
