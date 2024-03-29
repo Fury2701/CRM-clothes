@@ -489,7 +489,7 @@ def nova_tracking():
         return jsonify({"error": str(e)}), 400
 
 @app.route("/update_sprav_nova", methods=['POST'])
-def uprade_sprav_nova():
+def update_sprav_nova():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
         return "User is not logged in.", 401  # Повертаємо 401, щоб показати, що користувач не має доступу
