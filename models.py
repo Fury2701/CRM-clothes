@@ -7,6 +7,7 @@ class User(Base):
     __tablename__ = 'User'
 
     id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
     login = Column(String(255), nullable=False)
     password = Column(String(255), nullable=False)
 
@@ -20,6 +21,21 @@ class Sms_history(Base):
     message_id = Column(String(255), nullable=False)
     status = Column(String(255), nullable=False)
     date = Column(DateTime, nullable=False)
+
+class custom_status(Base):
+    __tablename__ = 'custom_status'
+
+    id = Column(Integer, primary_key=True)
+    key = Column(String(255), nullable=False)
+    value = Column(String(255), nullable=False)
+
+class manager_order(Base):
+    __tablename__ = 'manager_order'
+
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer, nullable=False)
+    manager_id = Column(Integer, nullable=False)
+    
 
 class wp_woocommerce_order_items(Base_second):
     __tablename__ = 'wp_woocommerce_order_items'

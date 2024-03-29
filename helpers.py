@@ -13,6 +13,7 @@ def user_validy(login, password):
             user = db_session.query(User).filter(User.login == login, User.password == password).first()
         
             if user:
+                session["id"] = user.id
                 session["login"] = login
                 session["password"] = password
                 return True
@@ -126,6 +127,66 @@ def create_note(id, data): # Функція для створення нотат
 def delete_note(id, note_id): # Функція для видалення нотатки в WooCommerce
     orders = get_woocomerce()
     return orders.delete_note(id, note_id)
+
+def custom_status(): # Функція для отримання кастомних статусів
+    with Session() as db_session:
+        status = db_session.query(custom_status).all()
+        return status
+
+def create_custom_status(key, value):
+    try:
+        with Session() as db_session:
+            status = custom_status(key=key, value=value)
+            db_session.add(status)
+            db_session.commit()
+            return "Status created"
+    except Exception as e:
+        return "Database error" + str(e)
+
+def delete_custom_status(key):
+    try:
+        with Session() as db_session:
+            status = db_session.query(custom_status).filter(custom_status.key == key).first()
+            db_session.delete(status)
+            db_session.commit()
+            return "Status deleted"
+    except Exception as e:
+        return "Database error" + str(e)
+
+def add_manager_to_order(order_id, manager_id):
+    try:
+        with Session() as db_session:
+            order = manager_order(order_id=order_id, manager_id=manager_id)
+            db_session.add(order)
+            db_session.commit()
+            return "Manager added to order"
+    except Exception as e:
+        return "Database error" + str(e)
+
+def get_manager_orders(manager_id):
+    try:
+        with Session() as db_session:
+            orders = db_session.query(manager_order).filter(manager_order.manager_id == manager_id).all()
+            json_orders_list = []
+            for order in orders:
+                json_order = json.dumps({
+                    "order_id": order.order_id,
+                    # Додайте інші поля замовлення за потреби
+                })
+                json_orders_list.append(json_order)
+            return json_orders_list
+    except Exception as e:
+        return "Database error" + str(e)
+
+def update_manager_order(order_id, manager_id):
+    try:
+        with Session() as db_session:
+            order = db_session.query(manager_order).filter(manager_order.order_id == order_id).first()
+            order.manager_id = manager_id
+            db_session.commit()
+            return "Manager updated"
+    except Exception as e:
+        return "Database error" + str(e)
 
 # Функції прослуховання бази даних Events
 

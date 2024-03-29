@@ -13,19 +13,17 @@ def admin_page():
     if "login" not in session:
         return redirect(url_for("login_page"))
     try:
-        page = request.args.get('page', 1, type=int) # Отримання номеру сторінки з параметрів запиту
-        orders = get_wc_orders(page=page)
-
-        orders_json = json.dumps(orders)
+        return render_template("main.html")
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return render_template("main.html", orders=orders_json, current_page=page)
+    
 
 @app.route("/logout", methods=['GET'])
 def logout():
     if "login" not in session:
         return redirect(url_for("login_page"))
+    session.pop("id", None)
     session.pop("login", None)
     session.pop("password", None)
     return redirect(url_for("login_page"))
@@ -44,6 +42,25 @@ def dataorders():
         return jsonify({"error": str(e)}), 400
 
     return jsonify({'orders': orders, 'current_page': page}), 200
+
+@app.route("/get_orders_by_manager", methods=['GET']) #для отримання даних наступних сторінок по менеджеру
+def get_orders_by_manager():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    try:
+        page = request.args.get('page', 1, type=int)
+        user_id = session.get('id')
+        orders = get_manager_orders(manager_id=user_id)
+        json_orders=[]
+        for order in orders:
+            info=get_order(order['id'])
+            json_orders.append(info)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify({'orders': json_orders, 'current_page': page}), 200
 
 @app.route("/dataordersbyid", methods=['GET']) #для отримання даних наступних сторінок по id
 def dataordersbyid():
@@ -359,6 +376,67 @@ def send_phone_sms():
         return "SMS sent successfully and processed in the database.", 200
     else:
         return jsonify({"error": response}), 400
+
+@app.route("/custom_status_list", methods=['POST'])
+def custom_status():
+    # Перевірка чи користувач залогінений в сесії
+    if "login" not in session:
+        return "User is not logged in.", 401
+    try:
+        return jsonify(get_custom_status()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/create_custom_status", methods=['POST'])
+def create_custom_status():
+    # Перевірка чи користувач залогінений в сесії
+    if "login" not in session:
+        return "User is not logged in.", 401
+    try:
+        key = request.get_json['key']
+        value = request.get_json['value']
+        response = create_custom_status(key, value)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/delete_custom_status", methods=['POST'])
+def delete_custom_status():
+    # Перевірка чи користувач залогінений в сесії
+    if "login" not in session:
+        return "User is not logged in.", 401
+    try:
+        key = request.get_json['key']
+        response = delete_custom_status(key)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/add_manager_order", methods=['POST'])
+def add_manager_order():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    user_id = request.get_json['user_id']
+    order_id = request.get_json['order_id']
+
+    try:
+        response = manager_order(user_id, order_id)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/update_manager_order", methods=['POST'])
+def update_manager_order():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    user_id = request.get_json['user_id']
+    order_id = request.get_json['order_id']
+
+    try:
+        response = manager_order(user_id, order_id)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 #Оновлення статусу SMS
 
