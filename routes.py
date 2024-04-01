@@ -13,7 +13,7 @@ def admin_page():
     if "login" not in session:
         return redirect(url_for("login_page"))
     try:
-        return render_template("main.html")
+        return render_template("main.html") 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -103,7 +103,7 @@ def dataordersnewtoold():
     return jsonify({'orders': orders, 'current_page': page}), 200
 
 @app.route("/create_order", methods=['POST'])
-def create_order():
+def create_orders():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
@@ -115,19 +115,19 @@ def create_order():
         return jsonify({"error": str(e)}), 400
 
 @app.route("/update_order", methods=['POST'])
-def update_order():
+def update_orders():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
     data = request.get_json()
     try:
-        response = update_order(data['id'], data)
+        response = update_order(data['id'], data['data'])
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 @app.route("/delete_order", methods=['POST'])
-def delete_order():
+def delete_orders():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
@@ -178,7 +178,7 @@ def data_products():
     return jsonify({"products":products,"current_page":page}), 200
 
 @app.route("/create_product", methods=['POST'])
-def create_product():
+def create_products():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
@@ -190,7 +190,7 @@ def create_product():
         return jsonify({"error": str(e)}), 400
 
 @app.route("/update_product", methods=['POST'])
-def update_product():
+def update_products():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
@@ -202,7 +202,7 @@ def update_product():
         return jsonify({"error": str(e)}), 400
 
 @app.route("/delete_product", methods=['POST'])
-def delete_product():
+def delete_products():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
@@ -253,7 +253,7 @@ def data_customers():
     return jsonify({"customers":customers,"current_page":page}), 200
 
 @app.route("/create_customer", methods=['POST'])
-def create_customer():
+def create_customers():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
@@ -265,7 +265,7 @@ def create_customer():
         return jsonify({"error": str(e)}), 400
 
 @app.route("/update_customer", methods=['POST'])
-def update_customer():
+def update_customers():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
@@ -277,7 +277,7 @@ def update_customer():
         return jsonify({"error": str(e)}), 400
 
 @app.route("/delete_customer", methods=['POST'])
-def delete_customer():
+def delete_customers():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
@@ -317,7 +317,7 @@ def note_info_page():
     return jsonify(note_json), 200
 
 @app.route("/create_note", methods=['POST'])
-def create_note():
+def create_notes():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
@@ -330,7 +330,7 @@ def create_note():
         return jsonify({"error": str(e)}), 400
 
 @app.route("/delete_note", methods=['POST'])
-def delete_note():
+def delete_notes():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
