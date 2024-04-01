@@ -13,9 +13,14 @@ def admin_page():
     if "login" not in session:
         return redirect(url_for("login_page"))
     try:
-        return render_template("main.html") 
+        page = request.args.get('page', 1, type=int) # Отримання номеру сторінки з параметрів запиту
+        orders = get_wc_orders(page=page)
+
+        orders_json = json.dumps(orders)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+    return render_template("main.html", orders=orders_json, current_page=page), 200
 
     
 
@@ -146,12 +151,12 @@ def product_page():
         return redirect(url_for("login_page"))
     try:
         page = request.args.get('page', 1, type=int)
-        products = get_products(page=page, per_page=20)
+        products = get_wc_products(page=page, per_page=20)
         products_json = json.dumps(products)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return render_template("product.html", products=products_json)
+    return render_template("product.html", products=products_json, current_page=page), 200
 
 @app.route("/productbyid", methods=['GET'])
 def product_info_page(id):
@@ -159,7 +164,7 @@ def product_info_page(id):
         return redirect(url_for("login_page"))
     try:
         product_id = request.args.get('id')
-        product = get_product(product_id) 
+        product = get_wc_product(product_id) 
         product_json = json.dumps(product)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -197,6 +202,8 @@ def update_products():
         return redirect(url_for("login_page"))
 
     data = request.get_json()
+    if "id" not in data:
+        return jsonify({"error": "Invalid data"}), 400
     try:
         response = update_product(data['id'], data)
         return jsonify(response), 200
@@ -226,7 +233,7 @@ def customer_page():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return render_template("customer.html", customers=customers_json)
+    return render_template("customer.html", customers=customers_json, current_page=page), 200
 
 @app.route("/customerbyid", methods=['GET'])
 def customer_info_page(id):
@@ -272,13 +279,15 @@ def update_customers():
         return redirect(url_for("login_page"))
 
     data = request.get_json()
+    if "id" not in data:
+        return jsonify({"error": "Invalid data"}), 400
     try:
         response = update_customer(data['id'], data)
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route("/delete_customer", methods=['POST'])
+@app.route("/delete_customer", methods=['GET'])
 def delete_customers():
     if "login" not in session:
         return redirect(url_for("login_page"))
@@ -311,7 +320,7 @@ def note_info_page():
     try:
         id_ord = request.args.get('id')
         note_id = request.args.get('note_id')
-        note = get_note(id_ord, note_id) 
+        note = get_wc_note(id_ord, note_id) 
         note_json = json.dumps(note)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -331,7 +340,7 @@ def create_notes():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route("/delete_note", methods=['POST'])
+@app.route("/delete_note", methods=['GET'])
 def delete_notes():
     if "login" not in session:
         return redirect(url_for("login_page"))
@@ -368,6 +377,9 @@ def send_phone_sms():
     phone_number = request.get_json['phone_number']
     message_text = request.get_json['message_text']
     
+    if not phone_number or not message_text:
+        return jsonify({"error": "Invalid data"}), 400
+
     # Відправлення SMS
     response = send_sms(phone_number, message_text)
     
@@ -375,7 +387,7 @@ def send_phone_sms():
         # Виклик функції для обробки запису в базу даних
         status = "Not delivered"
         update_sms(phone_number, message_text,response[1],status)  
-        return "SMS sent successfully and processed in the database.", 200
+        return jsonify({"success":"SMS sent successfully and processed in the database."}), 200
     else:
         return jsonify({"error": response}), 400
 
@@ -390,25 +402,31 @@ def custom_status():
         return jsonify({"error": str(e)}), 400
 
 @app.route("/create_custom_status", methods=['POST'])
-def create_custom_status():
+def create_custom_statuss():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
         return "User is not logged in.", 401
     try:
         key = request.get_json['key']
         value = request.get_json['value']
+        if not key or not value:
+            return jsonify({"error": "Invalid data"}), 400
+
         response = create_custom_status(key, value)
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 @app.route("/delete_custom_status", methods=['POST'])
-def delete_custom_status():
+def delete_custom_statuss():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
         return "User is not logged in.", 401
     try:
         key = request.get_json['key']
+        if not key:
+            return jsonify({"error": "Invalid data"}), 400
+
         response = delete_custom_status(key)
         return jsonify(response), 200
     except Exception as e:
@@ -420,6 +438,9 @@ def add_manager_order():
         return redirect(url_for("login_page"))
     user_id = request.get_json['user_id']
     order_id = request.get_json['order_id']
+
+    if not user_id or not order_id:
+        return jsonify({"error": "Invalid data"}), 400
 
     try:
         response = manager_order(user_id, order_id)
@@ -434,6 +455,9 @@ def update_manager_order():
     user_id = request.get_json['user_id']
     order_id = request.get_json['order_id']
 
+    if not user_id or not order_id:
+        return jsonify({"error": "Invalid data"}), 400
+
     try:
         response = manager_order(user_id, order_id)
         return jsonify(response), 200
@@ -442,13 +466,15 @@ def update_manager_order():
 
 #Оновлення статусу SMS
 
-@app.route("/update_sms_status", methods=['POST'])
-def update_sms_status():
+@app.route("/update_sms_status/<message_id>", methods=['GET'])
+def update_sms_status(message_id):
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
         return "User is not logged in.", 401  # Повертаємо 401, щоб показати, що користувач не має доступу
     
-    message_id = request.get_json['message_id']
+    if not message_id:
+        return jsonify({"error": "Invalid data"}), 400
+
     response = check_sms_status(message_id)
     if response == "Delivered":
         status = "Delivered"
