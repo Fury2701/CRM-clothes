@@ -112,9 +112,9 @@ def delete_product(id): # Функція для видалення продук�
     orders = get_woocomerce()
     return orders.delete_product(id)
 
-def get_wc_notes(page=1, per_page=20, id): # Функція для отримання нотаток з WooCommerce
+def get_wc_notes(id, page=1, per_page=20): # Функція для отримання нотаток з WooCommerce
     orders = get_woocomerce()
-    return orders.get_notes(page=page, per_page=per_page, id=id)
+    return orders.get_notes(id=id, page=page, per_page=per_page)
 
 def get_wc_note(id, note_id): # Функція для отримання нотатки з WooCommerce по id
     orders = get_woocomerce()

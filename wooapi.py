@@ -88,7 +88,7 @@ class WooAPI:
     def delete_customer(self, id):
         return self.wcapi.delete(f"customers/{id}").json()
 
-    def get_notes(self, page=1, per_page=20, id):
+    def get_notes(self, id, page=1, per_page=20):
         params = {
             "page": page,
             "per_page": per_page

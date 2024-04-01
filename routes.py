@@ -295,7 +295,7 @@ def notes_page():
     try:
         id_ord = request.args.get('id')
         page = request.args.get('page', 1, type=int)
-        notes = get_wc_notes(page=page, per_page=20, id_ord=id_ord)
+        notes = get_wc_notes(id_ord=id_ord, page=page, per_page=20)
         notes_json = json.dumps(notes)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
