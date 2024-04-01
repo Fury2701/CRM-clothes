@@ -120,6 +120,8 @@ def update_orders():
         return redirect(url_for("login_page"))
 
     data = request.get_json()
+    if "id" not in data or "data" not in data:
+        return jsonify({"error": "Invalid data"}), 400
     try:
         response = update_order(data['id'], data['data'])
         return jsonify(response), 200
