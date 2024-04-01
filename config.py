@@ -10,7 +10,8 @@ import secrets, os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from wooapi import *
-
+import redis
+from flask_session import Session
 
 app = Flask(__name__)
 
@@ -19,6 +20,12 @@ database_url = 'postgresql+psycopg2://postgres:2701172004@localhost/Crm'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_TYPE'] = 'redis'  # Вказуємо тип сесій (Redis)
+app.config['SESSION_PERMANENT'] = False  # Вимикаємо постійні сесії (не залишаємо сесії після закриття браузера)
+app.config['SESSION_USE_SIGNER'] = True  # Використовуємо підпис сесій (безпека)
+app.config['SESSION_REDIS'] = redis.from_url('redis://localhost:6379')  # Підключення до Redis
+
+Session(app)
 
 app.config['SQLALCHEMY_DATABASE_URI_SECOND']= 'mysql+pymysql://sr533762_db:4zWnFMFV@sr533762.mysql.ukraine.com.ua:3306/sr533762_db'
 
