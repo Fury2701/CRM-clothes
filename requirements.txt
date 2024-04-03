@@ -1,0 +1,9 @@
+flask
+sqlalchemy
+psycopg2-binary  # Для PostgreSQL
+pymysql  # Для MySQL
+requests
+woocommerce  # Якщо wooapi - це бібліотека для WooCommerce API
+redis
+flask-sqlalchemy
+flask-session
