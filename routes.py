@@ -67,7 +67,7 @@ def get_orders_by_manager():
 
     return jsonify({'orders': json_orders, 'current_page': page}), 200
 
-@app.route("/dataordersbyid", methods=['GET']) #для отримання даних наступних сторінок по id
+@app.route("/dataordersbyid", methods=['GET']) #для отримання даних наступних замовлень по id
 def dataordersbyid():
     if "login" not in session:
         return redirect(url_for("login_page"))
@@ -463,6 +463,28 @@ def update_manager_order():
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route("/get_manager_list", methods=['GET'])
+def get_manager_list():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    try:
+        return jsonify(get_manager_list()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/delete_manager_order", methods=['GET'])
+def delete_manager_order():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    order_id = request.args.get('order_id')
+    try:
+        response = delete_manager_order(order_id)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 
 #Оновлення статусу SMS
 

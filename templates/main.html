@@ -7,8 +7,10 @@
     <link rel="stylesheet" href="../static/css/main.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    
 </head>
 <body>
+
   <div class="white-stripe"></div>
 <div class="full-page-background"></div>    
 
@@ -51,7 +53,7 @@
 
     </div >
     <div class="navbar">
-    <ul class="nav justify-content-strat">
+    <ul class="nav justify-content-start">
 
       <li class="nav-item">
         <a id="active-page" href="#">Список замовлень</a>
@@ -67,7 +69,7 @@
           <a id="export" class="btn btn-outline-primary" href="#" role="button">Експорт</a>
         </li>
         <li class="nav-item">
-          <a id="create-offer" class="btn btn-primary" href="#" role="button">Створити замовлення</a>
+          <button id="create-offer" class="btn btn-primary" href="#" type="button">Створити замовлення</button>
         </li>
      </div>     
     </ul>
@@ -134,176 +136,114 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td><img src="../images/example11.jpg"></td>
-            <td>
-
-                <table id="t2table">
-                  <tr>
-                    <td>
-                      <a href="#" data-bs-toggle="modal" data-bs-target="#myModal">676872</a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>24</td>
-                  </tr>
-                </table>
-              </td>
-            <td>1400</td>
-            <td>Кушнір Денис</td>
-            <td>Нова пошта</td>
-            <td>
-              <select id="dropdown-list">
-                <option value="new" class="dropdown-item1">Новий</option>
-                <option  value="processing">В обробці</option>
-                <option  value="on_delivery">На відправку</option>
-                <option  value="shipped">Відправлено</option>
-                <option  value="paid">Оплачено</option>
-                <option  value="not_paid">Чекаємо на оплату</option>
-              </select>
-            </td>
-
-          </tr>
-          <tr>
-            <td><img src="../images/example11.jpg"></td>
-            <td>
-
-                <table id="t2table">
-                  <tr>
-                    <td>
-                      <a href="#" data-bs-toggle="modal" data-bs-target="#myModal">145671</a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>21</td>
-                  </tr>
-                </table>
-              </td>
-            <td>500</td>
-            <td>Вася пупкін</td>
-            <td>Нова пошта</td>
-            <td>
-              <select id="dropdown-list">
-                <option value="new" class="dropdown-item1">Новий</option>
-                <option  value="processing">В обробці</option>
-                <option  value="on_delivery">На відправку</option>
-                <option  value="shipped">Відправлено</option>
-                <option  value="paid">Оплачено</option>
-                <option  value="not_paid">Чекаємо на оплату</option>
-              </select>
-            </td>
-
-          </tr>
-          <tr>
-            <td><img src="../images/example11.jpg"></td>
-            <td>
-              <table id="t2table">
-                <tr>
-                  <td>
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#myModal">253464</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td>20</td>
-                </tr>
-              </table>
-            </td>
-            <td>1000</td>
-            <td>Свинка Пепа <br>0669693502</td>
-            <td>Укр пошта</td>
-            <td>             
-              <select id="dropdown-list">
-                <option  value="new">Новий</option>
-                <option  value="processing">В обробці</option>
-                <option  value="on_delivery">На відправку</option>
-                <option  value="shipped">Відправлено</option>
-                <option  value="paid">Оплачено</option>
-                <option  value="not_paid">Чекаємо на оплату</option>
-              </select>
-            </td>
-          </tr>
-          <tr>
-            <td><img src="../images/example11.jpg"></td>
-            <td>
-              <table id="t2table">
-                <tr>
-                  <td>
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#myModal">782142</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td>19</td>
-                </tr>
-              </table>
-            </td>
-            <td>200</td>
-            <td>Лисий бобік <br>0669693502</td>
-            <td>Міст Експрес</td>
-            <td>             
-              <select id="dropdown-list">
-                <option  value="new">Новий</option>
-                <option  value="processing">В обробці</option>
-                <option  value="on_delivery">На відправку</option>
-                <option  value="shipped">Відправлено</option>
-                <option  value="paid">Оплачено</option>
-                <option  value="not_paid">Чекаємо на оплату</option>
-              </select>
-            </td>
-          </tr>
-          <tr>
-            <td><img src="../images/example11.jpg"></td>
-            <td>
-              <table id="t2table">
-                <tr>
-                  <td>
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#myModal">999999</a>
-                  </td>
-                </tr>
-                <tr>
-                  <td>25</td>
-                </tr>
-              </table>
-            </td>
-            <td>3100</td>
-            <td>Кыцюк <br>0669693502</td>
-            <td>Міст Експрес</td>
-            <td>             
-              <select id="dropdown-list">
-                <option  value="new">Новий</option>
-                <option  value="processing">В обробці</option>
-                <option  value="on_delivery">На відправку</option>
-                <option  value="shipped">Відправлено</option>
-                <option  value="paid">Оплачено</option>
-                <option  value="not_paid">Чекаємо на оплату</option>
-              </select>
-            </td>
-          </tr>
+         
 
         </tbody>
       </table>
       </div>
     </div>
-          <!-- Модальное окно -->
-          <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="exampleModalLabel">Модальное окно</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  Содержимое вашего модального окна здесь...
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                </div>
-              </div>
-            </div>
+
+    <div class="modal fade" id="createOrderModal" tabindex="-1" aria-labelledby="createOrderModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="createOrderModalLabel">Створити замовлення</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-           <!-- Модальное окно -->
+          <div class="modal-body">
+            <form id="createOrderForm">
+              <div class="mb-3">
+                <label for="customerName" class="form-label">Ім'я замовника</label>
+                <input type="text" class="form-control" id="customerName" required>
+              </div>
+              <div class="mb-3">
+                <label for="customerPhone" class="form-label">Номер телефону</label>
+                <input type="tel" class="form-control" id="customerPhone" required>
+              </div>
+              <div class="mb-3">
+                <label for="customerEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="customerEmail" required>
+              </div>
+              <div class="mb-3">
+                <label for="shippingMethod" class="form-label">Метод доставки</label>
+                <select class="form-select" id="shippingMethod" required>
+                  <option value="">Виберіть метод доставки</option>
+                  <option value="nova_poshta">Нова пошта</option>
+                  <option value="ukr_poshta">Укрпошта</option>
+                  <!-- Добавьте другие методы доставки по необходимости -->
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="paymentMethod" class="form-label">Метод оплати</label>
+                <select class="form-select" id="paymentMethod" required>
+                  <option value="">Виберіть метод оплати</option>
+                  <option value="cash_on_delivery">Накладений платіж</option>
+                  <option value="bank_transfer">Банківський переказ</option>
+                  <!-- Добавьте другие методы оплаты по необходимости -->
+                </select>
+              </div>
+              <!-- Добавьте другие поля формы по необходимости -->
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+            <button type="button" class="btn btn-primary" id="createOrderBtn">Створити замовлення</button>
+          </div>
+        </div>
+      </div>
+    </div>    
+
+    <!-- Модальное окно -->
+<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Навигация с помощью табов -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab" aria-controls="tab1" aria-selected="true">Вкладка 1</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab2-tab" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab" aria-controls="tab2" aria-selected="false">Вкладка 2</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab3-tab" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab" aria-controls="tab3" aria-selected="false">Вкладка 3</button>
+          </li>
+        </ul>
+        <!-- Содержимое табов -->
+        <div class="tab-content" id="myTabContent">
+          <div class="tab-pane fade show active" id="tab1" role="tabpanel" aria-labelledby="tab1-tab">
+            Содержимое вкладки 1
+          </div>
+          <div class="tab-pane fade" id="tab2" role="tabpanel" aria-labelledby="tab2-tab">
+            Содержимое вкладки 2
+          </div>
+          <div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3-tab">
+            Содержимое вкладки 3
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer ">
+        <button type="button" class="btn btn-outline-danger" id="delete-order" href="#">Видалити замовлення</button>
+        <button type="button" class="btn btn-outline-primary" id="save-info" href="#">Зберегти</button>
+        <button type="button" class="btn btn-primary" id="save-button" href="#">Друк</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Модальное окно -->
     </div>
   </div>
 
+  <script>
+    const ordersData = `{% autoescape false %}{{ orders | tojson | safe }}{% endautoescape %}`;
+    console.log(ordersData);
+    // Ваш JavaScript-код для обработки ordersData и заполнения таблицы
+</script>
 
 <script src="../static/js/main.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>

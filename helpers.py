@@ -188,6 +188,33 @@ def update_manager_order(order_id, manager_id):
     except Exception as e:
         return "Database error" + str(e)
 
+def get_manager_list():
+    try:
+        with Session() as db_session:
+            managers = db_session.query(User).all()
+            json_managers_list = []
+            for manager in managers:
+                json_manager = json.dumps({
+                    "id": manager.id,
+                    "name": manager.name,
+                    "login": manager.login,
+                    # Додайте інші поля менеджера за потреби
+                })
+                json_managers_list.append(json_manager)
+            return json_managers_list
+    except Exception as e:
+        return "Database error" + str(e)
+
+def delete_manager_order(order_id):
+    try:
+        with Session() as db_session:
+            order = db_session.query(manager_order).filter(manager_order.order_id == order_id).first()
+            db_session.delete(order)
+            db_session.commit()
+            return "Manager deleted from order"
+    except Exception as e:
+        return "Database error" + str(e)
+
 # Функції прослуховання бази даних Events
 
 
