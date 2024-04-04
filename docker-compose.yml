@@ -33,3 +33,16 @@ services:
       - SECRET_KEY=5313b16ca203b539824a13add8495dcd
     volumes:
       - .:/app
+
+  nginx:
+    image: crmnginx:latest3
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+      - web2
