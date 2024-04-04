@@ -13,10 +13,8 @@ def admin_page():
     if "login" not in session:
         return redirect(url_for("login_page"))
     try:
-        page = request.args.get('page', 1, type=int) # Отримання номеру сторінки з параметрів запиту
-        orders = get_wc_orders(page=page)
-
-        orders_json = json.dumps(orders)
+        page = 1 
+        orders_json = "orders"
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -365,7 +363,7 @@ def admin_validy():
     else:
         user = user_validy(login,password)
         if user== True:
-            return redirect(url_for("admin_page")), 200
+            return redirect(url_for("admin_page"))
         else:
             return jsonify({"error": "Invalid login or password"}), 401 
 
