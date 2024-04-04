@@ -11,7 +11,7 @@ def login_page():
 @app.route("/admin", methods=['GET'])
 def admin_page():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         page = request.args.get('page', 1, type=int) # Отримання номеру сторінки з параметрів запиту
         orders = get_wc_orders(page=page)
@@ -27,7 +27,7 @@ def admin_page():
 @app.route("/logout", methods=['GET'])
 def logout():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     session.pop("id", None)
     session.pop("login", None)
@@ -37,7 +37,7 @@ def logout():
 @app.route("/dataorders", methods=['GET']) #для отримання даних наступних сторінок(можливе використання фільтрів по ПІБ)
 def dataorders():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     try:
 
@@ -52,7 +52,7 @@ def dataorders():
 @app.route("/get_orders_by_manager", methods=['GET']) #для отримання даних наступних сторінок по менеджеру
 def get_orders_by_manager():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     try:
         page = request.args.get('page', 1, type=int)
@@ -71,7 +71,7 @@ def get_orders_by_manager():
 @app.route("/dataordersbyid", methods=['GET']) #для отримання даних наступних замовлень по id
 def dataordersbyid():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     try:
         order_id = request.args.get('id')
@@ -84,7 +84,7 @@ def dataordersbyid():
 @app.route("/dataordersstatus", methods=['GET']) #для отримання даних наступних сторінок з фільтром по статусу
 def dataordersstatus():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     try:
         status = request.args.get('status')
@@ -98,7 +98,7 @@ def dataordersstatus():
 @app.route("/dataordersnewtoold", methods=['GET']) #для отримання даних наступних сторінок відсортованих від нових до старих
 def dataordersnewtoold():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     try:
         page = request.args.get('page', 1, type=int)
@@ -111,7 +111,7 @@ def dataordersnewtoold():
 @app.route("/create_order", methods=['POST'])
 def create_orders():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     data = request.get_json()
     try:
@@ -123,7 +123,7 @@ def create_orders():
 @app.route("/update_order", methods=['POST'])
 def update_orders():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     data = request.get_json()
     if "id" not in data or "data" not in data:
@@ -137,7 +137,7 @@ def update_orders():
 @app.route("/delete_order", methods=['POST'])
 def delete_orders():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     order_id= request.args.get('id')
     try:
@@ -149,7 +149,7 @@ def delete_orders():
 @app.route("/product", methods=['GET'])
 def product_page():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         page = request.args.get('page', 1, type=int)
         products = get_wc_products(page=page, per_page=20)
@@ -162,7 +162,7 @@ def product_page():
 @app.route("/productbyid", methods=['GET'])
 def product_info_page(id):
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         product_id = request.args.get('id')
         product = get_wc_product(product_id) 
@@ -175,7 +175,7 @@ def product_info_page(id):
 @app.route("/data_products", methods=['GET'])
 def data_products():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     try:
         page = request.args.get('page', 1, type=int)
@@ -188,7 +188,7 @@ def data_products():
 @app.route("/create_product", methods=['POST'])
 def create_products():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     data = request.get_json()
     try:
@@ -200,7 +200,7 @@ def create_products():
 @app.route("/update_product", methods=['POST'])
 def update_products():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     data = request.get_json()
     if "id" not in data:
@@ -214,7 +214,7 @@ def update_products():
 @app.route("/delete_product", methods=['POST'])
 def delete_products():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     product_id = request.args.get('id')
     try:
@@ -226,7 +226,7 @@ def delete_products():
 @app.route("/customer", methods=['GET'])
 def customer_page():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         page = request.args.get('page', 1, type=int)
         customers = get_customers(page=page)
@@ -239,7 +239,7 @@ def customer_page():
 @app.route("/customerbyid", methods=['GET'])
 def customer_info_page(id):
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         client_id = request.args.get('id')
         customer = get_customer(client_id) 
@@ -252,7 +252,7 @@ def customer_info_page(id):
 @app.route("/data_customers", methods=['GET'])
 def data_customers():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     try:
         page = request.args.get('page', 1, type=int)
@@ -265,7 +265,7 @@ def data_customers():
 @app.route("/create_customer", methods=['POST'])
 def create_customers():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     data = request.get_json()
     try:
@@ -277,7 +277,7 @@ def create_customers():
 @app.route("/update_customer", methods=['POST'])
 def update_customers():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     data = request.get_json()
     if "id" not in data:
@@ -291,7 +291,7 @@ def update_customers():
 @app.route("/delete_customer", methods=['GET'])
 def delete_customers():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     customer_id = request.args.get('id')
     try:
@@ -303,7 +303,7 @@ def delete_customers():
 @app.route("/notes", methods=['GET'])
 def notes_page():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         id_ord = request.args.get('id')
         page = request.args.get('page', 1, type=int)
@@ -317,7 +317,7 @@ def notes_page():
 @app.route("/notebyid", methods=['GET'])
 def note_info_page():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         id_ord = request.args.get('id')
         note_id = request.args.get('note_id')
@@ -331,7 +331,7 @@ def note_info_page():
 @app.route("/create_note", methods=['POST'])
 def create_notes():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     id_ord = request.args.get('id')
     data = request.get_json()
@@ -344,7 +344,7 @@ def create_notes():
 @app.route("/delete_note", methods=['GET'])
 def delete_notes():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
 
     id_ord = request.args.get('id')
     note_id = request.args.get('note_id')
@@ -373,7 +373,7 @@ def admin_validy():
 def send_phone_sms():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
-        return redirect(url_for("login_page")), 401  # Повертаємо 401, щоб показати, що користувач не має доступу
+        return redirect(url_for("login_page"))  # Повертаємо 401, щоб показати, що користувач не має доступу
 
     phone_number = request.get_json['phone_number']
     message_text = request.get_json['message_text']
@@ -396,7 +396,7 @@ def send_phone_sms():
 def custom_status():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         return jsonify(get_custom_status()), 200
     except Exception as e:
@@ -406,7 +406,7 @@ def custom_status():
 def create_custom_statuss():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         key = request.get_json['key']
         value = request.get_json['value']
@@ -422,7 +422,7 @@ def create_custom_statuss():
 def delete_custom_statuss():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         key = request.get_json['key']
         if not key:
@@ -436,7 +436,7 @@ def delete_custom_statuss():
 @app.route("/add_manager_order", methods=['POST'])
 def add_manager_order():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     user_id = request.get_json['user_id']
     order_id = request.get_json['order_id']
 
@@ -452,7 +452,7 @@ def add_manager_order():
 @app.route("/update_manager_order", methods=['POST'])
 def update_manager_order():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     user_id = request.get_json['user_id']
     order_id = request.get_json['order_id']
 
@@ -468,7 +468,7 @@ def update_manager_order():
 @app.route("/get_manager_list", methods=['GET'])
 def get_manager_list():
     if "login" not in session:
-        return redirect(url_for("login_page")), 401
+        return redirect(url_for("login_page"))
     try:
         return jsonify(get_manager_list()), 200
     except Exception as e:
@@ -493,7 +493,7 @@ def delete_manager_order():
 def update_sms_status(message_id):
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
-        return redirect(url_for("login_page")), 401 # Повертаємо 401, щоб показати, що користувач не має доступу
+        return redirect(url_for("login_page")) # Повертаємо 401, щоб показати, що користувач не має доступу
     
     if not message_id:
         return jsonify({"error": "Invalid data"}), 400
@@ -512,7 +512,7 @@ def update_sms_status(message_id):
 def nova_tracking():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
-        return redirect(url_for("login_page")), 401  # Повертаємо 401, щоб показати, що користувач не має доступу
+        return redirect(url_for("login_page"))  # Повертаємо 401, щоб показати, що користувач не має доступу
 
     # Отримати JSON-дані з фронтенду
     data = request.get_json()
@@ -543,7 +543,7 @@ def nova_tracking():
 def update_sprav_nova():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
-        return redirect(url_for("login_page")), 401  # Повертаємо 401, щоб показати, що користувач не має доступу
+        return redirect(url_for("login_page"))  # Повертаємо 401, щоб показати, що користувач не має доступу
 
     try:
         # Отримання списку міст з API Нової Пошти
