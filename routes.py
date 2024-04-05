@@ -93,14 +93,14 @@ def dataordersstatus():
 
     return jsonify({'orders': orders, 'current_page': page}), 200
 
-@app.route("/dataordersnewtoold", methods=['GET']) #для отримання даних наступних сторінок відсортованих від нових до старих
+@app.route("/dataordersoldtonew", methods=['GET']) #для отримання даних наступних сторінок відсортованих від нових до старих
 def dataordersnewtoold():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
     try:
         page = request.args.get('page', 1, type=int)
-        orders = get_sorted_new_to_old_orders(page=page)
+        orders = get_sorted_old_to_new_orders(page=page)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 

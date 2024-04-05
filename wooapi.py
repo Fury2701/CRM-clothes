@@ -38,7 +38,14 @@ class WooAPI:
         }
         if full_name:
             params["search"] = full_name
-        return self.wcapi.get("orders", params=params).json()
+        
+        response = self.wcapi.get("orders", params=params)
+        orders = response.json()
+        
+        # Отримання загальної кількості сторінок
+        total_pages = int(response.headers.get('X-WP-TotalPages', 0))
+        
+        return orders, total_pages
 
     def get_wc_status_orders(self, status, page=1, per_page=20):
         params = {
@@ -48,14 +55,15 @@ class WooAPI:
         }
         return self.wcapi.get("orders", params=params).json()
 
-    def get_sorted_new_to_old_orders(self, page=1, per_page=20):
+    def get_sorted_old_to_new_orders(self, page=1, per_page=20):
         params = {
-            "orderby": "date_created",
-            "order": "desc",
+            "orderby": "date",
+            "order": "asc",  # Сортування від найдавніших до найновіших
             "page": page,
             "per_page": per_page
         }
         return self.wcapi.get("orders", params=params).json()
+
 
     def get_order(self, id):
         return self.wcapi.get(f"orders/{id}").json()
@@ -113,6 +121,8 @@ def get_woocomerce():
     return Woo
   
 
-
+if __name__ == '__main__':
+    woo = get_woocomerce()
+    print(woo.get_wc_orders())
 
 

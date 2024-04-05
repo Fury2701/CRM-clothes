@@ -52,9 +52,9 @@ def get_wc_status_orders(status, page=1, per_page=20): # Функція для �
     orders = get_woocomerce()
     return orders.get_wc_status_orders(status=status, page=page, per_page=per_page)
 
-def get_sorted_new_to_old_orders(page=1, per_page=20): # Функція для отримання замовлень з WooCommerce відсортованих від нових до старих
+def get_sorted_old_to_new_orders(page=1, per_page=20): # Функція для отримання замовлень з WooCommerce відсортованих від нових до старих
     orders = get_woocomerce()
-    return orders.get_sorted_new_to_old_orders(page=page, per_page=per_page)
+    return orders.get_sorted_old_to_new_orders(page=page, per_page=per_page)
 
 def get_order(id): # Функція для отримання замовлення з WooCommerce по id
     orders = get_woocomerce()
