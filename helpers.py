@@ -128,7 +128,7 @@ def delete_note(id, note_id): # Функція для видалення нот�
     orders = get_woocomerce()
     return orders.delete_note(id, note_id)
 
-def custom_status(): # Функція для отримання кастомних статусів
+def get_custom_status(): # Функція для отримання кастомних статусів
     with Session() as db_session:
         status = db_session.query(custom_status).all()
         return status
@@ -230,3 +230,5 @@ def after_insert_listener_wp_wc_orders(mapper, connection, target):
 def after_delete_listener_wp_wc_orders(mapper, connection, target):
     pass
 
+if __name__ == "__main__":
+    print(get_wc_notes(12310))

@@ -101,16 +101,19 @@ class WooAPI:
             "page": page,
             "per_page": per_page
         }
-        return self.wcapi.get("orders/{id}/notes", params=params).json()
+        return self.wcapi.get(f"orders/{id}/notes", params=params).json()
 
     def get_note(self, id, note_id):
         return self.wcapi.get(f"orders/{id}/notes/{note_id}").json()
 
     def create_note(self, id, data):
-        return self.wcapi.post("orders/{id}/notes", data).json()
+        return self.wcapi.post(f"orders/{id}/notes", data).json()
 
     def delete_note(self, id, note_id):
         return self.wcapi.delete(f"orders/{id}/notes/{note_id}", params={"force":True}).json()
+
+    def index(self):
+        return self.wcapi.get("").json()
 
 def get_woocomerce():
     url = "https://www.detskietkani.com/"
@@ -118,11 +121,7 @@ def get_woocomerce():
     consumer_secret = "cs_e92b1f6b155d9e9e2ddd5e7fb11c950f20b4ce06"
     Woo = WooAPI(url, consumer_key, consumer_secret)
 
-    return Woo
-  
+    return Woo      
 
-if __name__ == '__main__':
-    woo = get_woocomerce()
-    print(woo.get_wc_orders())
 
 
