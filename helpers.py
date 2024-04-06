@@ -230,5 +230,3 @@ def after_insert_listener_wp_wc_orders(mapper, connection, target):
 def after_delete_listener_wp_wc_orders(mapper, connection, target):
     pass
 
-if __name__ == "__main__":
-    print(get_wc_notes(12310))

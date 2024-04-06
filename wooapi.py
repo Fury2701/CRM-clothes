@@ -112,8 +112,6 @@ class WooAPI:
     def delete_note(self, id, note_id):
         return self.wcapi.delete(f"orders/{id}/notes/{note_id}", params={"force":True}).json()
 
-    def index(self):
-        return self.wcapi.get("").json()
 
 def get_woocomerce():
     url = "https://www.detskietkani.com/"
