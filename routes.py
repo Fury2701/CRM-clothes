@@ -87,11 +87,11 @@ def dataordersstatus():
     try:
         status = request.args.get('status')
         page = request.args.get('page', 1, type=int)
-        orders = get_wc_status_orders(status, page=page)
+        orders, total_pages = get_wc_status_orders(status, page=page)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return jsonify({'orders': orders, 'current_page': page}), 200
+    return jsonify({'orders': orders, 'current_page': page, 'total_pages':total_pages}), 200
 
 @app.route("/dataordersoldtonew", methods=['GET']) #для отримання даних наступних сторінок відсортованих від нових до старих
 def dataordersnewtoold():
@@ -100,11 +100,11 @@ def dataordersnewtoold():
 
     try:
         page = request.args.get('page', 1, type=int)
-        orders = get_sorted_old_to_new_orders(page=page)
+        orders, total_pages = get_sorted_old_to_new_orders(page=page)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return jsonify({'orders': orders, 'current_page': page}), 200
+    return jsonify({'orders': orders, 'current_page': page, 'total_pages':total_pages}), 200
 
 @app.route("/create_order", methods=['POST'])
 def create_orders():
@@ -150,12 +150,12 @@ def product_page():
         return redirect(url_for("login_page"))
     try:
         page = request.args.get('page', 1, type=int)
-        products = get_wc_products(page=page, per_page=20)
+        products, total_pages = get_wc_products(name=None, category=None, page=page, per_page=20)
         products_json = json.dumps(products)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return render_template("product.html", products=products_json, current_page=page), 200
+    return render_template("product.html", products=products_json, current_page=page, total_pages=total_pages), 200
 
 @app.route("/productbyid", methods=['GET'])
 def product_info_page(id):
@@ -176,12 +176,14 @@ def data_products():
         return redirect(url_for("login_page"))
 
     try:
+        name = request.args.get('name', None, type=str)
+        category = request.args.get('category', None, type=str)
         page = request.args.get('page', 1, type=int)
-        products = get_wc_products(page=page, per_page=20)
+        products, total_pages = get_wc_products(name=name, category=category, page=page, per_page=20)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return jsonify({"products":products,"current_page":page}), 200
+    return jsonify({"products":products,"current_page":page, "total_pages":total_pages}), 200
 
 @app.route("/create_product", methods=['POST'])
 def create_products():

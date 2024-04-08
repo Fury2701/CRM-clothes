@@ -12,12 +12,23 @@ class WooAPI:
             version="wc/v3"
         )
 
-    def get_products(self, page=1, per_page=20):
+    def get_products(self, name=None, category=None, page=1, per_page=20):
         params = {
             "page": page,
             "per_page": per_page
         }
-        return self.wcapi.get("products", params=params).json()
+        if category:
+            params["category"] = category
+
+        if Name:
+            params["search"] = name
+
+        response = self.wcapi.get("products", params=params)
+        products = response.json()
+
+        total_pages = int(response.headers.get('X-WP-TotalPages', 0))
+
+        return products, total_pages
 
     def get_product(self, id):
         return self.wcapi.get(f"products/{id}").json()
@@ -53,7 +64,11 @@ class WooAPI:
             "page": page,
             "per_page": per_page
         }
-        return self.wcapi.get("orders", params=params).json()
+        response = self.wcapi.get("orders", params=params)
+        orders = response.json()
+        total_pages = int(response.headers.get('X-WP-TotalPages', 0))
+
+        return orders, total_pages 
 
     def get_sorted_old_to_new_orders(self, page=1, per_page=20):
         params = {
@@ -62,7 +77,11 @@ class WooAPI:
             "page": page,
             "per_page": per_page
         }
-        return self.wcapi.get("orders", params=params).json()
+        response = self.wcapi.get("orders", params=params)
+        orders = response.json()
+        total_pages = int(response.headers.get('X-WP-TotalPages', 0))
+
+        return orders, total_pages
 
 
     def get_order(self, id):

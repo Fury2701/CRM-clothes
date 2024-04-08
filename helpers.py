@@ -92,9 +92,9 @@ def delete_customer(id): # Функція для видалення клієнт
     orders = get_woocomerce()
     return orders.delete_customer(id)
 
-def get_wc_products(page=1, per_page=20): # Функція для отримання продуктів з WooCommerce
+def get_wc_products(name=None, category=None, page=1, per_page=20): # Функція для отримання продуктів з WooCommerce
     orders = get_woocomerce()
-    return orders.get_wc_products(page=page, per_page=per_page)
+    return orders.get_products(page=page, per_page=per_page)
 
 def get_wc_product(id): # Функція для отримання продукту з WooCommerce по id
     orders = get_woocomerce()
