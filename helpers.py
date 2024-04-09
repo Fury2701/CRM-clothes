@@ -14,6 +14,7 @@ def user_validy(login, password):
         
             if user:
                 session["id"] = user.id
+                session["name"] = user.name
                 session["login"] = login
                 session["password"] = password
                 return True

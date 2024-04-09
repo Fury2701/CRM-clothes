@@ -131,6 +131,20 @@ class WooAPI:
     def delete_note(self, id, note_id):
         return self.wcapi.delete(f"orders/{id}/notes/{note_id}", params={"force":True}).json()
 
+    def get_discout_coupons(self, search=None, code=None, page=1, per_page=20):
+        params = {
+            "page": page,
+            "per_page": per_page
+        }
+        if search:
+            params["search"] = search
+        if code:
+            params["code"] = code
+        return self.wcapi.get("coupons", params=params).json()
+
+    def create_discount_coupon(self, data):
+        return self.wcapi.post("coupons", data).json()
+
 
 def get_woocomerce():
     url = "https://www.detskietkani.com/"

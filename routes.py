@@ -128,6 +128,7 @@ def update_orders():
         return jsonify({"error": "Invalid data"}), 400
     try:
         response = update_order(data['id'], data['data'])
+        history = create_note(data['id'], {"note": f"Замовлення оновлено менеджером {session.get('name')}, оновлені дані {data['data']}"})
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
