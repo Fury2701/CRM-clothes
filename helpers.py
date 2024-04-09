@@ -216,6 +216,18 @@ def delete_manager_order(order_id):
     except Exception as e:
         return "Database error" + str(e)
 
+def get_discount_coupon(search=None, code=None, page=1, per_page=20):
+    orders = get_woocomerce()
+    return orders.get_discout_coupons(search=search, code=code, page=page, per_page=per_page)
+
+def create_discount_coupon(data):
+    orders = get_woocomerce()
+    return orders.create_discount_coupon(data)
+
+def delete_discount_coupon(id):
+    orders = get_woocomerce()
+    return orders.delete_discount_coupon(id)
+
 # Функції прослуховання бази даних Events
 
 

@@ -101,7 +101,11 @@ class WooAPI:
             "page": page,
             "per_page": per_page
         }
-        return self.wcapi.get("customers", params=params).json()
+        response = self.wcapi.get("customers", params=params)
+        customers = response.json()
+        total_pages = int(response.headers.get('X-WP-TotalPages', 0))
+
+        return customers, total_pages
 
     def get_customer(self, id):
         return self.wcapi.get(f"customers/{id}").json()
@@ -144,6 +148,9 @@ class WooAPI:
 
     def create_discount_coupon(self, data):
         return self.wcapi.post("coupons", data).json()
+
+    def delete_discount_coupon(self, id):
+        return self.wcapi.delete(f"coupons/{id}").json()
 
 
 def get_woocomerce():

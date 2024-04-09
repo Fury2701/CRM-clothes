@@ -230,12 +230,12 @@ def customer_page():
         return redirect(url_for("login_page"))
     try:
         page = request.args.get('page', 1, type=int)
-        customers = get_customers(page=page)
-        customers_json = json.dumps(customers)
+        customers, total_pages = get_customers(page=page)
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return render_template("customer.html", customers=customers_json, current_page=page), 200
+    return render_template("customer.html", customers=customers_json, current_page=page, total_pages=total_pages), 200
 
 @app.route("/customerbyid", methods=['GET'])
 def customer_info_page(id):
@@ -257,11 +257,11 @@ def data_customers():
 
     try:
         page = request.args.get('page', 1, type=int)
-        customers = get_customers(page=page)
+        customers, total_pages = get_customers(page=page)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return jsonify({"customers":customers,"current_page":page}), 200
+    return jsonify({"customers":customers,"current_page":page, "total_pages":total_pages}), 200
 
 @app.route("/create_customer", methods=['POST'])
 def create_customers():
