@@ -486,6 +486,44 @@ def delete_manager_order():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route("/get_coupons", methods=['GET'])
+def get_coupons():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    try:
+        page = request.args.get('page', 1, type=int)
+        search = request.args.get('search', None, type=str)
+        code = request.args.get('code', None, type=str)
+        coupons, total_pages = get_discount_coupons(search=search, code=code, page=page)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify({'coupons': coupons, 'current_page': page, 'total_pages':total_pages}), 200
+
+@app.route("/create_coupon", methods=['POST'])
+def create_coupon():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    data = request.get_json()
+    try:
+        response = create_discount_coupon(data)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/delete_coupon", methods=['GET'])
+def delete_coupon():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    coupon_id = request.args.get('id')
+    try:
+        response = delete_discount_coupon(coupon_id)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 
 #Оновлення статусу SMS
 
