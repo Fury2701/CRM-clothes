@@ -20,7 +20,7 @@ class WooAPI:
         if category:
             params["category"] = category
 
-        if Name:
+        if name:
             params["search"] = name
 
         response = self.wcapi.get("products", params=params)

@@ -235,7 +235,7 @@ def customer_page():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return render_template("customer.html", customers=customers_json, current_page=page, total_pages=total_pages), 200
+    return render_template("customer.html", customers=customers, current_page=page, total_pages=total_pages), 200
 
 @app.route("/customerbyid", methods=['GET'])
 def customer_info_page(id):
@@ -308,7 +308,7 @@ def notes_page():
     try:
         id_ord = request.args.get('id')
         page = request.args.get('page', 1, type=int)
-        notes = get_wc_notes(id_ord=id_ord, page=page, per_page=20)
+        notes = get_wc_notes(id=id_ord, page=page, per_page=20)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -494,7 +494,7 @@ def get_coupons():
         page = request.args.get('page', 1, type=int)
         search = request.args.get('search', None, type=str)
         code = request.args.get('code', None, type=str)
-        coupons, total_pages = get_discount_coupons(search=search, code=code, page=page)
+        coupons, total_pages = get_discount_coupon(search=search, code=code, page=page)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
