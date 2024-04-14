@@ -41,6 +41,28 @@ def update_sms_status(message_id):
         return "Database error" + str(e)
 
 
+def get_sms(number):
+    try:
+        with Session() as db_session:
+            sms_records = db_session.query(Sms_history).filter(Sms_history.phone_number == number).all()
+            
+            # Преобразование записей в словари для формирования JSON
+            sms_data = []
+            for sms in sms_records:
+                sms_dict = {
+                    'id': sms.id,
+                    'phone_number': sms.phone_number,
+                    'message': sms.message_id,
+                    'status': sms.status
+                }
+                sms_data.append(sms_dict)
+            
+            # Формирование JSON из списка словарей
+            return sms_data
+            
+    except Exception as e:
+        return ({"error": "Number error", "message": str(e)})
+
     
 
 # Функції робот з базою даних WooCommerce

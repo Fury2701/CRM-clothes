@@ -369,14 +369,28 @@ def admin_validy():
         else:
             return jsonify({"error": "Invalid login or password"}), 401 
 
+@app.route("get_all_sms", methods=['GET'])
+def get_all_sms():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    number=request.args.get('number')
+    try:
+        sms= get_sms(number)
+        return jsonify({"sms_data":sms}), 200
+    except Exception as e:
+        return jsonify({"error":"Invalid data"}), 400
+
+
 @app.route("/send_phone_sms", methods=['POST'])
 def send_phone_sms():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
         return redirect(url_for("login_page"))  # Повертаємо 401, щоб показати, що користувач не має доступу
 
-    phone_number = request.get_json['phone_number']
-    message_text = request.get_json['message_text']
+    requsted_data=request.get_json()
+    phone_number = requsted_data['phone_number']
+    message_text = requsted_data['message_text']
     
     if not phone_number or not message_text:
         return jsonify({"error": "Invalid data"}), 400
