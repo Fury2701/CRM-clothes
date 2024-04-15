@@ -389,7 +389,7 @@ def send_phone_sms():
         return redirect(url_for("login_page"))  # Повертаємо 401, щоб показати, що користувач не має доступу
 
     requsted_data=request.get_json()
-    cas_id = requsted_data['id']
+    ord_id = requsted_data['id']
     phone_number = requsted_data['phone_number']
     message_text = requsted_data['message_text']
     
@@ -399,7 +399,7 @@ def send_phone_sms():
     # Відправлення SMS
     try:
         response = send_sms(phone_number, message_text)
-        history = create_note(cas_id, {"note": f"Замовлення оновлено менеджером {session.get('name')}, відправлене повідомлення: {message_text}"})
+        history = create_note(ord_id, {"note": f"Замовлення оновлено менеджером {session.get('name')}, відправлене повідомлення: {message_text}"})
     except Exception as e:
         return jsonify({"error":"Internal error"}), 400
 
