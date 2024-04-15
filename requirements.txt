@@ -7,3 +7,4 @@ woocommerce  # Якщо wooapi - це бібліотека для WooCommerce AP
 redis
 flask-sqlalchemy
 flask-session
+pytz

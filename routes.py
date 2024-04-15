@@ -547,7 +547,7 @@ def delete_coupon():
 #Оновлення статусу SMS
 
 @app.route("/update_sms_status/<message_id>", methods=['GET'])
-def update_sms_status(message_id):
+def update_sms_status_info(message_id):
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
         return redirect(url_for("login_page")) # Повертаємо 401, щоб показати, що користувач не має доступу
@@ -560,10 +560,10 @@ def update_sms_status(message_id):
     except Exception as e:
         return jsonify({"error":"Problem with Kyivstar server"}), 400
 
-    if response == "Delivered":
-        status = "Delivered"
+    if response["status"] == "delivered":
+        
         update_sms_status(message_id)
-        return "SMS status updated in the database.", 200
+        return jsonify({"SMS status updated in the database.": response}), 200
     else:
         return jsonify({"error": response}), 400
 
