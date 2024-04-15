@@ -389,6 +389,7 @@ def send_phone_sms():
         return redirect(url_for("login_page"))  # Повертаємо 401, щоб показати, що користувач не має доступу
 
     requsted_data=request.get_json()
+    cas_id = requsted_data['id']
     phone_number = requsted_data['phone_number']
     message_text = requsted_data['message_text']
     
@@ -396,13 +397,17 @@ def send_phone_sms():
         return jsonify({"error": "Invalid data"}), 400
 
     # Відправлення SMS
-    response = send_sms(phone_number, message_text)
-    
+    try:
+        response = send_sms(phone_number, message_text)
+        history = create_note(cas_id, {"note": f"Замовлення оновлено менеджером {session.get('name')}, відправлене повідомлення: {message_text}"})
+    except Exception as e:
+        return jsonify({"error":"Internal error"}), 400
+
     if isinstance(response, tuple) and response[0] == "Well done!":
         # Виклик функції для обробки запису в базу даних
         status = "Not delivered"
         update_sms(phone_number, message_text,response[1],status)  
-        return jsonify({"success":"SMS sent successfully and processed in the database."}), 200
+        return jsonify({"success": "SMS sent successfully and processed in the database.", "message_id": response[1]}), 200
     else:
         return jsonify({"error": response}), 400
 
@@ -550,7 +555,11 @@ def update_sms_status(message_id):
     if not message_id:
         return jsonify({"error": "Invalid data"}), 400
 
-    response = check_sms_status(message_id)
+    try:
+        response = check_sms_status(message_id)
+    except Exception as e:
+        return jsonify({"error":"Problem with Kyivstar server"}), 400
+
     if response == "Delivered":
         status = "Delivered"
         update_sms_status(message_id)
