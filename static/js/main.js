@@ -27,10 +27,9 @@ $(document).ready(function() {
   });
 });
 
-
+let selectedValue;
 let orderData; // Объявляем переменную orderData в глобальной области видимости
 let loadOrders_response;
-let orderId;
 let updated_Order_Data;
 
 // Обработчик клика по кнопке "Створити замовлення"
@@ -38,7 +37,7 @@ $(document).on('click', '#create-offer', function() {
   $('#createOrderModal').modal('show');
 });
 
-// Обработчик клика по кнопке "Створити замовлення" в модальном окне
+
 // Обработчик клика по кнопке "Створити замовлення" в модальном окне
 $(document).on('click', '#createOrderBtn', function() {
   const customerName = $('#customerName').val();
@@ -179,42 +178,23 @@ $(document).on('change', '.table-input', function() {
   $(this).closest('tr').find('#table-input-summ').val(orderData.line_items[index].total);
 });
 
-// Обработчик клика на кнопку "Сохранить" в модальном окне
-$(document).on('click', '#save-info', function() {
-  const orderId = $('#myModal').data('order-id');
-  
-  // Получаем обновленные данные заказа
-  const updatedData = {
-    line_items: orderData.line_items.map(item => ({
-      id: item.id,
-      product_id: item.product_id,
-      variation_id: item.variation_id,
-      quantity: parseInt(item.quantity),
-      total: item.total, 
-      
-    })),
-    
-  };
-  
-  // Отправляем обновленные данные на сервер
-  updateOrder(orderId, updatedData);
-});
+
 
 
 function updateOrder(orderId, data) {
-  const discountAmount = parseFloat($('#discount_amount').val());
-  const discountType = $('#discount_type').val();
+  //const discountAmount = parseFloat($('#discount_amount').val());
+  //const discountType = $('#discount_type').val();
 
   const updatedData = {
     ...data,
-    coupon_lines: [
-      {
-        code: 'MANAGER_DISCOUNT',
-        amount: discountAmount,
-        discount_tax: "0",
-        discount_type: discountType
-      }
-    ]
+    //coupon_lines: [
+      //{
+    //    code: 'MANAGER_DISCOUNT',
+    //    amount: discountAmount,
+    //    discount_tax: "0",
+   //     discount_type: discountType
+  //    }
+ //   ]
   };
 
   console.log('Updating order:', orderId, updatedData);
@@ -253,18 +233,27 @@ $(document).on('change', '#table1 .dropdown-list', function() {
   updateOrder(orderId, { status: newStatus });
 });
 
-// Добавляем слушатель событий на клик по кнопке "Зберегти" в модальном окне
+// Обработчик клика на кнопку "Зберегти" в модальном окне
 $(document).on('click', '#save-info', function() {
   const orderId = $('#myModal').data('order-id');
   const newStatus = $('#myModal .dropdown-list').val();
   const isPaid = $('#if_Paid').val() === 'true';
-
-  const data = {
+  
+  // Получаем обновленные данные заказа
+  const updatedData = {
+    line_items: orderData.line_items.map(item => ({
+      id: item.id,
+      product_id: item.product_id,
+      variation_id: item.variation_id,
+      quantity: parseInt(item.quantity),
+      total: item.total, 
+    })),
     status: newStatus,
     set_paid: isPaid
   };
-
-  updateOrder(orderId, data);
+  
+  // Отправляем обновленные данные на сервер
+  updateOrder(orderId, updatedData);
 });
 
 // Добавляем слушатель событий на клик по ссылке с номером заказа
@@ -274,6 +263,20 @@ $(document).on('click', '#table1 tbody tr a', function(e) {
   console.log('ID заказа:', orderId);
   // Сохраняем идентификатор заказа в атрибуте данных модального окна
   $('#myModal').data('order-id', orderId);
+     // Отправляем запрос на сервер для получения данных о заказе по его ID
+     fetch(`/dataordersbyid?id=${orderId}`)
+     .then(response => response.json())
+     .then(data => {
+       orderData = data; // Присваиваем полученные данные переменной orderData
+       console.log('zakazinfo', orderData);
+
+       populateModal();
+       
+                 
+ })
+     .catch(error => {
+       console.error('Ошибка при получении данных о заказе:', error);
+     });
 });
 
 function loadOrders(page = 1) {
@@ -287,7 +290,7 @@ function loadOrders(page = 1) {
 
       // Заполнить таблицу данными из ответа сервера
       fillOrdersTable(data.orders);
-      viewModal(data.orders);
+      
 
       // Обновить пагинацию
       updatePagination(data.current_page, data.total_pages);
@@ -381,7 +384,94 @@ function fillOrdersTable(orders) {
 });
 }
 
+/*function loadSMS() {
+  const orderId = $('#myModal').data('order-id');
+  fetch(`/notes?id=${orderId}&page=1`)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Полученные данные заметок:', data);
+
+      // Очищаем тело таблицы перед заполнением
+      $('#SMSTable tbody').empty();
+
+      if (data.length > 0) {
+        // Если есть заметки, заполняем таблицу заметками
+        console.log('Найдены заметки, заполняем таблицу');
+
+        let tableRows = [];
+        data.forEach(note => {
+          tableRows.unshift(`
+            <tr>
+              <td class="note-text">${note.note}</td>
+              <td class="note-timestamp">${note.date_created}</td>
+              <td class="note-author">${note.author}</td>
+              <td class="note-delete">
+                <span class="delete-note" role="button" data-note-id="${note.id}">&#10006;</span>
+              </td>
+            </tr>
+          `);
+        });
+
+        $('#smsTable tbody').html(tableRows.join(''));
+      } else {
+        // Если заметок нет, выводим сообщение
+        $('#smsTable tbody').html(`
+          <tr>
+            <td colspan="4">SMS немає</td>
+          </tr>
+        `);
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка при получении заметок:', error);
+    });
+}*/
+
+// Обработчик клика по кнопке "Відправити SMS"
+$(document).on('click', '#sendSMSBtn', function() {
+  const phoneNumber = orderData.billing.phone;
+  const messageText = $('#messageText').val();
+
+  // Проверка введенных данных
+  if (phoneNumber && messageText) {
+    // Создание объекта с данными SMS
+    const smsData = {
+      phone_number: phoneNumber,
+      message_text: messageText
+    };
+
+    // Вызов функции для отправки SMS
+    sendSMS(smsData);
+  }
+});
+
+// Функция для отправки SMS
+function sendSMS(smsData) {
+  fetch('/send_phone_sms', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(smsData)
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Помилка при відправці SMS');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('SMS успішно відправлено:', data);
+      // Очистка поля ввода после успешной отправки SMS
+      $('#messageText').val('');
+    })
+    .catch(error => {
+      console.error('Помилка при відправці SMS:', error);
+    });
+}
+
 function loadnotes() {
+  const orderId = $('#myModal').data('order-id');
   fetch(`/notes?id=${orderId}&page=1`)
     .then(response => response.json())
     .then(data => {
@@ -486,200 +576,58 @@ function deleteNote(noteId) {
     });
 }
 
-function viewModal(orders) {
-  // Добавляем слушатель событий на клик по ссылке с номером заказа
-  $(document).on('click', '#table1 tbody tr a', function(e) {
-    e.preventDefault(); // Предотвращаем стандартное действие ссылки
-    orderId = parseInt($(this).text()); // Получаем номер заказа
-    console.log('ID заказа:', orderId); // Отладочное сообщение
+// Обработчик клика по кнопке "Створити купон на знижку"
+$(document).on('click', '#create_coupon', function() {
+  $('#createCouponModal').modal('show');
+});
 
-    // Отправляем запрос на сервер для получения данных о заказе по его ID
-    fetch(`/dataordersbyid?id=${orderId}`)
-      .then(response => response.json())
-      .then(data => {
-        orderData = data; // Присваиваем полученные данные переменной orderData
-        console.log('zakazinfo', orderData);
+// Обработчик клика по кнопке "Зберегти" в дочернем модальном окне
+$(document).on('click', '#saveCouponBtn', function() {
+  const couponCode = $('#couponCode').val();
+  const discountType = $('input[name="discountType"]:checked').val();
+  const discountAmount = $('#discountAmount').val();
 
-        loadnotes();
+  // Проверка введенных данных
+  if (couponCode && discountAmount > 0) {
+    // Создание объекта с данными купона
+    const couponData = {
+      code: couponCode,
+      discount_type: discountType,
+      amount: discountType === 'percent' ? discountAmount : discountAmount.toFixed(2)
+    };
 
-        // Заполняем модальное окно данными о заказе
-        $('#myModal .modal-body').html(`
-          <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab" aria-controls="tab1" aria-selected="true">Інформація про замовлення</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="tab2-tab" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab" aria-controls="tab2" aria-selected="false">Примітки</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="tab3-tab" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab" aria-controls="tab3" aria-selected="false">Повідомлення</button>
-            </li>
-          </ul>
+    // Вызов функции для сохранения купона
+    createCoupon(couponData);
 
-          <div class="tab-content" id="myTabContent">
-            <div class="tab-pane fade show active" id="tab1" role="tabpanel" aria-labelledby="tab1-tab">
-              <div class="accordion" id="accordionExample">
-                <div class="accordion-item">
-                  <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                      Основна інформація про замовлення
-                    </button>
-                  </h2>
-                  <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
-                    <div class="accordion-body">
-                      <div class="forInModalTable">
-                        <table class="table" id="inModalTable">
-                          <thead>
-                            <tr>
-                              <th scope="col"></th>
-                              <th scope="col">Назва позиції</th>
-                              <th scope="col">Кількість, м</th>
-                              <th scope="col">Ціна за метр, грн</th>
-                              <th scope="col">Сумма, грн</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            ${orderData.line_items.map((item, index) => `
-                              <tr>
-                                <td>
-                                  <img src="${item.image.src}" width="75" height="75">
-                                </td>
-                                <td>${item.name}</td>
-                                <td>
-                                  <input type="number" class="table-input" value="${item.quantity}">
-                                </td>
-                                <td>
-                                  ${item.price}
-                                </td>
-                                <td>
-                                  ${item.total}
-                                </td>
-                              </tr>
-                            `).join('')}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div class="text-end">
-                      <button type="button" class="btn btn-primary" id="addProductBtn">Додати товар</button>
-                    </div>
-                      <li>Дата створення: ${orderData.date_created}</li>
-                      <li>Замовник: ${orderData.billing.last_name + " " + orderData.billing.first_name + " " + orderData.billing.company}</li>
-                      <li>Статус: 
-                        <select class="dropdown-list">
-                          <option value="pending" ${orderData.status === 'pending' ? 'selected' : ''}>В очікуванні</option>
-                          <option value="processing" ${orderData.status === 'processing' ? 'selected' : ''}>В обробці</option>
-                          <option value="on-hold" ${orderData.status === 'on-hold' ? 'selected' : ''}>На утриманні</option>
-                          <option value="completed" ${orderData.status === 'completed' ? 'selected' : ''}>Завершений</option>
-                          <option value="cancelled" ${orderData.status === 'cancelled' ? 'selected' : ''}>Скасований</option>
-                          <option value="refunded" ${orderData.status === 'refunded' ? 'selected' : ''}>Повернений</option>
-                          <option value="failed" ${orderData.status === 'failed' ? 'selected' : ''}>Невдалий</option>
-                          <option value="trash" ${orderData.status === 'trash' ? 'selected' : ''}>Кошик</option>
-                        </select>
-                      </li>
-                      <li>Коментар до замовлення від покупця: ${orderData.customer_note}</li>
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item">
-                  <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                      Інформація про кієнта
-                    </button>
-                  </h2>
-                  <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
-                    <div class="accordion-body">
-                      <li>Ім'я: ${orderData.billing.last_name + " " + orderData.billing.first_name + " " + orderData.billing.company}</li>
-                      <li>Номер телефону: ${orderData.billing.phone}</li>
-                      <li>Email: ${orderData.billing.email}</li>
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                    Доставка
-                  </button>
-                </h2>
-                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
-                  <div class="accordion-body">
-                    <li>Метод доставки: ${orderData.shipping_lines[0].method_title}</li>
-                    <li>Адреса доставки: ${
-                      (orderData.shipping.state ? orderData.shipping.state + " " : "") +
-                      (orderData.shipping.city ? orderData.shipping.city + " " : "") +
-                      (orderData.shipping.postcode ? orderData.shipping.postcode + " " : "") +
-                      (orderData.shipping.address_1 ? orderData.shipping.address_1 + " " : "") +
-                      (orderData.shipping.address_2 ? orderData.shipping.address_2 : "") ||
-                      (orderData.billing.state ? orderData.billing.state + " " : "") +
-                      (orderData.billing.city ? orderData.billing.city + " " : "") +
-                      (orderData.billing.postcode ? orderData.billing.postcode + " " : "") +
-                      (orderData.billing.address_1 ? orderData.billing.address_1 + " " : "") +
-                      (orderData.billing.address_2 ? orderData.billing.address_2 : "")
-                    }</li>
-                    <li>Отримувач: ${orderData.shipping.last_name + " " + orderData.shipping.first_name + " " + orderData.shipping.company}</li>
-                  </div>
-                </div>
-               </div>
-                <div class="accordion-item">
-                  <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                      Оплата
-                    </button>
-                  </h2>
-                  <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
-                    <div class="accordion-body">
-                      <li>Знижка:
-                        <input type="number" id="discount_amount" min="0" step="0.01" value="0">
-                        <select id="discount_type">
-                          <option value="percent">%</option>
-                          <option value="fixed_cart">UAH</option>
-                        </select>
-                      </li>
-                      <li>Загальна сумма: ${orderData.total} ${orderData.currency}</li>
-                      <li>Вид оплати: ${orderData.payment_method_title}</li>
-                      <li>Оплачено:
-                        <select class="dropdown-list" id="if_Paid">
-                          <option value="true" ${orderData.date_paid ? 'selected' : ''}>Так</option>
-                          <option value="false" ${!orderData.date_paid ? 'selected' : ''}>Ні</option>
-                        </select>
-                      </li>
-                      <li>Дата оплати: ${orderData.date_paid}</li>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="tab-pane fade" id="tab2" role="tabpanel" aria-labelledby="tab2-tab">
-              <div class="container" id='note-cont' style="max-height: 300px; overflow-y: auto;">
-                <table class="table" id='noteTable'>
-                  <thead>
-                    <tr>
-                      <th></th>
-                      <th></th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
-              </div>
-              <div class="form-group">
-                <textarea class="form-control" id="managerNotes" rows="1" placeholder="Введіть вашу примітку"></textarea>
-                <button type="button" class="btn btn-primary" id="createNoteBtn">Створити замітку</button>
-              </div>
-            </div>
-            <div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3-tab">
-              Вкладка 3
-            </div>
-          </div>
-        `);
-        // Обновляем заголовок модального окна
-        $('#myModal .modal-title').text(`Замовлення № ${orderId}`);
-      })
-      .catch(error => {
-        console.error('Ошибка при получении данных о заказе:', error);
-      });
-  });
-} 
+    // Закрытие дочернего модального окна
+    $('#createCouponModal').modal('hide');
+  }
+});
+
+function createCoupon(couponData) {
+  fetch('/create_coupon', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(couponData)
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Помилка при створенні купона');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Купон успішно створено:', data);
+      // Обновление информации о заказе после успешного создания купона
+      updateOrderInfo();
+    })
+    .catch(error => {
+      console.error('Помилка при створенні купона:', error);
+    });
+}
+
 // Обработчик клика по кнопке "Додати товар"
 $(document).on('click', '#addProductBtn', function() {
   // Открытие дочернего модального окна
@@ -756,7 +704,7 @@ $('#addProductModal').on('shown.bs.modal', function() {
   // Обработчик клика на опцию
   document.querySelector('.options-container').addEventListener('click', function(event) {
     if (event.target.classList.contains('option')) {
-      const selectedValue = event.target.dataset.value;
+      selectedValue = event.target.dataset.value;
       const selectedText = event.target.textContent;
       document.querySelector('.selected-option').textContent = selectedText;
       document.querySelector('.options-container').style.display = 'none';
@@ -777,12 +725,21 @@ $('#addProductModal').on('shown.bs.modal', function() {
 // Обработчик клика по кнопке "Зберегти" в дочернем модальном окне
 $(document).on('click', '#saveProductBtn', function() {
   const orderId = $('#myModal').data('order-id');
-  const productId = $('#productIdInput').val();
+  const productId = selectedValue;
   const quantity = parseInt($('#quantityInput').val());
 
   // Проверка введенных данных
   if (productId && quantity > 0) {
-
+    // Получение текущих данных заказа
+    const currentOrderData = {
+      line_items: orderData.line_items.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        variation_id: item.variation_id,
+        quantity: parseInt(item.quantity),
+        total: item.total,
+      })),
+    };
 
     // Добавление нового товара в данные заказа
     const newLineItem = {
@@ -875,6 +832,192 @@ function updateOrderData(loadOrders_response, orderId, updatedOrder) {
   });
 }       
 
+function populateModal(){
+   // Заполняем модальное окно данными о заказе
+   $('#myModal .modal-body').html(`
+   <ul class="nav nav-tabs" id="myTab" role="tablist">
+     <li class="nav-item" role="presentation">
+       <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab" aria-controls="tab1" aria-selected="true">Інформація про замовлення</button>
+     </li>
+     <li class="nav-item" role="presentation">
+       <button class="nav-link" id="tab2-tab" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab" aria-controls="tab2" aria-selected="false">Примітки</button>
+     </li>
+     <li class="nav-item" role="presentation">
+       <button class="nav-link" id="tab3-tab" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab" aria-controls="tab3" aria-selected="false">Повідомлення</button>
+     </li>
+   </ul>
+
+   <div class="tab-content" id="myTabContent">
+     <div class="tab-pane fade show active" id="tab1" role="tabpanel" aria-labelledby="tab1-tab">
+       <div class="accordion" id="accordionExample">
+         <div class="accordion-item">
+           <h2 class="accordion-header">
+             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+               Основна інформація про замовлення
+             </button>
+           </h2>
+           <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
+             <div class="accordion-body">
+               <div class="forInModalTable">
+                 <table class="table" id="inModalTable">
+                   <thead>
+                     <tr>
+                       <th scope="col"></th>
+                       <th scope="col">Назва позиції</th>
+                       <th scope="col">Кількість, м</th>
+                       <th scope="col">Ціна за метр, грн</th>
+                       <th scope="col">Сумма, грн</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     ${orderData.line_items.map((item, index) => `
+                       <tr>
+                         <td>
+                           <img src="${item.image.src}" width="75" height="75">
+                         </td>
+                         <td>${item.name}</td>
+                         <td>
+                           <input type="number" class="table-input" value="${item.quantity}">
+                         </td>
+                         <td>
+                           ${item.price}
+                         </td>
+                         <td>
+                           ${item.total}
+                         </td>
+                       </tr>
+                     `).join('')}
+                   </tbody>
+                 </table>
+               </div>
+               <div class="text-end">
+               <button type="button" class="btn btn-primary" id="addProductBtn">Додати товар</button>
+             </div>
+               <li>Дата створення: ${orderData.date_created}</li>
+               <li>Замовник: ${orderData.billing.last_name + " " + orderData.billing.first_name + " " + orderData.billing.company}</li>
+               <li>Статус: 
+                 <select class="dropdown-list">
+                   <option value="pending" ${orderData.status === 'pending' ? 'selected' : ''}>В очікуванні</option>
+                   <option value="processing" ${orderData.status === 'processing' ? 'selected' : ''}>В обробці</option>
+                   <option value="on-hold" ${orderData.status === 'on-hold' ? 'selected' : ''}>На утриманні</option>
+                   <option value="completed" ${orderData.status === 'completed' ? 'selected' : ''}>Завершений</option>
+                   <option value="cancelled" ${orderData.status === 'cancelled' ? 'selected' : ''}>Скасований</option>
+                   <option value="refunded" ${orderData.status === 'refunded' ? 'selected' : ''}>Повернений</option>
+                   <option value="failed" ${orderData.status === 'failed' ? 'selected' : ''}>Невдалий</option>
+                   <option value="trash" ${orderData.status === 'trash' ? 'selected' : ''}>Кошик</option>
+                 </select>
+               </li>
+               <li>Коментар до замовлення від покупця: ${orderData.customer_note}</li>
+             </div>
+           </div>
+         </div>
+         <div class="accordion-item">
+           <h2 class="accordion-header">
+             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+               Інформація про кієнта
+             </button>
+           </h2>
+           <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
+             <div class="accordion-body">
+               <li>Ім'я: ${orderData.billing.last_name + " " + orderData.billing.first_name + " " + orderData.billing.company}</li>
+               <li>Номер телефону: ${orderData.billing.phone}</li>
+               <li>Email: ${orderData.billing.email}</li>
+             </div>
+           </div>
+         </div>
+         <div class="accordion-item">
+         <h2 class="accordion-header">
+           <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+             Доставка
+           </button>
+         </h2>
+         <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
+           <div class="accordion-body">
+             <li>Метод доставки: ${orderData.shipping_lines[0].method_title}</li>
+             <li>Адреса доставки: ${
+               (orderData.shipping.state ? orderData.shipping.state + " " : "") +
+               (orderData.shipping.city ? orderData.shipping.city + " " : "") +
+               (orderData.shipping.postcode ? orderData.shipping.postcode + " " : "") +
+               (orderData.shipping.address_1 ? orderData.shipping.address_1 + " " : "") +
+               (orderData.shipping.address_2 ? orderData.shipping.address_2 : "") ||
+               (orderData.billing.state ? orderData.billing.state + " " : "") +
+               (orderData.billing.city ? orderData.billing.city + " " : "") +
+               (orderData.billing.postcode ? orderData.billing.postcode + " " : "") +
+               (orderData.billing.address_1 ? orderData.billing.address_1 + " " : "") +
+               (orderData.billing.address_2 ? orderData.billing.address_2 : "")
+             }</li>
+             <li>Отримувач: ${orderData.shipping.last_name + " " + orderData.shipping.first_name + " " + orderData.shipping.company}</li>
+           </div>
+         </div>
+        </div>
+         <div class="accordion-item">
+           <h2 class="accordion-header">
+             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+               Оплата
+             </button>
+           </h2>
+           <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
+             <div class="accordion-body">
+                <li>Знижка:
+                 <input type="number" id="discount_amount" min="0" step="0.01" value="0">
+                 <select id="discount_type">
+                   <option value="percent">%</option>
+                   <option value="fixed_cart">UAH</option>
+                 </select>
+                 <div class="text-end">
+                  <button type="button" class="btn btn-primary" id="create_coupon">Створити купон на знижку</button>
+                 </div>
+                </li>
+               <li>Загальна сумма: ${orderData.total} ${orderData.currency}</li>
+               <li>Вид оплати: ${orderData.payment_method_title}</li>
+               <li>Оплачено:
+                 <select class="dropdown-list" id="if_Paid">
+                   <option value="true" ${orderData.date_paid ? 'selected' : ''}>Так</option>
+                   <option value="false" ${!orderData.date_paid ? 'selected' : ''}>Ні</option>
+                 </select>
+               </li>
+               <li>Дата оплати: ${orderData.date_paid}</li>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+     <div class="tab-pane fade" id="tab2" role="tabpanel" aria-labelledby="tab2-tab">
+       <div class="container" id='note-cont' style="max-height: 300px; overflow-y: auto;">
+         <table class="table" id='noteTable'>
+           <thead>
+             <tr>
+               <th></th>
+               <th></th>
+               <th></th>
+             </tr>
+           </thead>
+           <tbody>
+           </tbody>
+         </table>
+       </div>
+       <div class="form-group">
+         <textarea class="form-control" id="managerNotes" rows="1" placeholder="Введіть вашу примітку"></textarea>
+         <button type="button" class="btn btn-primary" id="createNoteBtn">Створити замітку</button>
+       </div>
+     </div>
+     <div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3-tab">
+  <div class="form-group">
+    <label>Номер телефона: ${orderData.billing.phone}</label>
+  </div>
+  <div class="form-group">
+    <label for="messageText">Текст сообщения:</label>
+    <textarea class="form-control" id="messageText" rows="1"></textarea>
+  </div>
+  <button type="button" class="btn btn-primary" id="sendSMSBtn">Відправити SMS</button>
+</div>
+   </div>
+ `);
+ // Обновляем заголовок модального окна
+ $('#myModal .modal-title').text(`Замовлення № ${orderData.id}`);
+ 
+loadnotes();
+}
 
 // Вызвать функцию loadOrders() при загрузке страницы
 $(document).ready(function() {

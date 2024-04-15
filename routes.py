@@ -369,7 +369,7 @@ def admin_validy():
         else:
             return jsonify({"error": "Invalid login or password"}), 401 
 
-@app.route("get_all_sms", methods=['GET'])
+@app.route("/get_all_sms", methods=['GET'])
 def get_all_sms():
     if "login" not in session:
         return redirect(url_for("login_page"))

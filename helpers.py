@@ -53,7 +53,7 @@ def get_sms(number):
                     'id': sms.id,
                     'phone_number': sms.phone_number,
                     'message_id': sms.message_id,
-                    'text', sms.message_text,
+                    'text': sms.message_text,
                     'status': sms.status
                 }
                 sms_data.append(sms_dict)
