@@ -411,13 +411,16 @@ def send_phone_sms():
     else:
         return jsonify({"error": response}), 400
 
-@app.route("/custom_status_list", methods=['POST'])
+@app.route("/custom_status_list", methods=['GET'])
 def custom_status():
     # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
         return redirect(url_for("login_page"))
     try:
-        return jsonify(get_custom_status()), 200
+        status = get_custom_status()
+        # Преобразование списка статусов в список словарей
+        status_data = [{'key': s.key, 'value': s.value} for s in status]
+        return jsonify(status_data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -427,8 +430,9 @@ def create_custom_statuss():
     if "login" not in session:
         return redirect(url_for("login_page"))
     try:
-        key = request.get_json['key']
-        value = request.get_json['value']
+        requsted_data=request.get_json()
+        key = requsted_data['key']
+        value = requsted_data['value']
         if not key or not value:
             return jsonify({"error": "Invalid data"}), 400
 
@@ -443,7 +447,8 @@ def delete_custom_statuss():
     if "login" not in session:
         return redirect(url_for("login_page"))
     try:
-        key = request.get_json['key']
+        requsted_data=request.get_json()
+        key = requsted_data['key']
         if not key:
             return jsonify({"error": "Invalid data"}), 400
 
@@ -456,8 +461,9 @@ def delete_custom_statuss():
 def add_manager_order():
     if "login" not in session:
         return redirect(url_for("login_page"))
-    user_id = request.get_json['user_id']
-    order_id = request.get_json['order_id']
+    requsted_data=request.get_json()
+    user_id = requsted_data['user_id']
+    order_id = requsted_data['order_id']
 
     if not user_id or not order_id:
         return jsonify({"error": "Invalid data"}), 400
@@ -472,8 +478,9 @@ def add_manager_order():
 def update_manager_order():
     if "login" not in session:
         return redirect(url_for("login_page"))
-    user_id = request.get_json['user_id']
-    order_id = request.get_json['order_id']
+    requsted_data=request.get_json()
+    user_id = requsted_data['user_id']
+    order_id = requsted_data['order_id']
 
     if not user_id or not order_id:
         return jsonify({"error": "Invalid data"}), 400
