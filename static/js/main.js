@@ -181,23 +181,8 @@ $(document).on('change', '.table-input', function() {
 
 
 
-function updateOrder(orderId, data) {
-  //const discountAmount = parseFloat($('#discount_amount').val());
-  //const discountType = $('#discount_type').val();
-
-  const updatedData = {
-    ...data,
-    //coupon_lines: [
-      //{
-    //    code: 'MANAGER_DISCOUNT',
-    //    amount: discountAmount,
-    //    discount_tax: "0",
-   //     discount_type: discountType
-  //    }
- //   ]
-  };
-
-  console.log('Updating order:', orderId, updatedData);
+function updateOrder(orderId, updatedFields) {
+  console.log('Updating order:', orderId, updatedFields);
   fetch('/update_order', {
     method: 'POST',
     headers: {
@@ -205,7 +190,7 @@ function updateOrder(orderId, data) {
     },
     body: JSON.stringify({
       id: orderId,
-      data: updatedData
+      data: updatedFields
     })
   })
     .then(response => {
@@ -215,7 +200,7 @@ function updateOrder(orderId, data) {
       return response.json();
     })
     .then(updatedOrder => {
-      console.log('Заказ успешно обновлен:', updatedOrder);
+      
       // Закрываем модальное окно
       $('#myModal').modal('hide');
       // Обновляем данные на странице после успешного обновления заказа
@@ -227,63 +212,93 @@ function updateOrder(orderId, data) {
 }
 
 // Добавляем слушатель событий на изменение select статуса заказа в таблице
-$(document).on('change', '#table1 .dropdown-list', function() {
-  const orderId = parseInt($(this).closest('tr').find('a').text());
+$(document).on('change', '#table1 .status-cell .dropdown-list', function() {
+  const orderId = $(this).closest('tr').attr('data-order-id');
   const newStatus = $(this).val();
   updateOrder(orderId, { status: newStatus });
 });
 
-// Обработчик клика на кнопку "Зберегти" в модальном окне
-$(document).on('click', '#save-info', function() {
-  const orderId = $('#myModal').data('order-id');
+function getUpdatedFields(orderId) {
   const newStatus = $('#myModal .dropdown-list').val();
   const isPaid = $('#if_Paid').val() === 'true';
   
-  // Получаем обновленные данные заказа
-  const updatedData = {
-    line_items: orderData.line_items.map(item => ({
-      id: item.id,
-      product_id: item.product_id,
-      variation_id: item.variation_id,
-      quantity: parseInt(item.quantity),
-      total: item.total, 
-    })),
-    status: newStatus,
-    set_paid: isPaid
-  };
+  const updatedFields = {};
+
+  if (newStatus !== orderData.status) {
+    updatedFields.status = newStatus;
+  }
+
+  if (isPaid !== !!orderData.date_paid) {
+    updatedFields.set_paid = isPaid;
+  }
   
-  // Отправляем обновленные данные на сервер
-  updateOrder(orderId, updatedData);
+  const updatedLineItems = orderData.line_items.filter(item => item.quantity !== item.original_quantity);
+  if (updatedLineItems.length > 0) {
+    updatedFields.line_items = updatedLineItems.map(item => ({
+      id: item.id,
+      quantity: item.quantity
+    }));
+  }
+
+  const selectedCustomStatuses = getSelectedCustomStatuses();
+  if (selectedCustomStatuses.length > 0) {
+    updatedFields.meta_data = [
+      {
+        key: '_custom_statuses',
+        value: selectedCustomStatuses
+      }
+    ];
+  } else {
+    // Если нет выбранных кастомных статусов, но они были ранее сохранены,
+    // нужно явно указать пустой массив, чтобы удалить ранее сохраненные статусы
+    const existingCustomStatuses = orderData.meta_data.find(meta => meta.key === '_custom_statuses');
+    if (existingCustomStatuses) {
+      updatedFields.meta_data = [
+        {
+          key: '_custom_statuses',
+          value: []
+        }
+      ];
+    }
+  }
+  
+  return updatedFields;
+}
+
+// Обработчик клика на кнопку "Зберегти" в модальном окне
+$(document).on('click', '#save-info', function() {
+  const orderId = $('#myModal').data('order-id');
+  
+  const updatedFields = getUpdatedFields(orderId);
+  
+  if (Object.keys(updatedFields).length > 0) {
+    updateOrder(orderId, updatedFields);
+  }
 });
 
 // Добавляем слушатель событий на клик по ссылке с номером заказа
-$(document).on('click', '#table1 tbody tr a', function(e) {
+$(document).on('click', '#table1 .modal-link-cell a', function(e) {
   e.preventDefault();
-  const orderId = parseInt($(this).text());
-  console.log('ID заказа:', orderId);
-  // Сохраняем идентификатор заказа в атрибуте данных модального окна
+  const orderId = $(this).closest('tr').attr('data-order-id');
   $('#myModal').data('order-id', orderId);
-     // Отправляем запрос на сервер для получения данных о заказе по его ID
-     fetch(`/dataordersbyid?id=${orderId}`)
-     .then(response => response.json())
-     .then(data => {
-       orderData = data; // Присваиваем полученные данные переменной orderData
-       console.log('zakazinfo', orderData);
-
-       populateModal();
-       
-                 
- })
-     .catch(error => {
-       console.error('Ошибка при получении данных о заказе:', error);
-     });
+  
+  // Отправляем запрос на сервер для получения данных о заказе по его ID
+  fetch(`/dataordersbyid?id=${orderId}`)
+    .then(response => response.json())
+    .then(data => {
+      orderData = data;
+      populateModal();
+    })
+    .catch(error => {
+      console.error('Ошибка при получении данных о заказе:', error);
+    });
 });
 
 function loadOrders(page = 1) {
   fetch(`/dataorders?page=${page}`)
     .then(response => response.json())
     .then(data => {
-      console.log('COSOLE.LOG(DATA): ', data);
+      
       loadOrders_response = data;
       // Очистить существующие строки в таблице
       $('#table1 tbody').empty();
@@ -351,14 +366,30 @@ $(document).on('click', '.pagination .page-link', function(e) {
   loadOrders(page);
 })
 
+function getManagerList(){
+  // Загрузить список менеджеров и добавить опции в дропдаун
+  fetch('/get_manager_list')
+    .then(response => response.json())
+    .then(managers => {
+      console.log("managers: ", managers);
+    })
+    .catch(error => {
+      console.error('Ошибка при загрузке списка менеджеров:', error);
+    });
+}
+
 function fillOrdersTable(orders) {
   orders.forEach(order => {
     const row = $('<tr>');
-    row.append($('<td>').html('<img src="' + order.line_items[0].image.src + '" width="100" height="100">'));
-    row.append($('<td>').html(`
-      <a href="#" data-bs-toggle="modal" data-bs-target="#myModal">${order.id}</a>
-        <br>
-          ${order.date_created}
+
+    // Проверяем наличие элементов 'line_items' и свойства 'image'
+    const imageUrl = order.line_items && order.line_items[0] && order.line_items[0].image ? order.line_items[0].image.src : '';
+    row.append($('<td>').html(`<img src="${imageUrl}" width="100" height="100">`));
+
+    row.append($('<td>').addClass('modal-link-cell').html(`
+    <a href="#" data-bs-toggle="modal" data-bs-target="#myModal">${order.id}</a>
+      <br>
+        ${order.date_created}
     `));
     row.append($('<td>').text(order.total + " " + order.currency));
     row.append($('<td>').html(`${order.billing.last_name + " " + order.billing.first_name + " " + order.billing.company}<br>${order.billing.phone}`));
@@ -369,7 +400,7 @@ function fillOrdersTable(orders) {
     
     // Создать элемент select с заданным классом и установить значение по умолчанию
     const selectDropdown = $('<select>').addClass('dropdown-list');
-    selectDropdown.append($('<option>').attr('value', 'pending').text('В очікуванні'));
+    selectDropdown.append($('<option>').attr('value', 'pending').text('В очікуванні оплати'));
     selectDropdown.append($('<option>').attr('value', 'processing').text('В обробці'));
     selectDropdown.append($('<option>').attr('value', 'on-hold').text('На утриманні'));
     selectDropdown.append($('<option>').attr('value', 'completed').text('Завершений'));
@@ -378,57 +409,162 @@ function fillOrdersTable(orders) {
     selectDropdown.append($('<option>').attr('value', 'failed').text('Невдалий'));
     selectDropdown.append($('<option>').attr('value', 'trash').text('Кошик'));
     selectDropdown.val(order.status); // Установить значение статуса для текущего заказа
-    row.append($('<td>').html(selectDropdown));
+    // Создать элемент select для списка менеджеров
+    const managerDropdown = $('<select>').addClass('manager-dropdown');
+    
+    // Добавить опции менеджеров в дропдаун
+    managers.forEach(manager => {
+      const option = $('<option>').attr('value', manager.id).text(manager.name);
+      managerDropdown.append(option);
+    });  
+    // Создать контейнер для обоих дропдаунов
+    const dropdownContainer = $('<div>').addClass('dropdown-container');
+    dropdownContainer.append(selectDropdown);
+    dropdownContainer.append(managerDropdown);
+    
+    row.append($('<td>').addClass('status-cell').html(dropdownContainer));
 
-  $('#table1 tbody').append(row);
-});
+    // Добавьте data-атрибут с идентификатором заказа для дочернего ряда
+    row.attr('data-order-id', order.id);
+
+    $('#table1 tbody').append(row);
+
+    // Создайте дочерний ряд для кастомных тегов
+    const childRow = $('<tr>').addClass('child-row').attr('data-order-id', order.id);
+    const childCell = $('<td>').attr('colspan', row.find('td').length);
+    const customTagsContainer = $('<div>').addClass('custom-tags-container');
+    
+    order.meta_data.forEach(meta => {
+      if (meta.key === '_custom_statuses') {
+        meta.value.forEach(status => {
+          const tagElement = `
+            <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+              <div class="toast-body">
+                ${status}
+              </div>
+            </div>
+          `;
+          customTagsContainer.append(tagElement);
+        });
+      }
+    });
+    
+    childCell.append(customTagsContainer);
+    childRow.append(childCell);
+    
+    // Добавьте дочерний ряд после основного ряда заказа
+    row.after(childRow);
+  });
 }
 
-/*function loadSMS() {
-  const orderId = $('#myModal').data('order-id');
-  fetch(`/notes?id=${orderId}&page=1`)
+$(document).on('change', '#table1 .status-cell .manager-dropdown', function() {
+  const orderId = $(this).closest('tr').attr('data-order-id');
+  const selectedManagerId = $(this).val();
+  console.log(orderId,selectedManagerId);
+  
+  // Отправить запрос на сервер для добавления информации о менеджере к заказу
+  fetch('/add_manager_order_info', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      user_id: selectedManagerId,
+      order_id: orderId
+    })
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Ошибка при добавлении информации о менеджере к заказу');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Информация о менеджере успешно добавлена к заказу:', data);
+      // Обновить данные заказа на странице, если необходимо
+    })
+    .catch(error => {
+      console.error('Ошибка при добавлении информации о менеджере к заказу:', error);
+    });
+});
+
+$(document).on('click', '#table1 tbody tr:not(.child-row)', function(event) {
+  if (!$(event.target).closest('.status-cell, .modal-link-cell').length) {
+    const orderId = $(this).attr('data-order-id');
+    const childRow = $(this).next('.child-row[data-order-id="' + orderId + '"]');
+    childRow.toggle();
+  }
+});
+
+function loadSMS() {
+  const phoneNumber = orderData.billing.phone;
+  fetch(`/get_all_sms?number=${phoneNumber}`)
     .then(response => response.json())
     .then(data => {
-      console.log('Полученные данные заметок:', data);
+      
 
       // Очищаем тело таблицы перед заполнением
-      $('#SMSTable tbody').empty();
+      $('#smsTable tbody').empty();
 
-      if (data.length > 0) {
-        // Если есть заметки, заполняем таблицу заметками
-        console.log('Найдены заметки, заполняем таблицу');
+      if (data.sms_data && data.sms_data.length > 0) {
+        // Если есть SMS, заполняем таблицу
+        
 
         let tableRows = [];
-        data.forEach(note => {
+        data.sms_data.forEach(sms => {
           tableRows.unshift(`
             <tr>
-              <td class="note-text">${note.note}</td>
-              <td class="note-timestamp">${note.date_created}</td>
-              <td class="note-author">${note.author}</td>
-              <td class="note-delete">
-                <span class="delete-note" role="button" data-note-id="${note.id}">&#10006;</span>
+              <td class="sms-text">${sms.text || ''}</td>
+              <td class="sms-status">${sms.status || ''}</td>
+              <td class="sms-refresh">
+                <img src="/static/images/refresh.png" width="20px" lenght="20px" alt="Обновить статус" class="update-sms-status" data-message-id="${sms.message_id}" style="cursor: pointer;">
               </td>
             </tr>
           `);
         });
-
         $('#smsTable tbody').html(tableRows.join(''));
       } else {
-        // Если заметок нет, выводим сообщение
+        // Если SMS нет, выводим сообщение
         $('#smsTable tbody').html(`
           <tr>
-            <td colspan="4">SMS немає</td>
+            <td colspan="4">SMS не знайдено</td>
           </tr>
         `);
       }
     })
     .catch(error => {
-      console.error('Ошибка при получении заметок:', error);
+      console.error('Ошибка при получении SMS:', error);
     });
-}*/
+}
+
+function updateSMSStatus(messageId) {
+  fetch(`/update_sms_status/${encodeURIComponent(messageId)}`)
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(error => {
+          throw new Error('Помилка при оновленні статусу SMS: ' + error.error);
+        });
+      }
+      return response.text();
+    })
+    .then(data => {
+      console.log('Статус SMS успішно оновлено:', data);
+      // Обновляем таблицу SMS после успешного обновления статуса
+      loadSMS();
+    })
+    .catch(error => {
+      console.error('Помилка при оновленні статусу SMS:', error);
+    });
+}
+
+$(document).on('click', '.update-sms-status', function() {
+  const messageId = $(this).data('message-id');
+  updateSMSStatus(messageId);
+});
 
 // Обработчик клика по кнопке "Відправити SMS"
 $(document).on('click', '#sendSMSBtn', function() {
+  const orderId = $('#myModal').data('order-id');
   const phoneNumber = orderData.billing.phone;
   const messageText = $('#messageText').val();
 
@@ -441,22 +577,30 @@ $(document).on('click', '#sendSMSBtn', function() {
     };
 
     // Вызов функции для отправки SMS
-    sendSMS(smsData);
+    sendSMS(orderId, smsData);
   }
 });
 
 // Функция для отправки SMS
-function sendSMS(smsData) {
+function sendSMS(orderId, smsData) {
+  const requestData = {
+    id: orderId,
+    phone_number: smsData.phone_number,
+    message_text: smsData.message_text
+  };
+
   fetch('/send_phone_sms', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(smsData)
+    body: JSON.stringify(requestData)
   })
     .then(response => {
       if (!response.ok) {
-        throw new Error('Помилка при відправці SMS');
+        return response.json().then(error => {
+          throw new Error('Помилка при відправці SMS: ' + error.error);
+        });
       }
       return response.json();
     })
@@ -464,6 +608,8 @@ function sendSMS(smsData) {
       console.log('SMS успішно відправлено:', data);
       // Очистка поля ввода после успешной отправки SMS
       $('#messageText').val('');
+      // Обновление списка сообщений после успешной отправки SMS
+      loadSMS();
     })
     .catch(error => {
       console.error('Помилка при відправці SMS:', error);
@@ -475,14 +621,13 @@ function loadnotes() {
   fetch(`/notes?id=${orderId}&page=1`)
     .then(response => response.json())
     .then(data => {
-      console.log('Полученные данные заметок:', data);
+      
 
       // Очищаем тело таблицы перед заполнением
       $('#noteTable tbody').empty();
 
       if (data.length > 0) {
         // Если есть заметки, заполняем таблицу заметками
-        console.log('Найдены заметки, заполняем таблицу');
 
         let tableRows = [];
         data.forEach(note => {
@@ -728,30 +873,18 @@ $(document).on('click', '#saveProductBtn', function() {
   const productId = selectedValue;
   const quantity = parseInt($('#quantityInput').val());
 
-  // Проверка введенных данных
   if (productId && quantity > 0) {
-    // Получение текущих данных заказа
-    const currentOrderData = {
-      line_items: orderData.line_items.map(item => ({
-        id: item.id,
-        product_id: item.product_id,
-        variation_id: item.variation_id,
-        quantity: parseInt(item.quantity),
-        total: item.total,
-      })),
-    };
-
-    // Добавление нового товара в данные заказа
     const newLineItem = {
       product_id: parseInt(productId),
       quantity: quantity,
     };
-    currentOrderData.line_items.push(newLineItem);
 
-    // Вызов функции updateOrder для обновления заказа с добавленным товаром
-    updateOrder(orderId, currentOrderData);
-
-    // Закрытие дочернего модального окна
+    const updatedFields = {
+      line_items: [newLineItem]
+    };
+    
+    updateOrder(orderId, updatedFields);
+    
     $('#addProductModal').modal('hide');
   }
 });
@@ -892,12 +1025,32 @@ function populateModal(){
                </div>
                <div class="text-end">
                <button type="button" class="btn btn-primary" id="addProductBtn">Додати товар</button>
-             </div>
+              </div>
+              <div class="client-tags">
+
+          
+              <!-- Кнопка "+" для добавления тегов -->
+              <div class="dropdown">
+              <button class="add-tag-btn dropdown-toggle" type="button" id="addCustomStatusBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                +
+              </button>
+              <div class="dropdown-menu">
+                <div class="dropdown-item">
+                  <input type="text" class="form-control" id="newCustomStatusInput" placeholder="Новий статус">
+                </div>
+                <div class="dropdown-divider"></div>
+                <div id="customStatusList">
+                  <!-- Список кастомных статусов будет динамически заполнен -->
+                </div>
+              </div>
+            </div>
+            </div>
+
                <li>Дата створення: ${orderData.date_created}</li>
                <li>Замовник: ${orderData.billing.last_name + " " + orderData.billing.first_name + " " + orderData.billing.company}</li>
                <li>Статус: 
                  <select class="dropdown-list">
-                   <option value="pending" ${orderData.status === 'pending' ? 'selected' : ''}>В очікуванні</option>
+                   <option value="pending" ${orderData.status === 'pending' ? 'selected' : ''}>В очікуванні оплати</option>
                    <option value="processing" ${orderData.status === 'processing' ? 'selected' : ''}>В обробці</option>
                    <option value="on-hold" ${orderData.status === 'on-hold' ? 'selected' : ''}>На утриманні</option>
                    <option value="completed" ${orderData.status === 'completed' ? 'selected' : ''}>Завершений</option>
@@ -1002,9 +1155,22 @@ function populateModal(){
        </div>
      </div>
      <div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3-tab">
-  <div class="form-group">
-    <label>Номер телефона: ${orderData.billing.phone}</label>
-  </div>
+     <div class="container" id='sms-cont' style="max-height: 300px; overflow-y: auto;">
+     <table class="table" id='smsTable'>
+       <thead>
+         <tr>
+           <th>Текст</th>
+           <th>Статус</th>
+           <th></th>
+         </tr>
+       </thead>
+       <tbody>
+       </tbody>
+     </table>
+    </div>
+    <div class="form-group">
+      <label>Номер телефона: ${orderData.billing.phone}</label>
+    </div>
   <div class="form-group">
     <label for="messageText">Текст сообщения:</label>
     <textarea class="form-control" id="messageText" rows="1"></textarea>
@@ -1013,21 +1179,198 @@ function populateModal(){
 </div>
    </div>
  `);
+
+   // Отображаем ранее сохраненные кастомные статусы
+   const customStatuses = orderData.meta_data.find(meta => meta.key === '_custom_statuses');
+   if (customStatuses) {
+     customStatuses.value.forEach(status => {
+       createTag(status);
+     });
+   }
+
+   // Сохраняем исходное количество товаров
+   orderData.line_items.forEach(item => {
+    item.original_quantity = item.quantity;
+  });
  // Обновляем заголовок модального окна
  $('#myModal .modal-title').text(`Замовлення № ${orderData.id}`);
  
 loadnotes();
+loadSMS();
+load_custom_status();
+displayCustomStatuses();
 }
+
+$(document).on('click', '.client-tags .btn-close', function() {
+  $(this).closest('.toast').remove();
+});
+
+// Функция для создания нового тега
+function createTag(text) {
+  // Проверяем, есть ли уже тег с таким текстом
+  const existingTag = $('.client-tags .toast-body').filter(function() {
+    return $(this).text().trim() === text;
+  });
+
+  if (existingTag.length === 0) {
+    const tagElement = `
+      <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body">
+          ${text}
+          <button type="button" class="btn-close ms-2 mb-1" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    `;
+    $('.client-tags').prepend(tagElement);
+  }
+}
+
+// Обработчик клика на опцию в дропдауне
+$(document).on('click', '#customStatusList .dropdown-item', function(event) {
+  event.stopPropagation();
+  const selectedText = $(this).text();
+  createTag(selectedText);
+});
+
+function getSelectedCustomStatuses() {
+  const selectedStatuses = [];
+  $('.client-tags .toast').each(function() {
+    selectedStatuses.push($(this).find('.toast-body').text().trim());
+  });
+  return selectedStatuses;
+}
+
+// Функция для отображения кастомных статусов в дропдауне
+function displayCustomStatuses(customStatuses) {
+  const customStatusList = $('#customStatusList');
+  customStatusList.empty();
+
+  if (customStatuses && Array.isArray(customStatuses)) {
+    customStatuses.forEach(status => {
+      const listItem = $('<div>').addClass('dropdown-item d-flex justify-content-between align-items-center');
+      listItem.append($('<span>').text(status.value));
+      listItem.append($('<img>').attr('src', '/static/images/bin.png').addClass('delete-custom-status').attr('data-key', status.key));
+      customStatusList.append(listItem);
+    });
+  }
+}
+
+$(document).on('click', '.delete-custom-status', function(event) {
+  event.stopPropagation();
+  const key = $(this).data('key');
+  deleteCustomStatus(key);
+});
+
+function deleteCustomStatus(key) {
+  fetch('/delete_custom_status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ key: key })
+  })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(error => {
+          throw new Error('Помилка при видаленні кастомного статусу: ' + error.error);
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Кастомний статус успішно видалено:', data);
+      // Перезагрузка списка кастомных статусов после удаления
+      load_custom_status();
+    })
+    .catch(error => {
+      console.error('Помилка при видаленні кастомного статусу:', error);
+    });
+}
+
+// Обработчик события для добавления выбранного кастомного статуса в теги
+$(document).on('click', '#customStatusList .dropdown-item', function() {
+  const selectedStatus = $(this).text();
+  createTag(selectedStatus);
+});
+
+// Обработчик события для создания нового кастомного статуса
+$(document).on('keypress', '#newCustomStatusInput', function(event) {
+  if (event.which === 13) {
+    const newCustomStatus = $(this).val().trim();
+    if (newCustomStatus !== '') {
+      createTag(newCustomStatus);
+      $(this).val('');
+
+      // Создаем новый кастомный статус
+      createCustomStatus('custom_statuses:' + newCustomStatus, newCustomStatus);
+
+      // Загружаем обновленный список кастомных статусов
+      load_custom_status();
+    }
+  }
+});
+
+// Функция для загрузки кастомных статусов
+function load_custom_status() {
+  fetch(`/custom_status_list`)
+    .then(response => response.json())
+    .then(data => {
+      const customStatuses = data;
+      displayCustomStatuses(customStatuses);
+    })
+    .catch(error => {
+      console.error('Ошибка при загрузке кастомных статусов:', error);
+    });
+}
+
+// Функция для создания кастомного статуса
+function createCustomStatus(key, value) {
+  fetch('/create_custom_status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      key: key,
+      value: value
+    })
+  })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(error => {
+          throw new Error('Помилка при створенні кастомного статусу: ' + error.error);
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Кастомний статус успішно створено:', data);
+      // Загрузка обновленного списка кастомных статусов после успешного создания нового статуса
+      load_custom_status();
+    })
+    .catch(error => {
+      console.error('Помилка при створенні кастомного статусу:', error);
+    });
+}
+
+let managers = [];
+
+function loadManagers() {
+  return fetch('/get_manager_list')
+    .then(response => response.json())
+    .then(data => {
+      managers = data.map(managerString => JSON.parse(managerString));
+    })
+    .catch(error => {
+      console.error('Ошибка при загрузке списка менеджеров:', error);
+    });
+}
+
 
 // Вызвать функцию loadOrders() при загрузке страницы
 $(document).ready(function() {
+loadManagers();
 loadOrders();
+load_custom_status();
 });                  
-
-
-
-
-
-
-
 
