@@ -3,8 +3,8 @@ from config import *
 
 version = "v1beta"
 authServerTokenUrl = f"https://api-gateway.kyivstar.ua/idp/oauth2/token"
-clientId = "462672cb-d6f3-4fc0-8a96-c6b863212be2"
-clientSecret = "DKUvKtg6~vcnfk8ZP2Z85f3~P6"
+clientId = "09e5815f-89e5-49a8-bc8c-44b13c01eee8"
+clientSecret = "PQIk5yZBOsAcDob3QeBKqul6Ic"
 
 
 
@@ -103,8 +103,7 @@ def check_sms_status(message_id):
         get_access_token()
         response = requests.get(url, headers=headers)
     else:
-        print("Failed to get SMS status. Status code:", response.status_code)
-        return None
+        return {"error": "Failed to get SMS status", "status_code": response.status_code}
        
 
 

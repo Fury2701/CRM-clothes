@@ -457,8 +457,8 @@ def delete_custom_statuss():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route("/add_manager_order", methods=['POST'])
-def add_manager_order():
+@app.route("/add_manager_order_info", methods=['POST'])
+def add_manager_order_info():
     if "login" not in session:
         return redirect(url_for("login_page"))
     requsted_data=request.get_json()
@@ -469,13 +469,13 @@ def add_manager_order():
         return jsonify({"error": "Invalid data"}), 400
 
     try:
-        response = manager_order(user_id, order_id)
+        response = add_manager_to_order(user_id, order_id)
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route("/update_manager_order", methods=['POST'])
-def update_manager_order():
+@app.route("/update_manager_order_info", methods=['POST'])
+def update_manager_order_info():
     if "login" not in session:
         return redirect(url_for("login_page"))
     requsted_data=request.get_json()
@@ -486,7 +486,7 @@ def update_manager_order():
         return jsonify({"error": "Invalid data"}), 400
 
     try:
-        response = manager_order(user_id, order_id)
+        response = update_manager_order(user_id, order_id)
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -496,12 +496,12 @@ def get_manager_list():
     if "login" not in session:
         return redirect(url_for("login_page"))
     try:
-        return jsonify(get_manager_list()), 200
+        return jsonify(get_manager_list_info()), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route("/delete_manager_order", methods=['GET'])
-def delete_manager_order():
+@app.route("/delete_manager_order_info", methods=['GET'])
+def delete_manager_order_info():
     if "login" not in session:
         return redirect(url_for("login_page"))
 
@@ -563,14 +563,18 @@ def update_sms_status_info(message_id):
         return jsonify({"error": "Invalid data"}), 400
 
     try:
+        print(message_id)
         response = check_sms_status(message_id)
+        print(response)
     except Exception as e:
         return jsonify({"error":"Problem with Kyivstar server"}), 400
 
-    if response["status"] == "delivered":
-        
-        update_sms_status(message_id)
-        return jsonify({"SMS status updated in the database.": response}), 200
+    if "status" in response:
+        if response["status"] == "delivered":
+            update_sms_status(message_id)
+            return jsonify({"SMS status updated in the database.": response}), 200
+        else:
+            return jsonify({"error": response}), 400
     else:
         return jsonify({"error": response}), 400
 

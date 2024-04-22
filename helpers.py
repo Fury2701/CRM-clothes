@@ -212,7 +212,7 @@ def update_manager_order(order_id, manager_id):
     except Exception as e:
         return "Database error" + str(e)
 
-def get_manager_list():
+def get_manager_list_info():
     try:
         with Session() as db_session:
             managers = db_session.query(User).all()
@@ -223,7 +223,7 @@ def get_manager_list():
                     "name": manager.name,
                     "login": manager.login,
                     # Додайте інші поля менеджера за потреби
-                })
+                },ensure_ascii=False)
                 json_managers_list.append(json_manager)
             return json_managers_list
     except Exception as e:
