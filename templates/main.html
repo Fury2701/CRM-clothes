@@ -105,10 +105,10 @@
                 </label>
               </li>
               <li class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="checkById">
-                <label class="form-check-label" for="checkById">
-                  По ID
-                </label>
+                <select class="form-select" id="managerFilter">
+                  <option value="">Все менеджеры</option>
+                  <!-- Опции менеджеров будут добавлены динамически из JavaScript -->
+                </select>
               </li>
               <li class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="filter4">
@@ -131,9 +131,8 @@
             </ul>
         
             <div class="input-group mb-3">
-              <button class="btn btn-outline-secondary" type="button" id="button-addon1">Пошук</button>
-              <input type="text" class="form-control flex-grow-1" placeholder="Пошук по номеру замовлення, ПІБ покупця, номеру телефона, Email" aria-label="Пример текста с надстройкой кнопкой" aria-describedby="button-addon1">
-            
+              <button class="btn btn-outline-secondary" type="button" id="searchButton">Пошук</button>
+              <input type="text" class="form-control flex-grow-1" id="searchInput" placeholder="Введіть ПІБ покупця" aria-label="Пошук по ПІБ покупця" aria-describedby="searchButton">
             </div>
                     
         </div>
@@ -168,8 +167,16 @@
             <div class="modal-body">
               <form class="create_order_form" style="max-height: px; overflow-y: auto;">
                 <div class="mb-3">
-                  <label for="customerName" class="form-label">Ім'я замовника</label>
-                  <input type="text" class="form-control" id="customerName" required>
+                  <label for="customerFirstName" class="form-label">Ім'я</label>
+                  <input type="text" class="form-control" id="customerFirstName" required>
+                </div>
+                <div class="mb-3">
+                  <label for="customerLastName" class="form-label">Прізвище</label>
+                  <input type="text" class="form-control" id="customerLastName" required>
+                </div>
+                <div class="mb-3">
+                  <label for="customerMiddleName" class="form-label">По батькові</label>
+                  <input type="text" class="form-control" id="customerMiddleName">
                 </div>
                 <div class="mb-3">
                   <label for="customerPhone" class="form-label">Номер телефону</label>
@@ -208,12 +215,15 @@
                   </select>
                 </div>
                 <div class="mb-3">
-                  <label for="productId" class="form-label">ID товару</label>
-                  <input type="text" class="form-control" id="productId" required>
+                  <label for="productSelectCreate" class="form-label">Товар</label>
+                  <div class="custom-select-create">
+                    <div class="selected-option-create">Виберіть товар</div>
+                    <div class="options-container-create"></div>
+                  </div>
                 </div>
                 <div class="mb-3">
-                  <label for="productQuantity" class="form-label">Кількість</label>
-                  <input type="number" class="form-control" id="productQuantity" min="1" required>
+                  <label for="productQuantityCreate" class="form-label">Кількість</label>
+                  <input type="number" class="form-control" id="productQuantityCreate" min="1" required>
                 </div>
               </form>
             </div>

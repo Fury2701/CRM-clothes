@@ -187,19 +187,13 @@ def add_manager_to_order(order_id, manager_id):
     except Exception as e:
         return "Database error" + str(e)
 
-def get_total_pages(manager_id, per_page=5):
+def get_manager_orders(manager_id, page=1, per_page=5):
     try:
         with Session() as db_session:
-            total_records = db_session.query(manager_order).filter(manager_order.manager_id == manager_id).count()
-            total_pages = ceil(total_records / per_page)
-            return total_pages
-    except Exception as e:
-        return 0
-
-def get_manager_orders(manager_id):
-    try:
-        with Session() as db_session:
-            orders = db_session.query(manager_order).filter(manager_order.manager_id == manager_id).all()
+            # Обчислюємо значення offset для поточної сторінки
+            offset = (page - 1) * per_page
+            # Вибираємо замовлення для поточної сторінки
+            orders = db_session.query(manager_order).filter(manager_order.manager_id == manager_id).offset(offset).limit(per_page).all()
             json_orders_list = []
             for order in orders:
                 json_order = json.dumps({
@@ -211,11 +205,18 @@ def get_manager_orders(manager_id):
     except Exception as e:
         return "Database error" + str(e)
 
-def update_manager_order(order_id, manager_id):
+def update_manager_order(order_id:int, manager_id:int):
     try:
         with Session() as db_session:
+            # Перевіряємо чи існує запис з вказаним order_id
             order = db_session.query(manager_order).filter(manager_order.order_id == order_id).first()
-            order.manager_id = manager_id
+            if order is None:
+                # Якщо запис не існує, створюємо новий
+                order = manager_order(order_id=order_id, manager_id=manager_id)
+                db_session.add(order)
+            else:
+                # Якщо запис існує, оновлюємо manager_id
+                order.manager_id = manager_id
             db_session.commit()
             return "Manager updated"
     except Exception as e:
@@ -247,7 +248,7 @@ def delete_manager_order(order_id):
             return "Manager deleted from order"
     except Exception as e:
         return "Database error" + str(e)
-
+    
 def apply_discount(order_id, discount_amount, discount_type):
     try:
         with Session() as db_session:

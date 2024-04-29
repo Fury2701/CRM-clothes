@@ -54,13 +54,13 @@ def get_orders_by_manager():
 
     try:
         page = request.args.get('page', 1, type=int)
-        user_id = session.get('id')
-        orders = get_manager_orders(manager_id=user_id)
+        user_id = request.args.get('manager_id')
+        orders = get_manager_orders(manager_id=user_id, page=page)
         json_orders=[]
         for order in orders:
-            info=get_order(order['id'])
+            order_dict = json.loads(order)  # перетворення рядка JSON у словник
+            info = get_order(order_dict['order_id'])  # отримання ідентифікатора замовлення
             json_orders.append(info)
-        
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -469,7 +469,7 @@ def add_manager_order_info():
         return jsonify({"error": "Invalid data"}), 400
 
     try:
-        response = add_manager_to_order(user_id, order_id)
+        response = add_manager_to_order(order_id, user_id)
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -486,7 +486,7 @@ def update_manager_order_info():
         return jsonify({"error": "Invalid data"}), 400
 
     try:
-        response = update_manager_order(user_id, order_id)
+        response = update_manager_order(order_id, user_id)
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -511,7 +511,7 @@ def delete_manager_order_info():
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
+    
 @app.route("/update_order_discount", methods=['POST'])
 def update_order_discount():
     if "login" not in session:

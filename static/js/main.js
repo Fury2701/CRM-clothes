@@ -37,10 +37,16 @@ $(document).on('click', '#create-offer', function() {
   $('#createOrderModal').modal('show');
 });
 
+let selectedProductId;
+let currentPage = 1;
+let totalPages = 1;
+let isLoading = false;
 
 // Обработчик клика по кнопке "Створити замовлення" в модальном окне
 $(document).on('click', '#createOrderBtn', function() {
-  const customerName = $('#customerName').val();
+  const customerFirstName = $('#customerFirstName').val();
+  const customerLastName = $('#customerLastName').val();
+  const customerMiddleName = $('#customerMiddleName').val();
   const customerPhone = $('#customerPhone').val();
   const customerEmail = $('#customerEmail').val();
   const shippingAddress = $('#shippingAddress').val();
@@ -48,27 +54,28 @@ $(document).on('click', '#createOrderBtn', function() {
   const shippingPostcode = $('#shippingPostcode').val();
   const shippingMethod = $('#shippingMethod').val();
   const paymentMethod = $('#paymentMethod').val();
-  const productId = $('#productId').val();
-  const productQuantity = $('#productQuantity').val();
+  const productQuantity = parseInt($('#productQuantityCreate').val());
 
   const lineItems = [
     {
-      product_id: parseInt(productId),
-      quantity: parseInt(productQuantity),
+      product_id: parseInt(selectedProductId),
+      quantity: productQuantity,
     }
   ];
 
   // Создайте объект с данными заказа
   const orderData = {
     customer: {
-      first_name: customerName.split(' ')[0],
-      last_name: customerName.split(' ')[1] || '',
+      first_name: customerFirstName,
+      last_name: customerLastName,
+      company: customerMiddleName,
       email: customerEmail,
       phone: customerPhone
     },
     billing: {
-      first_name: customerName.split(' ')[0],
-      last_name: customerName.split(' ')[1] || '',
+      first_name: customerFirstName,
+      last_name: customerLastName,
+      company: customerMiddleName,
       address_1: shippingAddress,
       city: shippingCity,
       postcode: shippingPostcode,
@@ -76,8 +83,9 @@ $(document).on('click', '#createOrderBtn', function() {
       email: customerEmail
     },
     shipping: {
-      first_name: customerName.split(' ')[0],
-      last_name: customerName.split(' ')[1] || '',
+      first_name: customerFirstName,
+      last_name: customerLastName,
+      company: customerMiddleName,
       address_1: shippingAddress,
       city: shippingCity,
       postcode: shippingPostcode
@@ -97,6 +105,86 @@ $(document).on('click', '#createOrderBtn', function() {
   createOrder(orderData);
   console.log(orderData)
 });
+
+// Обработчик клика на выбранную опцию товара
+document.querySelector('.selected-option-create').addEventListener('click', function() {
+  document.querySelector('.options-container-create').style.display = 'block';
+});
+
+// Обработчик клика на опцию товара
+document.querySelector('.options-container-create').addEventListener('click', function(event) {
+  if (event.target.classList.contains('option')) {
+    selectedProductId = event.target.dataset.value;
+    const selectedText = event.target.textContent;
+    document.querySelector('.selected-option-create').textContent = selectedText;
+    document.querySelector('.options-container-create').style.display = 'none';
+    console.log('Выбранный товар:', selectedProductId);
+  }
+});
+
+// Обработчик клика вне выпадающего списка товаров
+document.addEventListener('click', function(event) {
+  const customSelect = document.querySelector('.custom-select-create');
+  if (!customSelect.contains(event.target)) {
+    document.querySelector('.options-container-create').style.display = 'none';
+  }
+});
+
+// Обработчик открытия модального окна для создания заказа
+$('#createOrderModal').on('show.bs.modal', function() {
+  // Очистка выбранного товара
+  selectedProductId = null;
+  document.querySelector('.selected-option-create').textContent = 'Виберіть товар';
+  
+  // Загрузка первой страницы товаров
+  currentPage = 1;
+  $('.options-container-create').empty();
+  loadProducts();
+});
+
+// Обработчик события прокрутки для контейнера опций товаров
+$('.options-container-create').on('scroll', function() {
+  const optionsContainer = this;
+  if (optionsContainer.scrollTop + optionsContainer.clientHeight >= optionsContainer.scrollHeight) {
+    loadProducts();
+  }
+});
+
+// Функция для загрузки товаров и создания опций
+function loadProducts() {
+  if (isLoading || currentPage > totalPages) {
+    return;
+  }
+
+  isLoading = true;
+
+  fetch(`/data_products?page=${currentPage}`)
+    .then(response => response.json())
+    .then(data => {
+      const products = data.products;
+      currentPage = data.current_page + 1;
+      totalPages = data.total_pages;
+
+      // Создание опций для каждого товара и добавление их в контейнер опций
+      const optionsContainer = document.querySelector('.options-container-create');
+      products.forEach(function(product) {
+        const option = document.createElement('div');
+        option.className = 'option';
+        option.dataset.value = product.id;
+
+        const imageSrc = product.images && product.images.length > 0 ? product.images[0].src : '';
+        option.innerHTML = `<img src="${imageSrc}"> ${product.name}`;
+
+        optionsContainer.appendChild(option);
+      });
+
+      isLoading = false;
+    })
+    .catch(error => {
+      console.error('Ошибка при загрузке товаров:', error);
+      isLoading = false;
+    });
+}
 // Функция для отправки данных заказа на сервер
 function createOrder(newOrder) {
   fetch('/create_order', {
@@ -150,12 +238,7 @@ function deleteOrder(orderId) {
       // Закрыть модальное окно
       $('#myModal').modal('hide');
       // Обновить данные на странице после успешного удаления заказа
-      const updatedOrders = loadOrders_response.orders.filter(order => order.id !== orderId);
-      updated_Order_Data = updatedOrders;
-      console.log('Оновлена локальна data', updated_Order_Data);
-      // Очистить существующие строки в таблице
-      $('#table1 tbody').empty();
-      fillOrdersTable(updated_Order_Data);
+      loadOrders();
     })
     .catch(error => {
       console.error('Помилка при видаленні замовлення:', error);
@@ -200,10 +283,7 @@ function updateOrder(orderId, updatedFields) {
       return response.json();
     })
     .then(updatedOrder => {
-      
-      // Закрываем модальное окно
-      $('#myModal').modal('hide');
-      // Обновляем данные на странице после успешного обновления заказа
+      // Обновление данных на странице после успешного обновления заказа
       loadOrders();
     })
     .catch(error => {
@@ -287,6 +367,7 @@ $(document).on('click', '#table1 .modal-link-cell a', function(e) {
     .then(response => response.json())
     .then(data => {
       orderData = data;
+      console.log(orderData);
       populateModal();
     })
     .catch(error => {
@@ -409,14 +490,21 @@ function fillOrdersTable(orders) {
     selectDropdown.append($('<option>').attr('value', 'failed').text('Невдалий'));
     selectDropdown.append($('<option>').attr('value', 'trash').text('Кошик'));
     selectDropdown.val(order.status); // Установить значение статуса для текущего заказа
-    // Создать элемент select для списка менеджеров
+    // Создание элемента select для списка менеджеров
     const managerDropdown = $('<select>').addClass('manager-dropdown');
-    
-    // Добавить опции менеджеров в дропдаун
+
+    // Добавление опций менеджеров в дропдаун
+    managerDropdown.append($('<option>').attr('value', 'none').text('-'));
     managers.forEach(manager => {
       const option = $('<option>').attr('value', manager.id).text(manager.name);
       managerDropdown.append(option);
-    });  
+    });
+
+    // Установка выбранной опции менеджера на основе метаданных заказа
+    const savedManagerId = order.meta_data.find(meta => meta.key === '_manager_id')?.value;
+    if (savedManagerId) {
+      managerDropdown.val(savedManagerId);
+    }
     // Создать контейнер для обоих дропдаунов
     const dropdownContainer = $('<div>').addClass('dropdown-container');
     dropdownContainer.append(selectDropdown);
@@ -456,35 +544,92 @@ function fillOrdersTable(orders) {
     row.after(childRow);
   });
 }
+$(document).on('change', '#table1 .status-cell .manager-dropdown', function() {
+  const orderId = $(this).closest('tr').attr('data-order-id');
+  const selectedManagerId = $(this).val();
+  updateOrder(orderId, {
+    meta_data: [
+      {
+        key: '_manager_id',
+        value: selectedManagerId
+      }
+    ]
+  });
+});
 
 $(document).on('change', '#table1 .status-cell .manager-dropdown', function() {
   const orderId = $(this).closest('tr').attr('data-order-id');
   const selectedManagerId = $(this).val();
-  console.log(orderId,selectedManagerId);
+  console.log('Selected manager ID:', selectedManagerId);
+  console.log('Order ID:', orderId);
   
-  // Отправить запрос на сервер для добавления информации о менеджере к заказу
-  fetch('/add_manager_order_info', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      user_id: selectedManagerId,
-      order_id: orderId
-    })
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Ошибка при добавлении информации о менеджере к заказу');
+  // Отправляем запрос на сервер для получения данных о заказе по его ID
+  fetch(`/dataordersbyid?id=${orderId}`)
+    .then(response => response.json())
+    .then(orderData => {
+      console.log('Order data:', orderData);
+      
+      // Ищем значение manager_id в метаданных заказа
+      const managerMeta = orderData.meta_data.find(meta => meta.key === '_manager_id');
+      const previousManagerId = managerMeta ? managerMeta.value : undefined;
+      console.log('Previous manager ID:', previousManagerId);
+      
+      if (!previousManagerId) {
+        console.log('No previous manager assigned');
+        // Если ранее менеджер не был назначен, отправляем запрос по маршруту add_manager_order_info
+        fetch('/add_manager_order_info', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: selectedManagerId,
+            order_id: orderId
+          })
+        })
+          .then(response => {
+            console.log("Adding manager is done");
+            if (!response.ok) {
+              throw new Error('Ошибка при добавлении информации о менеджере к заказу');
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('Информация о менеджере успешно добавлена к заказу:', data);
+          })
+          .catch(error => {
+            console.error('Ошибка при добавлении информации о менеджере к заказу:', error);
+          });
+      } else {
+        console.log('Previous manager assigned');
+        // Если ранее менеджер был назначен, отправляем запрос по маршруту update_manager_order_info
+        fetch('/update_manager_order_info', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: selectedManagerId,
+            order_id: orderId
+          })
+        })
+          .then(response => {
+            console.log('Updating manager is done');
+            if (!response.ok) {
+              throw new Error('Ошибка при обновлении информации о менеджере заказа');
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('Информация о менеджере заказа успешно обновлена:', data);
+          })
+          .catch(error => {
+            console.error('Ошибка при обновлении информации о менеджере заказа:', error);
+          });
       }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Информация о менеджере успешно добавлена к заказу:', data);
-      // Обновить данные заказа на странице, если необходимо
     })
     .catch(error => {
-      console.error('Ошибка при добавлении информации о менеджере к заказу:', error);
+      console.error('Ошибка при получении данных о заказе:', error);
     });
 });
 
@@ -808,7 +953,10 @@ function loadProducts() {
         const option = document.createElement('div');
         option.className = 'option';
         option.dataset.value = product.id;
-        option.innerHTML = `<img src="${product.images[0].src}"> ${product.name}`;
+
+        const imageSrc = product.images && product.images.length > 0 ? product.images[0].src : '';
+        option.innerHTML = `<img src="${imageSrc}"> ${product.name}`;
+
         optionsContainer.appendChild(option);
       });
 
@@ -1366,10 +1514,102 @@ function loadManagers() {
     });
 }
 
+$(document).ready(function() {
+  $('#searchButton').on('click', function() {
+    const fullName = $('#searchInput').val().trim();
+    if (fullName !== '') {
+      loadOrders(1, fullName);
+    } else {
+      loadOrders(1);
+    }
+  });
+
+  $('#searchInput').on('keypress', function(event) {
+    if (event.which === 13) {
+      event.preventDefault();
+      $('#searchButton').click();
+    }
+  });
+});
+
+function loadOrders(page = 1, fullName = '') {
+  const url = `/dataorders?page=${page}${fullName ? '&full_name=' + encodeURIComponent(fullName) : ''}`;
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      console.log(data);
+      // Очистить существующие строки в таблице
+      $('#table1 tbody').empty();
+
+      // Заполнить таблицу данными из ответа сервера
+      fillOrdersTable(data.orders);
+
+      // Обновить пагинацию
+      updatePagination(data.current_page, data.total_pages);
+    })
+    .catch(error => {
+      console.error('Ошибка при загрузке заказов:', error);
+    });
+}
+
+function loadManagerList() {
+  fetch('/get_manager_list')
+    .then(response => response.json())
+    .then(managerStrings => {
+      const managerSelect = document.getElementById('managerFilter');
+      const managers = managerStrings.map(managerString => JSON.parse(managerString));
+      managers.forEach(manager => {
+        const option = document.createElement('option');
+        option.value = manager.id;
+        option.text = manager.name;
+        managerSelect.add(option);
+      });
+    })
+    .catch(error => {
+      console.error('Ошибка при загрузке списка менеджеров:', error);
+    });
+}
+
+$('#managerFilter').on('change', function() {
+  const managerId =parseInt($(this).val());
+  
+  if (managerId) {
+    loadOrdersByManager(managerId, 1);
+  } else {
+    loadOrders(1);
+  }
+});
+
+function loadOrdersByManager(managerId, page = 1) {
+  console.log(managerId)
+  fetch(`/get_orders_by_manager?page=${page}&manager_id=${managerId}`)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Received data:', data);
+      // Очистить существующие строки в таблице
+      $('#table1 tbody').empty();
+
+      // Проверяем наличие массива orders в ответе и его тип
+      if (data && data.orders && Array.isArray(data.orders)) {
+        console.log('Orders data:', data.orders);
+        // Заполнить таблицу данными из ответа сервера
+        fillOrdersTable(data.orders);
+      } else {
+        console.error('Ошибка: Некорректный формат ответа сервера.');
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка при загрузке заказов:', error);
+    });
+}
+
+
 
 // Вызвать функцию loadOrders() при загрузке страницы
 $(document).ready(function() {
 loadManagers();
+loadManagerList();
 loadOrders();
 load_custom_status();
 });                  
