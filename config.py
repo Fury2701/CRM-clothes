@@ -12,6 +12,7 @@ from sqlalchemy import event
 from wooapi import *
 import redis
 from flask_session import Session
+from math import ceil
 
 app = Flask(__name__)
 
