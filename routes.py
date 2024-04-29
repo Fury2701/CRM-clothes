@@ -528,7 +528,7 @@ def update_order_discount():
     try:
         response = apply_discount(order_id, discount_amount, discount_type)
         if response.get("success"):
-            create_note(ord_id, {"note":f"Замовлення оновлено менеджером {session.get('name')}, знижка застосована: {discount_amount}, ({discount_type})"})
+            create_note(order_id, {"note":f"Замовлення оновлено менеджером {session.get('name')}, знижка застосована: {discount_amount}, ({discount_type})"})
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
