@@ -187,6 +187,15 @@ def add_manager_to_order(order_id, manager_id):
     except Exception as e:
         return "Database error" + str(e)
 
+def get_total_pages(manager_id, per_page=5):
+    try:
+        with Session() as db_session:
+            total_records = db_session.query(manager_order).filter(manager_order.manager_id == manager_id).count()
+            total_pages = ceil(total_records / per_page)
+            return total_pages
+    except Exception as e:
+        return 0
+
 def get_manager_orders(manager_id, page=1, per_page=5):
     try:
         with Session() as db_session:

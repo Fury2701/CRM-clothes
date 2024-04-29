@@ -55,6 +55,7 @@ def get_orders_by_manager():
     try:
         page = request.args.get('page', 1, type=int)
         user_id = request.args.get('manager_id')
+        total_pages = get_total_pages(user_id, 5)
         orders = get_manager_orders(manager_id=user_id, page=page)
         json_orders=[]
         for order in orders:
