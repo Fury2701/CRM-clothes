@@ -512,6 +512,27 @@ def delete_manager_order_info():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route("/update_order_discount", methods=['POST'])
+def update_order_discount():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    requested_data = request.get_json()
+    order_id = requested_data.get('order_id')
+    discount_amount = requested_data.get('discount_amount')
+    discount_type = requested_data.get('discount_type')
+
+    if not order_id or not discount_amount or not discount_type:
+        return jsonify({"error": "Invalid data"}), 400
+
+    try:
+        response = apply_discount(order_id, discount_amount, discount_type)
+        if response.get("success"):
+            create_note(ord_id, {"note":f"Замовлення оновлено менеджером {session.get('name')}, знижка застосована: {discount_amount}, ({discount_type})"})
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 @app.route("/get_coupons", methods=['GET'])
 def get_coupons():
     if "login" not in session:

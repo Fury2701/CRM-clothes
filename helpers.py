@@ -239,6 +239,23 @@ def delete_manager_order(order_id):
     except Exception as e:
         return "Database error" + str(e)
 
+def apply_discount(order_id, discount_amount, discount_type):
+    try:
+        with Session() as db_session:
+            order = db_session.query(wp_wc_orders).filter(wp_wc_orders.id == order_id).first()
+            if order:
+                if discount_type == 'percentage':
+                    new_total = order.total_amount * (1 - discount_amount / 100)
+                else:  # fixed amount in UAH
+                    new_total = order.total_amount - discount_amount
+                order.total_amount = new_total
+                db_session.commit()
+                return {"success": True, "message": "Discount applied successfully"}
+            else:
+                return {"error": "Order not found"}
+    except Exception as e:
+        return {"error": "Database error" + str(e)}
+
 def get_discount_coupon(search=None, code=None, page=1, per_page=20):
     orders = get_woocomerce()
     return orders.get_discout_coupons(search=search, code=code, page=page, per_page=per_page)
