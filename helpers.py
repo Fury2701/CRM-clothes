@@ -260,7 +260,7 @@ def delete_manager_order(order_id):
     
 def apply_discount(order_id, discount_amount, discount_type):
     try:
-        with Session() as db_session:
+        with Session_second() as db_session:
             order = db_session.query(wp_wc_orders).filter(wp_wc_orders.id == order_id).first()
             if order:
                 if discount_type == 'percentage':
@@ -269,7 +269,7 @@ def apply_discount(order_id, discount_amount, discount_type):
                     new_total = order.total_amount - discount_amount
                 order.total_amount = new_total
                 db_session.commit()
-                return {"success": True, "message": "Discount applied successfully"}
+                return {"success": True, "message": "Discount applied successfully", "new_total":new_total}
             else:
                 return {"error": "Order not found"}
     except Exception as e:
