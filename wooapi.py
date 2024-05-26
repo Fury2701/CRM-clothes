@@ -35,6 +35,9 @@ class WooAPI:
 
     def create_product(self, data):
         return self.wcapi.post("products", data).json()
+    
+    def get_categotry(self):
+        return self.wcapi.get("products/categories").json()
 
     def update_product(self, id, data):
         return self.wcapi.put(f"products/{id}", data).json()
@@ -42,13 +45,16 @@ class WooAPI:
     def delete_product(self, id):
         return self.wcapi.delete(f"products/{id}").json()
 
-    def get_wc_orders(self, full_name=None, page=1, per_page=20):
+    def get_wc_orders(self, customer=None, full_name=None, page=1, per_page=20):
         params = {
             "page": page,
             "per_page": per_page
         }
         if full_name:
             params["search"] = full_name
+        if customer:
+            params["customer"] = customer
+        
         
         response = self.wcapi.get("orders", params=params)
         orders = response.json()
@@ -96,14 +102,20 @@ class WooAPI:
     def delete_order(self, id):
         return self.wcapi.delete(f"orders/{id}").json()
     
-    def get_customers(self, page=1, per_page=20):
+    def get_customers(self,name=None, page=1, per_page=20):
         params = {
             "page": page,
             "per_page": per_page
         }
+        if name:
+            params['search'] = name
+
+        
         response = self.wcapi.get("customers", params=params)
         customers = response.json()
         total_pages = int(response.headers.get('X-WP-TotalPages', 0))
+        url = response.url
+        print(url)
 
         return customers, total_pages
 

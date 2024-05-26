@@ -41,7 +41,8 @@ def dataorders():
 
         page = request.args.get('page', 1, type=int)
         full_name = request.args.get('full_name', None, type=str)
-        orders, total_pages = get_wc_orders(full_name=full_name,page=page)
+        customer= request.args.get('customer_id',None,type=int) 
+        orders, total_pages = get_wc_orders(customer=customer, full_name=full_name,page=page)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -65,7 +66,7 @@ def get_orders_by_manager():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-    return jsonify({'orders': json_orders, 'current_page': page}), 200
+    return {"orders": json_orders, "current_page": page, "total_pages": total_pages}
 
 @app.route("/dataordersbyid", methods=['GET']) #для отримання даних наступних замовлень по id
 def dataordersbyid():
@@ -133,7 +134,7 @@ def update_orders():
         return jsonify(response), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
+ 
 @app.route("/delete_order", methods=['POST'])
 def delete_orders():
     if "login" not in session:
@@ -152,7 +153,9 @@ def product_page():
         return redirect(url_for("login_page"))
     try:
         page = request.args.get('page', 1, type=int)
-        products, total_pages = get_wc_products(name=None, category=None, page=page, per_page=20)
+        name = request.args.get('name', 1, type=str)
+        category = request.args.get('category', 1, type=int)
+        products, total_pages = get_wc_products(name=name, category=category, page=page, per_page=20)
         products_json = json.dumps(products)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -160,13 +163,25 @@ def product_page():
     return render_template("product.html", products=products_json, current_page=page, total_pages=total_pages), 200
 
 @app.route("/productbyid", methods=['GET'])
-def product_info_page(id):
+def product_info_page():
     if "login" not in session:
         return redirect(url_for("login_page"))
     try:
         product_id = request.args.get('id')
         product = get_wc_product(product_id) 
         product_json = json.dumps(product)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(product_json), 200
+
+@app.route("/category", methods=['GET'])
+def category():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    try:
+        category = get_category() 
+        product_json = json.dumps(category)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -179,7 +194,7 @@ def data_products():
 
     try:
         name = request.args.get('name', None, type=str)
-        category = request.args.get('category', None, type=str)
+        category = request.args.get('category', None, type=int)
         page = request.args.get('page', 1, type=int)
         products, total_pages = get_wc_products(name=name, category=category, page=page, per_page=20)
     except Exception as e:
@@ -239,7 +254,7 @@ def customer_page():
     return render_template("customer.html", customers=customers, current_page=page, total_pages=total_pages), 200
 
 @app.route("/customerbyid", methods=['GET'])
-def customer_info_page(id):
+def customer_info_page():
     if "login" not in session:
         return redirect(url_for("login_page"))
     try:
@@ -258,7 +273,9 @@ def data_customers():
 
     try:
         page = request.args.get('page', 1, type=int)
-        customers, total_pages = get_customers(page=page)
+        full_name = request.args.get('name', None)
+        customers, total_pages = get_customers(full_name=full_name,page=page)
+        print(customers)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 

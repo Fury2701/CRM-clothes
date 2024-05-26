@@ -68,9 +68,9 @@ def get_sms(number):
 
 # Функції робот з базою даних WooCommerce
 
-def get_wc_orders(full_name=None, page=1, per_page=20): # Функція для отримання замовлень з WooCommerce
+def get_wc_orders(customer=None, full_name=None, page=1, per_page=20): # Функція для отримання замовлень з WooCommerce
     orders = get_woocomerce()
-    return orders.get_wc_orders(full_name=full_name, page=page, per_page=per_page)
+    return orders.get_wc_orders(customer=customer, full_name=full_name, page=page, per_page=per_page)
 
 def get_wc_status_orders(status, page=1, per_page=20): # Функція для отримання замовлень з WooCommerce за статусом
     orders = get_woocomerce()
@@ -96,9 +96,9 @@ def delete_order(id): # Функція для видалення замовле�
     orders = get_woocomerce()
     return orders.delete_order(id)
 
-def get_customers(page=1, per_page=20): # Функція для отримання клієнтів з WooCommerce
+def get_customers(full_name=None,page=1, per_page=20): # Функція для отримання клієнтів з WooCommerce
     orders = get_woocomerce()
-    return orders.get_customers(page=page, per_page=per_page)
+    return orders.get_customers(name=full_name, page=page, per_page=per_page)
 
 def get_customer(id): # Функція для отримання клієнта з WooCommerce по id
     orders = get_woocomerce()
@@ -122,7 +122,11 @@ def get_wc_products(name=None, category=None, page=1, per_page=20): # Функц
 
 def get_wc_product(id): # Функція для отримання продукту з WooCommerce по id
     orders = get_woocomerce()
-    return orders.get_wc_product(id)
+    return orders.get_product(id)
+
+def get_category(): # Функція для отримання продукту з WooCommerce по id
+    orders = get_woocomerce()
+    return orders.get_categotry()
 
 def create_product(data): # Функція для створення продукту в WooCommerce
     orders = get_woocomerce()
@@ -187,14 +191,6 @@ def add_manager_to_order(order_id, manager_id):
     except Exception as e:
         return "Database error" + str(e)
 
-def get_total_pages(manager_id, per_page=5):
-    try:
-        with Session() as db_session:
-            total_records = db_session.query(manager_order).filter(manager_order.manager_id == manager_id).count()
-            total_pages = ceil(total_records / per_page)
-            return total_pages
-    except Exception as e:
-        return 0
 
 def get_manager_orders(manager_id, page=1, per_page=5):
     try:
@@ -230,6 +226,15 @@ def update_manager_order(order_id:int, manager_id:int):
             return "Manager updated"
     except Exception as e:
         return "Database error" + str(e)
+    
+def get_total_pages(manager_id, per_page=5):
+    try:
+        with Session() as db_session:
+            total_records = db_session.query(manager_order).filter(manager_order.manager_id == manager_id).count()
+            total_pages = ceil(total_records / per_page)
+            return total_pages
+    except Exception as e:
+        return 0
 
 def get_manager_list_info():
     try:

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список клієнтів</title>
+    <link rel="stylesheet" href="../static/css/customer.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="white-stripe"></div>
+    <div class="full-page-background"></div>    
+    <div class="my-content">    
+        <div class="full-height-70px-width-div">
+            <a class="home-img" href="#"><img src="/static/images/home.png" width="30px" height="30px" ></a>
+            <a class="products-img" href="#"><img src="/static/images/shopping-cart.png" width="25px" height="26px" ></a>
+            <a class="clients-img" href="#"><img src="/static/images/group.png" width="30px" height="30px" ></a>
+            <div class="div-70x70px"></div>
+        </div>
+
+        <div class="menu">
+            <div class="menu-bckground">
+                <div class="in-menu-div-70x70px">
+                    <a class="menu2-btn" href="#">L</a>
+                </div>
+            </div>
+            <a class="menu-btn" href="#">L</a>
+            <nav class="menu-list">
+                <a class="home-img" href="#"><img src="/static/images/home.png" width="30px" height="30px" ></a>
+                <a id="href-main" href="#">Головна</a>
+                <a class="products-img" href="#"><img src="/static/images/shopping-cart.png" width="25px" height="26px" ></a>
+                <a id="href-products" href="#">Список товарів</a>
+                <a class="clients-img" href="#"><img src="/static/images/group.png" width="30px" height="30px" ></a>
+                <a id="href-clients" href="#">Клієнти</a>
+            </nav>
+        </div >
+        
+        <div class="navbar">
+            <ul class="nav justify-content-start">
+                <li class="nav-item">
+                    <a id="active-page" href="#">Список клієнтів</a>
+                </li>
+            </ul>
+            <ul class="nav justify-content-end">
+                <li class="nav-item">
+                    <a id="export" class="btn btn-outline-primary" href="#" role="button">Доставка</a>
+                </li>
+                <li class="nav-item">
+                    <button id="create-client" class="btn btn-primary" href="#" type="button">Додати клієнта</button>
+                </li>
+            </ul>
+        </div>     
+
+        <div class="main-conent-div">
+            <div class="rectangle-5">
+                <div class="navi">
+                    <div class="input-group mb-3">
+                        <button class="btn btn-outline-secondary" type="button" id="searchButton">Пошук</button>
+                        <input type="text" class="form-control flex-grow-1" id="searchInput" placeholder="Введіть ім'я клієнта" aria-label="Пошук по імені клієнта" aria-describedby="searchButton">
+                    </div>
+                </div>
+
+                <div class="mytable">
+                    <table class="table" id="clientsTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Ім'я</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Телефон</th>
+                                <th scope="col">Адреса</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center" id="paginationContainer"></ul>
+                </nav>
+            </div>
+        </div>
+
+<!-- Модальное окно для создания клиента -->
+<div class="modal fade" id="createClientModal" tabindex="-1" aria-labelledby="createClientModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createClientModalLabel">Додати клієнта</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createClientForm">
+            <div class="mb-3">
+              <label for="clientUsername" class="form-label">Username</label>
+              <input type="text" class="form-control" id="clientUsername" required>
+            </div>
+            <div class="mb-3">
+              <label for="clientEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="clientEmail" required>
+            </div>
+            <div class="mb-3">
+              <label for="clientFirstName" class="form-label">Ім'я</label>
+              <input type="text" class="form-control" id="clientFirstName" required>
+            </div>
+            <div class="mb-3">
+              <label for="clientLastName" class="form-label">Прізвище</label>
+              <input type="text" class="form-control" id="clientLastName" required>
+            </div>
+            <div class="mb-3">
+              <label for="clientBillingAddress1" class="form-label">Адреса 1</label>
+              <input type="text" class="form-control" id="clientBillingAddress1" required>
+            </div>
+            <div class="mb-3">
+              <label for="clientBillingAddress2" class="form-label">Адреса 2</label>
+              <input type="text" class="form-control" id="clientBillingAddress2">
+            </div>
+            <div class="mb-3">
+              <label for="clientBillingCity" class="form-label">Місто</label>
+              <input type="text" class="form-control" id="clientBillingCity" required>
+            </div>
+            <div class="mb-3">
+              <label for="clientBillingState" class="form-label">Область</label>
+              <input type="text" class="form-control" id="clientBillingState" required>
+            </div>
+            <div class="mb-3">
+              <label for="clientBillingPostcode" class="form-label">Поштовий індекс</label>
+              <input type="text" class="form-control" id="clientBillingPostcode" required>
+            </div>
+            <div class="mb-3">
+              <label for="clientBillingCountry" class="form-label">Країна</label>
+              <input type="text" class="form-control" id="clientBillingCountry" required>
+            </div>
+            <div class="mb-3">
+              <label for="clientBillingPhone" class="form-label">Телефон</label>
+              <input type="tel" class="form-control" id="clientBillingPhone" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+          <button type="button" class="btn btn-primary" id="createClientBtn">Зберегти</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Модальное окно для просмотра/редактирования клиента -->
+<div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="clientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="clientModalLabel"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="accordion" id="clientAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                  Інформація про клієнта
+                </button>
+              </h2>
+              <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#clientAccordion">
+                <div class="accordion-body">
+                  <div class="forInModalClientTable">
+                    <table class="table" id="inClient-table">
+                      <thead>
+                        <tr>
+                          <th scope="col">Ім'я</th>
+                          <th scope="col">Email</th>
+                          <th scope="col">Телефон</th>
+                          <th scope="col">Адреса</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <input type="text" class="form-control" id="editClientName" required>
+                          </td>
+                          <td>
+                            <input type="email" class="form-control" id="editClientEmail" required>
+                          </td>
+                          <td>
+                            <input type="tel" class="form-control" id="editClientPhone" required>
+                          </td>
+                          <td>
+                            <textarea class="form-control" id="editClientAddress" rows="3" required></textarea>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                  Замовлення клієнта
+                </button>
+              </h2>
+              <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#clientAccordion">
+                <div class="accordion-body">
+                  <div class="mytable">
+                    <table class="table" id="clientOrdersTable">
+                      <thead>
+                        <tr>
+                          <th scope="col"></th>
+                          <th scope="col">Замовлення</th>
+                          <th scope="col">Загальна сумма</th>
+                          <th scope="col">Доставка і оплата</th>
+                          <th scope="col">Статус</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                    </table>
+                  </div>
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center" id="clientOrdersPaginationContainer"></ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-danger" id="deleteClientBtn">Видалити клієнта</button>
+          <button type="button" class="btn btn-primary" id="saveChangesBtn">Зберегти</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для просмотра заказа -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="orderModalLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Навигация с помощью табов -->
+        <ul class="nav nav-tabs" id="orderTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab" aria-controls="tab1" aria-selected="true">Інформація про замовлення</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab2-tab" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab" aria-controls="tab2" aria-selected="false">Примітки</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab3-tab" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab" aria-controls="tab3" aria-selected="false">СМС</button>
+          </li>
+        </ul>
+        <!-- Содержимое табов -->
+        <div class="tab-content" id="orderTabContent">
+          <div class="tab-pane fade show active" id="tab1" role="tabpanel" aria-labelledby="tab1-tab">
+            <!-- Содержимое вкладки 1 -->
+          </div>
+          <div class="tab-pane fade" id="tab2" role="tabpanel" aria-labelledby="tab2-tab">
+            <!-- Содержимое вкладки 2 -->
+          </div>
+          <div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3-tab">
+            <!-- Содержимое вкладки 3 -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-danger" id="deleteOrderBtn">Видалити замовлення</button>
+        <button type="button" class="btn btn-outline-primary" id="saveOrderBtn">Зберегти</button>
+        <button type="button" class="btn btn-primary" id="printOrderBtn">Друк</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Дочернее модальное окно -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addProductModalLabel">Додати товар</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Форма для добавления товара -->
+        <form>
+          <div class="mb-3">
+            <label for="productSelect" class="form-label">Виберіть товар</label>
+            <div class="custom-select">
+              <div class="selected-option">Виберіть товар</div>
+              <div class="options-container">
+                <!-- Опции будут динамически добавлены сюда -->
+              </div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="quantityInput" class="form-label">Кількість</label>
+            <input type="number" class="form-control" id="quantityInput" min="1" value="1">
+          </div>
+        </form>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+        <button type="button" class="btn btn-primary" id="saveProductBtn">Зберегти</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+    </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css" />
+
+        <script src="../static/js/customer.js"></script>
+</body>
+</html>

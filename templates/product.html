@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список товарів</title>
+    <link rel="stylesheet" href="../static/css/product.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="white-stripe"></div>
+    <div class="full-page-background"></div>    
+    <div class="my-content">    
+        <div class="full-height-70px-width-div">
+            <a class="home-img" href="#"><img src="/static/images/home.png" width="30px" height="30px" ></a>
+            <a class="products-img" href="#"><img src="/static/images/shopping-cart.png" width="25px" height="26px" ></a>
+            <a class="categories-img" href="#"><img src="/static/images/group.png" width="30px" height="30px" ></a>
+            <div class="div-70x70px"></div>
+        </div>
+
+        <div class="menu">
+            <div class="menu-bckground">
+                <div class="in-menu-div-70x70px">
+                    <a class="menu2-btn" href="#">L</a>
+                </div>
+            </div>
+            <a class="menu-btn" href="#">L</a>
+            <nav class="menu-list">
+                <a class="home-img" href="#"><img src="/static/images/home.png" width="30px" height="30px" ></a>
+                <a id="href-main" href="#">Головна</a>
+                <a class="products-img" href="#"><img src="/static/images/shopping-cart.png" width="25px" height="26px" ></a>
+                <a id="href-products" href="#">Список товарів</a>
+                <a class="categories-img" href="#"><img src="/static/images/group.png" width="30px" height="30px" ></a>
+                <a id="href-categories" href="#">Клієнти</a>
+            </nav>
+        </div >
+        
+        <div class="navbar">
+            <ul class="nav justify-content-start">
+                <li class="nav-item">
+                    <a id="active-page" href="#">Список товарів</a>
+                </li>
+            </ul>
+            <ul class="nav justify-content-end">
+                <li class="nav-item">
+                    <a id="export" class="btn btn-outline-primary" href="#" role="button">Доставка</a>
+                </li>
+                <li class="nav-item">
+                    <button id="create-product" class="btn btn-primary" href="#" type="button">Створити товар</button>
+                </li>
+            </ul>
+        </div>     
+
+        <div class="main-conent-div">
+            <div class="rectangle-5">
+              <div class="navi">
+                <select class="form-select" id="categoryFilter">
+                  <option value="">Всі категорії</option>
+                </select>
+              
+                <div class="input-group mb-3">
+                  <button class="btn btn-outline-secondary" type="button" id="searchButton">Пошук</button>
+                  <input type="text" class="form-control flex-grow-1" id="searchInput" placeholder="Введіть назву товару" aria-label="Пошук по назві товару" aria-describedby="searchButton">
+                </div>
+              </div>
+
+                <div class="mytable">
+                    <table class="table" id="productsTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">Зображення</th>
+                                <th scope="col">Назва</th>
+                                <th scope="col">Ціна за метр</th>
+                                <th scope="col">Категорія</th>
+                                <th scope="col">Кількість</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center" id="paginationContainer"></ul>
+                </nav>
+            </div>
+        </div>
+
+<!-- Модальное окно для создания товара -->
+<div class="modal fade" id="createProductModal" tabindex="-1" aria-labelledby="createProductModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createProductModalLabel">Додати товар</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="createProductForm">
+          <div class="mb-3">
+            <label for="productName" class="form-label">Назва товару</label>
+            <input type="text" class="form-control" id="productName" required>
+          </div>
+          <div class="mb-3">
+            <label for="productPrice" class="form-label">Ціна</label>
+            <input type="number" class="form-control" id="productPrice" step="0.01" required>
+          </div>
+          <div class="mb-3">
+            <label for="productCategorySelect" class="form-label">Категорії</label>
+            <select class="form-select" id="productCategorySelect" multiple required>
+              <option value="">Виберіть категорії</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="productQuantity" class="form-label">Кількість</label>
+            <input type="number" class="form-control" id="productQuantity" min="0" required>
+          </div>
+          <div class="mb-3">
+            <label for="productDescription" class="form-label">Опис товару</label>
+            <textarea class="form-control" id="productDescription" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="productShortDescription" class="form-label">Короткий опис товару</label>
+            <textarea class="form-control" id="productShortDescription" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="productImage" class="form-label">Зображення</label>
+            <input type="file" class="form-control" id="productImage" accept="image/*">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+        <button type="button" class="btn btn-primary" id="createProductBtn">Зберегти</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Модальное окно -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productModalLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="accordion" id="productAccordion">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                Інформація про товар
+              </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#productAccordion">
+              <div class="accordion-body">
+                <div class="forInModalProductTable">
+                  <table class="table" id="inProduct-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Зображення</th>
+                        <th scope="col">Назва товару</th>
+                        <th scope="col">Наявність</th>
+                        <th scope="col">Ціна за метр, грн</th>
+                        <th scope="col">Категорія</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><img id="productImage" width="50" height="50"></td>
+                        <td id="productName"></td>
+                        <td>
+                          <select id="productAvailability" class="form-select">
+                            <option value="instock">В наличии</option>
+                            <option value="outofstock">Нет в наличии</option>
+                          </select>
+                        </td>
+                        <td></td>
+                        <td id="productCategory"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <ul id="productAttributesList"></ul>
+                <button type="button" class="btn btn-primary" id="addAtributeBtn">Додати атрибут</button>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                Зображення товару
+              </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#productAccordion">
+              <div class="accordion-body">
+                <button type="button" class="btn btn-primary" id="addImgBtn">Додати зображення</button>
+                <div id="productImagesGallery"></div>
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingThree">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                Опис товару
+              </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#productAccordion">
+              <div class="accordion-body">
+                <div id="productDescriptionText"></div>
+                <textarea id="productDescription" class="form-control" rows="5"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-danger" id="delete-order" href="#">Видалити товар</button>
+        <button type="button" class="btn btn-primary" id="saveChangesBtn">Зберегти</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addAtributeModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addAtributeModalLabel">Додати Атрибут</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="atributeName" class="form-label">Назва атрибуту</label>
+          <input type="text" class="form-control" id="atributeName" placeholder="Введіть назву атрибуту">
+        </div>
+        <div class="mb-3">
+          <label for="atributeDescription" class="form-label">Опис атрибуту</label>
+          <input type="text" class="form-control" id="atributeDescription" placeholder="Введіть опис атрибуту">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+        <button type="button" class="btn btn-primary" id="saveCategoryBtn">Зберегти</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addImageModal" tabindex="-1" aria-labelledby="addImageModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addImageModalLabel">Додати зображення</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addImageForm" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="imageFile" class="form-label">Виберіть зображення</label>
+            <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+        <button type="button" class="btn btn-primary" id="addImageSaveBtn">Зберегти</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css" />
+
+        <script src="../static/js/product.js"></script>
+</body>
+</html>
