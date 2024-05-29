@@ -66,3 +66,10 @@ class wp_wc_orders(Base_second):
     user_agent = Column(String(255), nullable=False)
     customer_note = Column(String(255), nullable=True)
     
+class nova_poshta(Base):
+    __tablename__ = 'nova_poshta'
+    id = Column(Integer, primary_key=True, nullable=False)
+    ord_id = Column(Integer, nullable=False)
+    ttn_id = Column(Integer, nullable=False)
+    ref_code = Column(String, nullable=False)
+    date= Column(DateTime, nullable=False)

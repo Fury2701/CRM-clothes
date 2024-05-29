@@ -280,6 +280,70 @@ def apply_discount(order_id, discount_amount, discount_type):
     except Exception as e:
         return {"error": "Database error" + str(e)}
 
+def add_entry(ord_id, ttn_id):
+    with Session() as db_session:
+        new_entry = nova_poshta(
+            ord_id=ord_id,
+            ttn_id=ttn_id,
+            date=datetime.utcnow()
+        )
+        db_session.add(new_entry)
+        db_session.commit()
+        return new_entry.id
+
+
+def delete_entry(ord_id):
+    with Session() as db_session:
+        entry = db_session.query(nova_poshta).filter(nova_poshta.ord_id == ord_id).first()
+        if entry:
+            db_session.delete(entry)
+            db_session.commit()
+            return True
+        return False
+
+
+def update_entry(entry_id, ord_id=None, ttn_id=None):
+    with Session() as db_session:
+        entry = db_session.query(nova_poshta).filter(nova_poshta.id == entry_id).first()
+        if entry:
+            if ord_id is not None:
+                entry.ord_id = ord_id
+            if ttn_id is not None:
+                entry.ttn_id = ttn_id
+            entry.date = datetime.utcnow()
+            db_session.commit()
+            return True
+        return False
+
+
+def get_entries(page=1, page_size=20, order_by='date', order='desc', search_ord_id=None):
+    """
+    Отримує сторінку записів з таблиці з можливістю сортування і фільтрації.
+    :param page: Номер сторінки (починається з 1).
+    :param page_size: Кількість записів на сторінку (максимум 20).
+    :param order_by: Поле для сортування ('date' або 'ord_id').
+    :param order: Порядок сортування ('asc' або 'desc').
+    :param search_ord_id: Значення ord_id для пошуку.
+    :return: Кортеж (список записів, кількість сторінок, поточна сторінка).
+    """
+    with Session() as db_session:
+        query = db_session.query(nova_poshta)
+        
+        if search_ord_id is not None:
+            query = query.filter(nova_poshta.ord_id == search_ord_id)
+        
+        total_entries = query.count()
+        total_pages = (total_entries + page_size - 1) // page_size  # Обчислюємо кількість сторінок
+
+        if order == 'asc':
+            order_criteria = getattr(nova_poshta, order_by).asc()
+        else:
+            order_criteria = getattr(nova_poshta, order_by).desc()
+
+        entries = query.order_by(order_criteria).offset((page - 1) * page_size).limit(page_size).all()
+        
+        return entries, total_pages, page
+
 def get_discount_coupon(search=None, code=None, page=1, per_page=20):
     orders = get_woocomerce()
     return orders.get_discout_coupons(search=search, code=code, page=page, per_page=per_page)

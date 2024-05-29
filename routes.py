@@ -589,6 +589,49 @@ def delete_coupon():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@app.route("/delivery", methods=['GET', 'POST'])
+def delivery():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    page = request.args.get('page', 1, type=int)
+    order_by = request.args.get('order_by', 'date')
+    order = request.args.get('order', 'desc')
+    search_ord_id = request.args.get('search_ord_id', type=int)
+    
+    entries, total_pages, current_page = get_entries(page=page, order_by=order_by, order=order, search_ord_id=search_ord_id)
+    
+    return render_template("delivery.html", entries=entries, total_pages=total_pages, current_page=current_page), 200
+
+@app.route("/delivery_data", methods=['GET'])
+def delivery_data():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    page = request.args.get('page', 1, type=int)
+    order_by = request.args.get('order_by', 'date')
+    order = request.args.get('order', 'desc')
+    search_ord_id = request.args.get('search_ord_id', type=int)
+    
+    entries, total_pages, current_page = get_entries(page=page, order_by=order_by, order=order, search_ord_id=search_ord_id)
+    
+    entries_data = [
+        {
+            'id': entry.id,
+            'ord_id': entry.ord_id,
+            'ttn_id': entry.ttn_id,
+            'date': entry.date.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        for entry in entries
+    ]
+    
+    response = {
+        'entries': entries_data,
+        'total_pages': total_pages,
+        'current_page': current_page
+    }
+    
+    return jsonify(response)
 
 #Оновлення статусу SMS
 
