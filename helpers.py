@@ -281,16 +281,19 @@ def apply_discount(order_id, discount_amount, discount_type):
         return {"error": "Database error" + str(e)}
 
 def add_entry(ord_id, ttn_id, ref_code):
-    with Session() as db_session:
-        new_entry = nova_poshta(
-            ord_id=ord_id,
-            ttn_id=ttn_id,
-            ref_code=ref_code,
-            date=datetime.utcnow()
-        )
-        db_session.add(new_entry)
-        db_session.commit()
-        return new_entry.id
+    try:
+        with Session() as db_session:
+            new_entry = nova_poshta(
+                ord_id=ord_id,
+                ttn_id=ttn_id,
+                ref_code=ref_code,
+                date=datetime.utcnow()
+            )
+            db_session.add(new_entry)
+            db_session.commit()
+            return 200
+    except Exception as e:
+        return "DB error with NP"
 
 
 def delete_entry(ord_id):

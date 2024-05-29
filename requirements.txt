@@ -8,3 +8,5 @@ redis
 flask-sqlalchemy
 flask-session
 pytz
+novaposhta-python-client #бібла новой пошти
+typing
