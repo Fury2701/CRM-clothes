@@ -293,31 +293,37 @@ def add_entry(ord_id, ttn_id, ref_code):
             db_session.commit()
             return 200
     except Exception as e:
-        return "DB error with NP"
+        return {"error": "DB error with NP" + str(e)}
 
 
 def delete_entry(ord_id):
-    with Session() as db_session:
-        entry = db_session.query(nova_poshta).filter(nova_poshta.ord_id == ord_id).first()
-        if entry:
-            db_session.delete(entry)
-            db_session.commit()
-            return True
-        return False
+    try:
+        with Session() as db_session:
+            entry = db_session.query(nova_poshta).filter(nova_poshta.ord_id == ord_id).first()
+            if entry:
+                db_session.delete(entry)
+                db_session.commit()
+                return True
+            return False
+    except Exception as e:
+        return {"error": "DB error with NP" + str(e)}
 
 
 def update_entry(entry_id, ord_id=None, ttn_id=None):
-    with Session() as db_session:
-        entry = db_session.query(nova_poshta).filter(nova_poshta.id == entry_id).first()
-        if entry:
-            if ord_id is not None:
-                entry.ord_id = ord_id
-            if ttn_id is not None:
-                entry.ttn_id = ttn_id
-            entry.date = datetime.utcnow()
-            db_session.commit()
-            return True
-        return False
+    try:
+        with Session() as db_session:
+            entry = db_session.query(nova_poshta).filter(nova_poshta.id == entry_id).first()
+            if entry:
+                if ord_id is not None:
+                    entry.ord_id = ord_id
+                if ttn_id is not None:
+                    entry.ttn_id = ttn_id
+                entry.date = datetime.utcnow()
+                db_session.commit()
+                return True
+            return False
+    except Exception as e:
+        return {"error": "DB error with NP" + str(e)}
 
 
 def get_entries(page=1, page_size=20, order_by='date', order='desc', search_ord_id=None):
@@ -347,6 +353,95 @@ def get_entries(page=1, page_size=20, order_by='date', order='desc', search_ord_
         entries = query.order_by(order_criteria).offset((page - 1) * page_size).limit(page_size).all()
         
         return entries, total_pages, page
+
+def create_counteragent(name: str, phone: str, ref: str):
+    try:
+        with Session() as db_session:
+            new_counteragent = Counteragents(name=name, phone=phone, ref=ref)
+            db_session.add(new_counteragent)
+            db_session.commit()
+            db_session.refresh(new_counteragent)
+            return new_counteragent
+    except Exception as e:
+        return{"error": "DB error with NP" + str(e)}
+        
+
+# Функція для отримання запису за ID
+def get_counteragent_by_id(counteragent_id: int):
+    try:
+        with Session() as db_session:
+            return db_session.query(Counteragents).filter(Counteragents.id == counteragent_id).first()
+    except Exception as e:
+        return{"error": "DB error with NP" + str(e)}
+        
+
+# Функція для оновлення запису за ID
+def update_counteragent(counteragent_id: int, name: str = None, phone: str = None):
+    try:
+        with Session() as db_session:
+            counteragent = db_session.query(Counteragents).filter(Counteragents.id == counteragent_id).first()
+            if counteragent:
+                if name:
+                    counteragent.name = name
+                if phone:
+                    counteragent.phone = phone
+                db_session.commit()
+                db_session.refresh(counteragent)
+                return counteragent
+            else:
+                return(f"No counteragent found with ID: {counteragent_id}")
+                return None
+    except Exception as e:
+        return{"error": "DB error with NP" + str(e)}
+        
+
+# Функція для видалення запису за ID
+def delete_counteragent(counteragent_id: int):
+    try:
+        with Session() as db_session:
+            counteragent = db_session.query(Counteragents).filter(Counteragents.id == counteragent_id).first()
+            if counteragent:
+                db_session.delete(counteragent)
+                db_session.commit()
+                return True
+            else:
+                print(f"No counteragent found with ID: {counteragent_id}")
+                return False
+    except Exception as e:
+        return{"error": "DB error with NP" + str(e)}
+
+def get_counteragents(page=1, page_size=20, search_name=None, search_phone=None):
+    """
+    Отримує сторінку записів з таблиці з можливістю фільтрації.
+    :param page: Номер сторінки (починається з 1).
+    :param page_size: Кількість записів на сторінку (максимум 20).
+    :param search_name: Значення name для пошуку.
+    :param search_phone: Значення phone для пошуку.
+    :return: Кортеж (список записів, кількість сторінок, поточна сторінка).
+    """
+    if page_size > 20:
+        page_size = 20
+    
+    try:
+        with Session() as db_session:
+            query = db_session.query(Counteragents)
+            
+            if search_name:
+                query = query.filter(Counteragents.name == search_name)
+            
+            if search_phone:
+                query = query.filter(Counteragents.phone == search_phone)
+            
+            total_entries = query.count()
+            total_pages = (total_entries + page_size - 1) // page_size  # Обчислюємо кількість сторінок
+
+            entries = query.order_by(Counteragents.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+            
+            return entries, total_pages, page
+    except Exception as e:
+        return{"error": "DB error with NP" + str(e)}
+        
+        
 
 def get_discount_coupon(search=None, code=None, page=1, per_page=20):
     orders = get_woocomerce()

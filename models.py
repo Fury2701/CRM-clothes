@@ -73,3 +73,10 @@ class nova_poshta(Base):
     ttn_id = Column(Integer, nullable=False)
     ref_code = Column(String, nullable=False)
     date= Column(DateTime, nullable=False)
+
+class counteragents(Base):
+    __tablename__ = 'counteragents'
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    ref = Column(String, nullable=False)

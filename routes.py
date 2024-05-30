@@ -691,15 +691,40 @@ def delete_document_route():
         result = delete_internet_document(client, document_refs)
     return jsonify(result)
 
+@app.route('/counteragents', methods=['GET'])
+def counteragents():
+    # Отримуємо параметри запиту
+    page = int(request.args.get('page', 1))
+    page_size = int(request.args.get('page_size', 20))
+    search_name = request.args.get('search_name', None)
+    search_phone = request.args.get('search_phone', None)
+    try:
+        # Викликаємо функцію get_counteragents з введеними параметрами
+        result = get_counteragents(page=page, page_size=page_size, search_name=search_name, search_phone=search_phone)
+
+        
+        entries, total_pages, current_page = result
+        return jsonify({
+            'counteragents': entries, 
+            'total_pages': total_pages,
+            'current_page': current_page
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/create_counterparty', methods=['POST'])
 def create_counterparty_route():
     data = request.json
     try:
         with NovaPoshtaClient() as client:
             result = create_counterparty(client, **data)
+            ref = result['data'][0]['Ref']
+            print(ref)
+            name = f"{data.get('FirstName')} {data.get('MiddleName')} {data.get('LastName')}".strip()
+            phone = data.get('Phone')
+            create_counteragent(name, phone, ref)
         return jsonify(result)
     except Exception as e:
-        app.logger.error(f"Error creating counterparty: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/update_counterparty/<ref>', methods=['PUT'])
@@ -710,17 +735,16 @@ def update_counterparty_route(ref):
             result = update_counterparty(client, ref, **data)
         return jsonify(result)
     except Exception as e:
-        app.logger.error(f"Error updating counterparty: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/delete_counterparty/<ref>', methods=['DELETE'])
-def delete_counterparty_route(ref):
+@app.route('/delete_counterparty/<ref>/<id>', methods=['DELETE'])
+def delete_counterparty_route(ref,id):
     try:
         with NovaPoshtaClient() as client:
             result = delete_counterparty(client, ref)
+            delete_counteragent(id)
         return jsonify(result)
     except Exception as e:
-        app.logger.error(f"Error deleting counterparty: {e}")
         return jsonify({"error": str(e)}), 500
 
 
