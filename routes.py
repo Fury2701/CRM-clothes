@@ -719,10 +719,9 @@ def create_counterparty_route():
         with NovaPoshtaClient() as client:
             result = create_counterparty(client, **data)
             ref = result['data'][0]['Ref']
-            print(ref)
-            name = f"{data.get('FirstName')} {data.get('MiddleName')} {data.get('LastName')}".strip()
-            phone = data.get('Phone')
-            create_counteragent(name, phone, ref)
+            name = f"{data.get('first_name')} {data.get('middle_name')} {data.get('last_name')}".strip()
+            phone = data.get('phone')
+            inf= create_counteragent(name, phone, ref)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
