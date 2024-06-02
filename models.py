@@ -80,3 +80,11 @@ class counteragents(Base):
     name = Column(String, nullable=False)
     phone = Column(String, nullable=False)
     ref = Column(String, nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'phone': self.phone,
+            'ref': self.ref
+        }

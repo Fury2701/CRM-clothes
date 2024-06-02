@@ -437,9 +437,12 @@ def get_counteragents(page=1, page_size=20, search_name=None, search_phone=None)
 
             entries = query.order_by(counteragents.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
             
+            # Конвертація записів у словники
+            entries = [entry.to_dict() for entry in entries]
+            
             return entries, total_pages, page
     except Exception as e:
-        return{"error": "DB error with NP" + str(e)}
+        return {"error": "DB error with NP: " + str(e)}
         
         
 
