@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, jsonify, session, redirect, url_for, send_file
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, func
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, func, or_
 from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.ext.declarative import declarative_base
 import requests

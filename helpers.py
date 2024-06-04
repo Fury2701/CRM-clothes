@@ -427,10 +427,12 @@ def get_counteragents(page=1, page_size=20, search_name=None, search_phone=None)
             query = db_session.query(counteragents)
             
             if search_name:
-                query = query.filter(counteragents.name == search_name)
+                search_pattern = f"%{search_name}%"
+                query = query.filter(counteragents.name.ilike(search_pattern))
             
             if search_phone:
-                query = query.filter(counteragents.phone == search_phone)
+                search_pattern = f"%{search_phone}%"
+                query = query.filter(counteragents.phone.ilike(search_pattern))
             
             total_entries = query.count()
             total_pages = (total_entries + page_size - 1) // page_size  # Обчислюємо кількість сторінок
