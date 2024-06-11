@@ -10,6 +10,7 @@ class User(Base):
     name = Column(String(255), nullable=False)
     login = Column(String(255), nullable=False)
     password = Column(String(255), nullable=False)
+    lvl= Column(Integer, nullable=False)
 
 class Sms_history(Base):
     __tablename__ = 'Sms_history'
@@ -80,11 +81,13 @@ class counteragents(Base):
     name = Column(String, nullable=False)
     phone = Column(String, nullable=False)
     ref = Column(String, nullable=False)
+    contact_ref = Column(String, nullable=False)
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
             'phone': self.phone,
-            'ref': self.ref
+            'ref': self.ref,
+            'contact_ref': self.contact_ref
         }

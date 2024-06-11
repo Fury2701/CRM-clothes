@@ -7,6 +7,91 @@ import time
 Base.metadata.create_all(engine)
 Base_second.metadata.create_all(engine_second)
 
+# Функції для роботи з користувачами
+def create_user(name, login, password, lvl):
+    try:
+        with Session() as session:
+            new_user = User(name=name, login=login, password=password, lvl=lvl)
+            session.add(new_user)
+            session.commit()
+            return {
+                "id": new_user.id,
+                "name": new_user.name,
+                "login": new_user.login,
+                "password": new_user.password,
+                "lvl": new_user.lvl
+            }
+    except Exception as e:
+        logging.error(f"Failed to create user: {str(e)}")
+        return {"error": "Failed to create user", "message": str(e)}
+
+def get_user(user_id):
+    try:
+        with Session() as session:
+            user = session.query(User).filter(User.id == user_id).first()
+            if user:
+                return {
+                    "id": user.id,
+                    "name": user.name,
+                    "login": user.login,
+                    "password": user.password,
+                    "lvl": user.lvl
+                }
+            else:
+                return {"error": "User not found"}
+    except Exception as e:
+        logging.error(f"Failed to get user: {str(e)}")
+        return {"error": "Failed to get user", "message": str(e)}
+
+def update_user(user_id, name=None, login=None, password=None, lvl=None):
+    try:
+        with Session() as session:
+            user = session.query(User).filter(User.id == user_id).first()
+            if user:
+                if name:
+                    user.name = name
+                if login:
+                    user.login = login
+                if password:
+                    user.password = password
+                if lvl is not None:
+                    user.lvl = lvl
+                session.commit()
+                return {
+                    "id": user.id,
+                    "name": user.name,
+                    "login": user.login,
+                    "password": user.password,
+                    "lvl": user.lvl
+                }
+            return {"error": "User not found"}
+    except Exception as e:
+        logging.error(f"Failed to update user: {str(e)}")
+        return {"error": "Failed to update user", "message": str(e)}
+
+def delete_user(user_id):
+    try:
+        with Session() as session:
+            user = session.query(User).filter(User.id == user_id).first()
+            if user:
+                session.delete(user)
+                session.commit()
+                return {"message": "User deleted successfully"}
+            return {"error": "User not found"}
+    except Exception as e:
+        logging.error(f"Failed to delete user: {str(e)}")
+        return {"error": "Failed to delete user", "message": str(e)}
+
+def get_all_users():
+    try:
+        with Session() as session:
+            users = session.query(User).all()
+            return [{"id": user.id, "name": user.name, "login": user.login, "password": user.password, "lvl": user.lvl} for user in users]
+    except Exception as e:
+        logging.error(f"Failed to get users: {str(e)}")
+        return {"error": "Failed to get users", "message": str(e)}
+
+
 
 def user_validy(login, password):
         with Session() as db_session:
@@ -17,6 +102,7 @@ def user_validy(login, password):
                 session["name"] = user.name
                 session["login"] = login
                 session["password"] = password
+                session["lvl"] = user.lvl
                 return True
             else:
                 return False
@@ -354,10 +440,10 @@ def get_entries(page=1, page_size=20, order_by='date', order='desc', search_ord_
         
         return entries, total_pages, page
 
-def create_counteragent(name: str, phone: str, ref: str):
+def create_counteragent(name: str, phone: str, ref: str, contact_ref: str):
     try:
         with Session() as db_session:
-            new_counteragent = counteragents(name=name, phone=phone, ref=ref)
+            new_counteragent = counteragents(name=name, phone=phone, ref=ref, contact_ref=contact_ref)
             db_session.add(new_counteragent)
             db_session.commit()
             db_session.refresh(new_counteragent)

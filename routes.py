@@ -30,7 +30,93 @@ def logout():
     session.pop("id", None)
     session.pop("login", None)
     session.pop("password", None)
+    session.pop("name", None)
+    session.pop("lvl",None)
     return redirect(url_for("login_page"))
+
+@app.route("/print", methods=['GET'])
+def print():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+ 
+    return render_template("print.html"), 200
+
+@app.route("/user_page", methods=['GET'])
+def user_page():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    if session.get("lvl", 0) < 1:
+        return "Access Denied", 403  # 403 Forbidden
+
+    return render_template("user.html"), 200
+
+
+@app.route("/user/create", methods=['POST'])
+def create_user_route():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    if session.get("lvl", 0) < 1:
+        return "Access Denied", 403  # 403 Forbidden
+
+    name = request.json.get('name')
+    login = request.json.get('login')
+    password = request.json.get('password')
+    lvl = request.json.get('lvl')
+    if name and login and password and lvl:
+        result = create_user(name, login, password, lvl)
+        return jsonify(result), 200
+    else:
+        return jsonify({"error": "Missing required fields"}), 400  # 400 Bad Request
+
+@app.route("/user/<int:user_id>", methods=['GET'])
+def get_user_route(user_id):
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    if session.get("lvl", 0) < 1:
+        return "Access Denied", 403  # 403 Forbidden
+
+    result = get_user(user_id)
+    return jsonify(result), 200 if "error" not in result else 404  # 404 Not Found if user not found
+
+@app.route("/user/<int:user_id>", methods=['PUT'])
+def update_user_route(user_id):
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    if session.get("lvl", 0) < 1:
+        return "Access Denied", 403  # 403 Forbidden
+
+    name = request.json.get('name')
+    login = request.json.get('login')
+    password = request.json.get('password')
+    lvl = request.json.get('lvl')
+    result = update_user(user_id, name, login, password, lvl)
+    return jsonify(result), 200 if "error" not in result else 404  # 404 Not Found if user not found
+
+@app.route("/user/<int:user_id>", methods=['DELETE'])
+def delete_user_route(user_id):
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    if session.get("lvl", 0) < 1:
+        return "Access Denied", 403  # 403 Forbidden
+
+    result = delete_user(user_id)
+    return jsonify(result), 200 if "error" not in result else 404  # 404 Not Found if user not found
+
+@app.route("/user/all", methods=['GET'])
+def get_all_users_route():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    if session.get("lvl", 0) < 1:
+        return "Access Denied", 403  # 403 Forbidden
+
+    result = get_all_users()
+    return jsonify(result), 200 if "error" not in result else 500  # 500 Internal Server Error if database error
 
 @app.route("/dataorders", methods=['GET']) #для отримання даних наступних сторінок(можливе використання фільтрів по ПІБ)
 def dataorders():
@@ -719,9 +805,10 @@ def create_counterparty_route():
         with NovaPoshtaClient() as client:
             result = create_counterparty(client, **data)
             ref = result['data'][0]['Ref']
+            contact_ref=  result['data'][0]['ContactPerson']['data'][0]['Ref']
             name = f"{data.get('last_name')} {data.get('first_name')} {data.get('middle_name')}".strip()
             phone = data.get('phone')
-            inf= create_counteragent(name, phone, ref)
+            inf= create_counteragent(name, phone, ref, contact_ref)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
