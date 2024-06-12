@@ -1705,6 +1705,16 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  const deliveryButton = document.querySelector('#export');
+
+  deliveryButton.addEventListener('click', function(e) {
+    e.preventDefault();
+
+    window.location.href = '/delivery?page=1';
+  });
+});
+
 function openCustomerModal(customerId) {
   fetch(`/customerbyid?id=${customerId}`)
     .then(response => {

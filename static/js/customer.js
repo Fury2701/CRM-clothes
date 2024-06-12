@@ -58,6 +58,16 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  const deliveryButton = document.querySelector('#export');
+
+  deliveryButton.addEventListener('click', function(e) {
+    e.preventDefault();
+
+    window.location.href = '/delivery?page=1';
+  });
+});
+
 $('.menu-btn').on('click', function(e) {
   e.preventDefault();
   $(this).hide();

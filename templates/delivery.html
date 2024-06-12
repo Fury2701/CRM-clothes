@@ -23,10 +23,10 @@
         <div class="menu">
             <div class="menu-bckground">
                 <div class="in-menu-div-70x70px">
-                    <a class="menu2-btn" href="#">L</a>
+                    <a class="menu2-btn" href="#"><img src="/static/images/logo.png" width="70px" height="70px" ></a>
                 </div>
             </div>
-            <a class="menu-btn" href="#">L</a>
+            <a class="menu-btn" href="#"><img src="/static/images/logo.png" width="70px" height="70px" ></a>
             <nav class="menu-list">
                 <a class="home-img" href="#"><img src="/static/images/home.png" width="30px" height="30px" ></a>
                 <a id="href-main" href="#">Головна</a>
@@ -81,26 +81,244 @@
             </div>
         </div>
 
-        <!-- Модальне вікно для створення доставки -->
-        <div class="modal fade" id="createShipmentModal" tabindex="-1" aria-labelledby="createShipmentModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="createShipmentModalLabel">Створити доставку</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="createShipmentForm">
-                            <!-- Поля форми для створення доставки -->
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
-                        <button type="button" class="btn btn-primary" id="createShipmentBtn">Створити</button>
+<!-- Модальное вікно для створення доставки -->
+<div class="modal fade" id="createShipmentModal" tabindex="-1" aria-labelledby="createShipmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createShipmentModalLabel">Створити доставку</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createShipmentForm">
+                    <div class="select-wrapper">
+                        <label for="sender-city-search">Населенний пункт відправника:</label>
+                        <input type="text" id="sender-city-search" class="search-input" placeholder="Введіть назву населеного пункту">
+                        <div id="sender-city-options" class="options-container"></div>
+                      </div>
+                      
+                      <div class="select-wrapper">
+                        <label for="sender-warehouse-search">Відділення відправника:</label>
+                        <input type="text" id="sender-warehouse-search" class="search-input" placeholder="Введіть номер відділення">
+                        <div id="sender-warehouse-options" class="options-container"></div>
+                      </div>
+                      
+                      <div class="select-wrapper">
+                        <label for="recipient-city-search">Населенний пункт одержувача:</label>
+                        <input type="text" id="recipient-city-search" class="search-input" placeholder="Введіть назву населеного пункту">
+                        <div id="recipient-city-options" class="options-container"></div>
+                      </div>
+                      
+                      <div class="select-wrapper">
+                        <label for="recipient-warehouse-search">Відділення одержувача:</label>
+                        <input type="text" id="recipient-warehouse-search" class="search-input" placeholder="Введіть номер відділення">
+                        <div id="recipient-warehouse-options" class="options-container"></div>
+                      </div>                 
+  
+                <div class="mb-3">
+                    <label for="payerType" class="form-label">Тип платника</label>
+                    <select class="form-select" id="payerType" name="payerType" required>
+                        <option value="Sender">Відправник</option>
+                        <option value="Recipient">Отримувач</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="paymentMethod" class="form-label">Форма розрахунку</label>
+                    <select class="form-select" id="paymentMethod" name="paymentMethod" required>
+                        <option value="Cash">Готівка</option>
+                        <option value="NonCash">Безготівковий розрахунок</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="dateTime" class="form-label">Дата відправки</label>
+                    <input type="date" class="form-control" id="dateTime" name="dateTime" required>
+                </div>
+                <div class="mb-3">
+                    <label for="weight" class="form-label">Фактична вага, кг</label>
+                    <input type="text" class="form-control" id="weight" name="weight" min="0.1" step="0.1" required>
+                </div>
+                <div class="mb-3">
+                    <label for="serviceType" class="form-label">Технологія доставки</label>
+                    <select class="form-select" id="serviceType" name="serviceType" required>
+                        <option value="WarehouseWarehouse">Відділення-Відділення</option>
+                        
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="seatsAmount" class="form-label">Кількість місць відправлення</label>
+                    <input type="number" class="form-control" id="seatsAmount" name="seatsAmount" min="1" required>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Опис відправлення</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="cost" class="form-label">Оціночна вартість</label>
+                    <input type="number" class="form-control" id="cost" name="cost" min="0" step="0.01">
+                </div>
+                <div class="mb-3">
+                    <label for="sender" class="form-label">Відправник</label>
+                    <div class="custom-select">
+                        <input type="text" id="senderInput" placeholder="Виберіть відправника">
+                        <ul id="senderList"></ul>
                     </div>
                 </div>
+
+                <div class="mb-3">
+                    <label for="senderPhone" class="form-label">Номер телефону відправника</label>
+                    <input class="form-control" id="senderPhone" name="senderPhone" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="recipient" class="form-label">Отримувач</label>
+                    <div class="custom-select">
+                        <input type="text" id="recipientInput" placeholder="Виберіть отримувача">
+                        <ul id="recipientList"></ul>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="recipientPhone" class="form-label">Номер телефону отримувача</label>
+                    <input class="form-control" id="recipientPhone" name="recipientPhone" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="ord_id" class="form-label">ІD замовлення</label>
+                    <input class="form-control" id="ord_id" name="ord_id" required>
+                </div>
+
+                <div>
+                    <button type="button" class="btn btn-primary" id="createCounerparty" data-toggle="modal" data-target="#counterpartyModal">
+                        Створити контрагента
+                    </button>
+                    <button type="button" class="btn btn-danger" id="deleteCounterparty" data-toggle="modal" data-target="#deleteCounterpartyModal">
+                        Видалити контрагента
+                      </button>
+                </div>
+                <!-- ... -->
+            </form>
+        </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+                <button type="submit" form="createShipmentForm" class="btn btn-primary">Створити</button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Модальное окно для удаления контрагента -->
+<div class="modal fade" id="deleteCounterpartyModal" tabindex="-1" role="dialog" aria-labelledby="deleteCounterpartyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteCounterpartyModalLabel">Видалення контрагента</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="deleteCounterpartyInput" class="form-label">Виберіть контрагента для видалення:</label>
+            <div class="custom-select">
+              <input type="text" id="deleteCounterpartyInput" placeholder="Виберіть контрагента">
+              <ul id="deleteCounterpartyList"></ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+          <button type="button" class="btn btn-danger" id="deleteCounterpartyButton">Видалити</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="modal fade" id="contactPersonModal" tabindex="-1" role="dialog" aria-labelledby="contactPersonModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="contactPersonModalLabel">Создание контактного лица</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="createContactPersonForm">
+            <div class="mb-3">
+              <label for="counterpartySelect" class="form-label">Контрагент</label>
+              <select class="form-select" id="counterpartySelect" required></select>
+            </div>
+            <div class="mb-3">
+              <label for="contactPersonFirstName" class="form-label">Имя</label>
+              <input type="text" class="form-control" id="contactPersonFirstName" required>
+            </div>
+            <div class="mb-3">
+              <label for="contactPersonLastName" class="form-label">Фамилия</label>
+              <input type="text" class="form-control" id="contactPersonLastName" required>
+            </div>
+            <div class="mb-3">
+              <label for="contactPersonMiddleName" class="form-label">Отчество</label>
+              <input type="text" class="form-control" id="contactPersonMiddleName">
+            </div>
+            <div class="mb-3">
+              <label for="contactPersonPhone" class="form-label">Телефон</label>
+              <input type="tel" class="form-control" id="contactPersonPhone" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="createContactPersonButton">Создать</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="modal fade" id="counterpartyModal" tabindex="-1" role="dialog" aria-labelledby="counterpartyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="counterpartyModalLabel">Створення контрагента</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="firstName">Імя'я</label>
+                        <input type="text" class="form-control" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="middleName">По батькові</label>
+                        <input type="text" class="form-control" id="middleName">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Прізвище</label>
+                        <input type="text" class="form-control" id="lastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+                        <input type="tel" class="form-control" id="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" id="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="counterpartyType">Тип контрагента</label>
+                        <select class="form-control" id="counterpartyType" required>
+                            <option value="PrivatePerson">Приватне лице</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="counterpartyProperty">Властивість контрагента</label>
+                        <select class="form-control" id="counterpartyProperty" required>
+                            <option value="Recipient">Отримувач</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрити</button>
+                <button type="button" class="btn btn-primary" id="saveCounterparty">Зберегти</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
         <!-- Модальне вікно для перегляду інформації про доставку -->
         <div class="modal fade" id="shipmentModal" tabindex="-1" aria-labelledby="shipmentModalLabel" aria-hidden="true">
@@ -127,7 +345,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css" />
-
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/np-select@1.0.3/build/np-select.umd.js"></script>
     <script src="../static/js/delivery.js"></script>
 </body>
 </html>
