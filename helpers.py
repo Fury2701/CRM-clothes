@@ -22,7 +22,6 @@ def create_user(name, login, password, lvl):
                 "lvl": new_user.lvl
             }
     except Exception as e:
-        logging.error(f"Failed to create user: {str(e)}")
         return {"error": "Failed to create user", "message": str(e)}
 
 def get_user(user_id):
@@ -40,7 +39,6 @@ def get_user(user_id):
             else:
                 return {"error": "User not found"}
     except Exception as e:
-        logging.error(f"Failed to get user: {str(e)}")
         return {"error": "Failed to get user", "message": str(e)}
 
 def update_user(user_id, name=None, login=None, password=None, lvl=None):
@@ -66,7 +64,6 @@ def update_user(user_id, name=None, login=None, password=None, lvl=None):
                 }
             return {"error": "User not found"}
     except Exception as e:
-        logging.error(f"Failed to update user: {str(e)}")
         return {"error": "Failed to update user", "message": str(e)}
 
 def delete_user(user_id):
@@ -79,7 +76,6 @@ def delete_user(user_id):
                 return {"message": "User deleted successfully"}
             return {"error": "User not found"}
     except Exception as e:
-        logging.error(f"Failed to delete user: {str(e)}")
         return {"error": "Failed to delete user", "message": str(e)}
 
 def get_all_users():
@@ -88,7 +84,6 @@ def get_all_users():
             users = session.query(User).all()
             return [{"id": user.id, "name": user.name, "login": user.login, "password": user.password, "lvl": user.lvl} for user in users]
     except Exception as e:
-        logging.error(f"Failed to get users: {str(e)}")
         return {"error": "Failed to get users", "message": str(e)}
 
 
@@ -366,14 +361,14 @@ def apply_discount(order_id, discount_amount, discount_type):
     except Exception as e:
         return {"error": "Database error" + str(e)}
 
-def add_entry(ord_id, ttn_id, ref_code):
+def add_entry(ord_id:str, ttn_id:str, ref_code:str):
     try:
         with Session() as db_session:
             new_entry = nova_poshta(
                 ord_id=ord_id,
                 ttn_id=ttn_id,
                 ref_code=ref_code,
-                date=datetime.utcnow()
+                date=datetime.now().date()
             )
             db_session.add(new_entry)
             db_session.commit()

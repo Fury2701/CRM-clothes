@@ -749,11 +749,18 @@ def update_sms_status_info(message_id):
 
 @app.route('/create_internet_document/<ord_id>', methods=['POST'])
 def create_document_route(ord_id):
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    
     data = request.json
+    
     try:
         with NovaPoshtaClient() as client:
             result = create_internet_document(client, **data)
-        info= add_entry(ord_id,result["IntDocNumber"],result["Ref"])
+            result_data = result['data'][0]
+            IntDocNumber = result_data["IntDocNumber"]
+            ref = result_data["Ref"]
+        info= add_entry(ord_id,IntDocNumber,ref)
         if info==200:
             return jsonify(result)
         else: 
@@ -763,6 +770,9 @@ def create_document_route(ord_id):
 
 @app.route('/update_internet_document', methods=['PUT'])
 def update_document_route():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
     data = request.json
     ref = data.pop('ref')
     with NovaPoshtaClient() as client:
@@ -771,6 +781,9 @@ def update_document_route():
 
 @app.route('/delete_internet_document', methods=['DELETE'])
 def delete_document_route():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
     data = request.json
     document_refs = data['document_refs']
     with NovaPoshtaClient() as client:
@@ -779,6 +792,9 @@ def delete_document_route():
 
 @app.route('/counteragents', methods=['GET'])
 def counteragents():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
     # Отримуємо параметри запиту
     page = int(request.args.get('page', 1))
     page_size = int(request.args.get('page_size', 20))
@@ -800,6 +816,9 @@ def counteragents():
 
 @app.route('/create_counterparty', methods=['POST'])
 def create_counterparty_route():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
     data = request.json
     try:
         with NovaPoshtaClient() as client:
@@ -815,6 +834,9 @@ def create_counterparty_route():
 
 @app.route('/update_counterparty/<ref>', methods=['PUT'])
 def update_counterparty_route(ref):
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    
     data = request.json
     try:
         with NovaPoshtaClient() as client:
@@ -825,6 +847,9 @@ def update_counterparty_route(ref):
 
 @app.route('/delete_counterparty/<ref>/<id>', methods=['DELETE'])
 def delete_counterparty_route(ref,id):
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
     try:
         with NovaPoshtaClient() as client:
             result = delete_counterparty(client, ref)
