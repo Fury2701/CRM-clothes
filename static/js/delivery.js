@@ -855,8 +855,6 @@ fetch(`/create_internet_document/${ord_id}`, {
       console.log('ТТН успешно создана:', result);
       // Закрытие модального окна
       $('#createShipmentModal').modal('hide');
-      // Обновление списка ТТН на странице (если необходимо)
-      // ...
     }
   })
   .catch(error => {
