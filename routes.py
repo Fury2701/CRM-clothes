@@ -756,13 +756,13 @@ def create_document_route(ord_id):
     
     try:
         with NovaPoshtaClient() as client:
-            result = create_internet_document(client, **data)
-            result_data = result['data'][0]
+            result = create_internet_document(**data)
+            result_data = result[0]
             IntDocNumber = result_data["IntDocNumber"]
             ref = result_data["Ref"]
         info= add_entry(ord_id,IntDocNumber,ref)
         if info==200:
-            return jsonify(result)
+            return jsonify(result_data), 200
         else: 
             return jsonify({"error": "DB error or Novapost error"}), 500
     except Exception as e:

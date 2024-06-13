@@ -847,16 +847,16 @@ fetch(`/create_internet_document/${ord_id}`, {
     return response.json();
   })
   .then(result => {
-    if (result.success) {
+    if (result.error) {
+      // Обработка ошибок при создании ТТН
+      console.error('Ошибка создания ТТН:', result.error);
+    } else {
       // Обработка успешного создания ТТН
-      console.log('ТТН успешно создана:', result.data);
+      console.log('ТТН успешно создана:', result);
       // Закрытие модального окна
       $('#createShipmentModal').modal('hide');
       // Обновление списка ТТН на странице (если необходимо)
       // ...
-    } else {
-      // Обработка ошибок при создании ТТН
-      console.error('Ошибка создания ТТН:', result.error);
     }
   })
   .catch(error => {
