@@ -407,21 +407,27 @@ def update_entry(entry_id, ord_id=None, ttn_id=None):
         return {"error": "DB error with NP" + str(e)}
 
 
-def get_entries(page=1, page_size=20, order_by='date', order='desc', search_ord_id=None):
+def get_entries(page=1, page_size=20, order_by='date', order='desc', search_value=None):
     """
     Отримує сторінку записів з таблиці з можливістю сортування і фільтрації.
     :param page: Номер сторінки (починається з 1).
     :param page_size: Кількість записів на сторінку (максимум 20).
     :param order_by: Поле для сортування ('date' або 'ord_id').
     :param order: Порядок сортування ('asc' або 'desc').
-    :param search_ord_id: Значення ord_id для пошуку.
+    :param search_value: Значення для пошуку по ord_id або ttn_id.
     :return: Кортеж (список записів, кількість сторінок, поточна сторінка).
     """
     with Session() as db_session:
         query = db_session.query(nova_poshta)
         
-        if search_ord_id is not None:
-            query = query.filter(nova_poshta.ord_id == search_ord_id)
+        if search_value is not None:
+            search_value_str = f"%{search_value}%"
+            query = query.filter(
+                or_(
+                    nova_poshta.ord_id.like(search_value_str),
+                    nova_poshta.ttn_id.like(search_value_str)
+                )
+            )
         
         total_entries = query.count()
         total_pages = (total_entries + page_size - 1) // page_size  # Обчислюємо кількість сторінок

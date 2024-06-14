@@ -14,9 +14,9 @@
     <div class="full-page-background"></div>    
     <div class="my-content">    
         <div class="full-height-70px-width-div">
-            <a class="home-img" href="#"><img src="/static/images/home.png" width="30px" height="30px" ></a>
-            <a class="products-img" href="#"><img src="/static/images/shopping-cart.png" width="25px" height="26px" ></a>
-            <a class="clients-img" href="#"><img src="/static/images/group.png" width="30px" height="30px" ></a>
+            <a class="home-img" href="#"><img src="/static/images/home2.png" width="30px" height="30px" ></a>
+            <a class="products-img" href="#"><img src="/static/images/shopping-cart2.png" width="25px" height="26px" ></a>
+            <a class="clients-img" href="#"><img src="/static/images/group2.png" width="30px" height="30px" ></a>
             <div class="div-70x70px"></div>
         </div>
 
@@ -28,11 +28,11 @@
             </div>
             <a class="menu-btn" href="#"><img src="/static/images/logo.png" width="70px" height="70px" ></a>
             <nav class="menu-list">
-                <a class="home-img" href="#"><img src="/static/images/home.png" width="30px" height="30px" ></a>
+                <a class="home-img" href="#"><img src="/static/images/home2.png" width="30px" height="30px" ></a>
                 <a id="href-main" href="#">Головна</a>
-                <a class="products-img" href="#"><img src="/static/images/shopping-cart.png" width="25px" height="26px" ></a>
+                <a class="products-img" href="#"><img src="/static/images/shopping-cart2.png" width="25px" height="26px" ></a>
                 <a id="href-products" href="#">Список товарів</a>
-                <a class="clients-img" href="#"><img src="/static/images/group.png" width="30px" height="30px" ></a>
+                <a class="clients-img" href="#"><img src="/static/images/group2.png" width="30px" height="30px" ></a>
                 <a id="href-clients" href="#">Клієнти</a>
             </nav>
         </div >
@@ -45,6 +45,7 @@
             </ul>
             <ul class="nav justify-content-end">
                 <li class="nav-item">
+                    <button id="print-ttn" class="btn btn-outline-primary" href="#" type="button">Друк ЕН/Маркування</button>
                     <button id="create-shipment" class="btn btn-primary" href="#" type="button">Створити доставку</button>
                 </li>
             </ul>
@@ -155,6 +156,10 @@
                 <div class="mb-3">
                     <label for="cost" class="form-label">Оціночна вартість</label>
                     <input type="number" class="form-control" id="cost" name="cost" min="0" step="0.01">
+                </div>
+                <div class="mb-3">
+                    <label for="afterpaymentOnGoodsCost" class="form-label">Сума наложеного платежу</label>
+                    <input type="number" class="form-control" id="afterpaymentOnGoodsCost" name="afterpaymentOnGoodsCost" min="0" step="0.01">
                 </div>
                 <div class="mb-3">
                     <label for="sender" class="form-label">Відправник</label>
@@ -319,6 +324,37 @@
     </div>
 </div>
 
+<!-- Модальное окно -->
+<div class="modal fade" id="print-ttn-modal" tabindex="-1" role="dialog" aria-labelledby="print-ttn-labelModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="print-ttn-labelModalLabel">Створення контрагента</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div>
+                <label for="doc_type" class="form-label">Форма розрахунку</label>
+                <select class="form-select" id="doc_type" name="doc_type" required>
+                    <option value="ttnFull">Накладна</option>
+                    <option value="ttnMark">Наліпка</option>
+                </select>
+            </div>
+          <div class="mb-3">
+            <label for="ttnSearch" class="form-label">Пошук ТТН за номером замовлення:</label>
+            <div class="custom-select">
+              <input type="text" id="ttnSearch" placeholder="Введіть номер замовлення">
+              <ul id="ttnList"></ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрити</button>
+          <button type="button" class="btn btn-primary" id="printTTN">Отримати для друку</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
         <!-- Модальне вікно для перегляду інформації про доставку -->
         <div class="modal fade" id="shipmentModal" tabindex="-1" aria-labelledby="shipmentModalLabel" aria-hidden="true">

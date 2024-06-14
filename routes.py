@@ -683,9 +683,9 @@ def delivery():
     page = request.args.get('page', 1, type=int)
     order_by = request.args.get('order_by', 'date')
     order = request.args.get('order', 'desc')
-    search_ord_id = request.args.get('search_ord_id', type=int)
+    search_value = request.args.get('search_value')
     
-    entries, total_pages, current_page = get_entries(page=page, order_by=order_by, order=order, search_ord_id=search_ord_id)
+    entries, total_pages, current_page = get_entries(page=page, order_by=order_by, order=order, search_value=search_value)
     
     return render_template("delivery.html", entries=entries, total_pages=total_pages, current_page=current_page), 200
 
@@ -697,9 +697,9 @@ def delivery_data():
     page = request.args.get('page', 1, type=int)
     order_by = request.args.get('order_by', 'date')
     order = request.args.get('order', 'desc')
-    search_ord_id = request.args.get('search_ord_id', type=int)
+    search_value = request.args.get('search_value', None)
     
-    entries, total_pages, current_page = get_entries(page=page, order_by=order_by, order=order, search_ord_id=search_ord_id)
+    entries, total_pages, current_page = get_entries(page=page, order_by=order_by, order=order, search_value=search_value)
     
     entries_data = [
         {
@@ -718,7 +718,6 @@ def delivery_data():
     }
     
     return jsonify(response)
-
 #Оновлення статусу SMS
 
 @app.route("/update_sms_status/<message_id>", methods=['GET'])

@@ -209,21 +209,21 @@
 
 .home-img {
   position: absolute;
-  opacity: 0.55;
+  opacity: 1;
   top: 123px;
   left: 19px;
 }
 
 .offer-list-img {
   position: absolute;
-  opacity: 0.55;
+  opacity: 1;
   top: 172px;
   left: 21px;
 }
 
 .clients-img {
   position: absolute;
-  opacity: 0.55;
+  opacity: 1;
   top: 217px;
   left: 19px;
 }

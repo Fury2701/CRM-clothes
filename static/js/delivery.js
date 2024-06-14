@@ -278,27 +278,28 @@ const recipientWarehouseSearchInput = document.getElementById('recipient-warehou
 const recipientWarehouseOptionsContainer = document.getElementById('recipient-warehouse-options');
 
 senderWarehouseSearchInput.addEventListener('click', function() {
-  const deliveryCity = senderCitySearchInput.dataset.deliveryCity; // Получаем DeliveryCity для отправителя
+  const deliveryCity = senderCitySearchInput.dataset.deliveryCity;
   if (deliveryCity && senderWarehouseOptionsContainer.style.display === 'none') {
-    searchWarehouses(deliveryCity, senderWarehouseOptionsContainer);
+    searchWarehouses(deliveryCity, '', senderWarehouseOptionsContainer);
   } else {
     senderWarehouseOptionsContainer.style.display = 'none';
   }
 });
 
 recipientWarehouseSearchInput.addEventListener('click', function() {
-  const deliveryCity = recipientCitySearchInput.dataset.deliveryCity; // Получаем DeliveryCity для получателя
+  const deliveryCity = recipientCitySearchInput.dataset.deliveryCity;
   if (deliveryCity && recipientWarehouseOptionsContainer.style.display === 'none') {
-    searchWarehouses(deliveryCity, recipientWarehouseOptionsContainer);
+    searchWarehouses(deliveryCity, '', recipientWarehouseOptionsContainer);
   } else {
     recipientWarehouseOptionsContainer.style.display = 'none';
   }
 });
 
 senderWarehouseSearchInput.addEventListener('input', function() {
-  const deliveryCity = senderCitySearchInput.dataset.deliveryCity; // Получаем DeliveryCity для отправителя
+  const deliveryCity = senderCitySearchInput.dataset.deliveryCity;
+  const searchTerm = this.value;
   if (deliveryCity) {
-    searchWarehouses(deliveryCity, senderWarehouseOptionsContainer);
+    searchWarehouses(deliveryCity, searchTerm, senderWarehouseOptionsContainer);
   } else {
     senderWarehouseOptionsContainer.innerHTML = '';
     senderWarehouseOptionsContainer.style.display = 'none';
@@ -306,9 +307,10 @@ senderWarehouseSearchInput.addEventListener('input', function() {
 });
 
 recipientWarehouseSearchInput.addEventListener('input', function() {
-  const deliveryCity = recipientCitySearchInput.dataset.deliveryCity; // Получаем DeliveryCity для получателя
+  const deliveryCity = recipientCitySearchInput.dataset.deliveryCity;
+  const searchTerm = this.value;
   if (deliveryCity) {
-    searchWarehouses(deliveryCity, recipientWarehouseOptionsContainer);
+    searchWarehouses(deliveryCity, searchTerm, recipientWarehouseOptionsContainer);
   } else {
     recipientWarehouseOptionsContainer.innerHTML = '';
     recipientWarehouseOptionsContainer.style.display = 'none';
@@ -325,8 +327,9 @@ document.addEventListener('click', function(event) {
   }
 });
 
-function searchWarehouses(deliveryCity, optionsContainer) {
+function searchWarehouses(deliveryCity, searchTerm, optionsContainer) {
   console.log('searchWarehouses - deliveryCity:', deliveryCity);
+  console.log('searchWarehouses - searchTerm:', searchTerm);
 
   if (!deliveryCity) {
     optionsContainer.innerHTML = '';
@@ -342,7 +345,8 @@ function searchWarehouses(deliveryCity, optionsContainer) {
     modelName: 'AddressGeneral',
     calledMethod: 'getWarehouses',
     methodProperties: {
-      CityRef: deliveryCity // Используем DeliveryCity вместо CityRef
+      CityRef: deliveryCity,
+      FindByString: searchTerm
     }
   };
 
@@ -353,11 +357,16 @@ function searchWarehouses(deliveryCity, optionsContainer) {
     },
     body: JSON.stringify(data)
   })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.success) {
         const warehouses = data.data;
-        console.log('Полученные отделения:', warehouses); // Добавьте эту строку
+        console.log('Полученные отделения:', warehouses);
         displayWarehouseOptions(warehouses, optionsContainer);
       } else {
         console.error('Ошибка при получении данных:', data.errors);
@@ -794,6 +803,7 @@ document.getElementById('createShipmentForm').addEventListener('submit', functio
   const seatsAmount = document.getElementById('seatsAmount').value;
   const description = document.getElementById('description').value;
   const cost = document.getElementById('cost').value;
+  const AfterpaymentOnGoodsCost = document.getElementById('afterpaymentOnGoodsCost').value;
   const citySender = senderCitySearchInput.getAttribute('data-ref');
   const cityRecipient = recipientCitySearchInput.getAttribute('data-ref');
   const sender = document.getElementById('senderInput').dataset.ref;
@@ -818,6 +828,7 @@ document.getElementById('createShipmentForm').addEventListener('submit', functio
     seats_amount: seatsAmount,
     description: description,
     cost: cost,
+    afterpayment_ongoodscost:AfterpaymentOnGoodsCost,
     city_sender: citySender, 
     sender: sender, 
     sender_address: senderAddress, 
@@ -848,18 +859,16 @@ fetch(`/create_internet_document/${ord_id}`, {
   })
   .then(result => {
     if (result.error) {
-      // Обработка ошибок при создании ТТН
+      
       console.error('Ошибка создания ТТН:', result.error);
-    } else {
-      // Обработка успешного создания ТТН
-      console.log('ТТН успешно создана:', result);
       // Закрытие модального окна
       $('#createShipmentModal').modal('hide');
+      // Обновление списка ТТН на странице (если необходимо)
+    } else {
+      
+      console.log('ТТН успешно создана:', result.data);
     }
   })
-  .catch(error => {
-    console.error('Ошибка отправки запроса:', error);
-  });
 });
 
 let currentDeleteCounterpartyPage = 1;
@@ -971,3 +980,235 @@ function deleteCounterparty(counterpartyRef, counterpartyId) {
       }
     });
 }
+
+function delivery_data(){
+const url = '/delivery_data';
+
+const params = new URLSearchParams({
+  page: 1,
+  order_by: 'date',
+  order: 'desc',
+  search_ord_id: 123
+});
+
+fetch(`${url}`, {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  credentials: 'same-origin'
+})
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+    // Обработка полученных данных
+    const entries = data.entries;
+    const totalPages = data.total_pages;
+    const currentPage = data.current_page;
+
+    // Дальнейшие действия с полученными данными
+  })
+  .catch(error => {
+    console.error('Ошибка:', error);
+  });
+}
+
+  // Обробник кліка для кнопки "Створити доставку"
+  document.getElementById("print-ttn").addEventListener("click", function() {
+    // Отримуємо модальне вікно за його id
+    var modal = new bootstrap.Modal(document.getElementById("print-ttn-modal"));
+    
+    modal.show();
+  });
+
+  let currentTTNPage = 1;
+  let totalTTNPages = 1;
+  
+  // Функция для получения данных о доставках
+  async function getDeliveryData(page, orderId) {
+    const url = `/delivery_data?page=${page}&search_value=${orderId}`;
+  
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching delivery data:', error);
+      throw error;
+    }
+  }
+  
+// Функция для загрузки ТТН в выпадающий список
+function loadTTNs(orderId = '', page = 1, append = false) {
+  return getDeliveryData(page, orderId)
+    .then(data => {
+      const entries = data.entries;
+      totalTTNPages = data.total_pages;
+      const ttnList = document.getElementById('ttnList');
+
+      if (!append) {
+        ttnList.innerHTML = '';
+      }
+
+      entries.forEach(entry => {
+        const ttnItem = document.createElement('li');
+        ttnItem.textContent = `ТТН: ${entry.ttn_id}, Замовлення: ${entry.ord_id}, Дата: ${entry.date}`;
+        ttnItem.dataset.ttnRef = entry.ttn_id; // Сохраняем ttnRef вместо ttnId
+        ttnList.appendChild(ttnItem);
+      });
+
+      return totalTTNPages;
+    })
+    .catch(error => {
+      console.error('Error loading TTNs:', error);
+    });
+}
+  
+  // Обработчик открытия модального окна
+  $('#print-ttn-modal').on('show.bs.modal', function () {
+    currentTTNPage = 1;
+    loadTTNs();
+  });
+  
+  // Обработчик клика на поле ввода поиска ТТН
+  document.getElementById('ttnSearch').addEventListener('click', function() {
+    document.getElementById('ttnList').style.display = 'block';
+  });
+  
+  // Обработчик клика вне поля ввода и списка ТТН
+  document.addEventListener('click', function(event) {
+    const ttnSearch = document.getElementById('ttnSearch');
+    const ttnList = document.getElementById('ttnList');
+  
+    if (!ttnSearch.contains(event.target) && !ttnList.contains(event.target)) {
+      ttnList.style.display = 'none';
+    }
+  });
+  
+  // Обработчик прокрутки для загрузки новых страниц ТТН
+  document.getElementById('ttnList').addEventListener('scroll', function() {
+    if (this.scrollTop + this.clientHeight >= this.scrollHeight && currentTTNPage < totalTTNPages) {
+      currentTTNPage++;
+      loadTTNs('', currentTTNPage, true);
+    }
+  });
+  
+  // Обработчик ввода текста в поле поиска ТТН
+  document.getElementById('ttnSearch').addEventListener('input', function() {
+    const orderId = this.value;
+    currentTTNPage = 1;
+    loadTTNs(orderId);
+  });
+  
+// Обработчик выбора ТТН из списка
+document.getElementById('ttnList').addEventListener('click', function(event) {
+  if (event.target.tagName === 'LI') {
+    const selectedTTNRef = event.target.dataset.ttnRef;
+    document.getElementById('ttnSearch').value = selectedTTNRef;
+    document.getElementById('ttnList').style.display = 'none';
+  }
+});
+  
+// Обработчик клика на кнопку "Отримати для друку"
+document.getElementById('printTTN').addEventListener('click', function() {
+// Обработчик изменения значения селекта #doc_type
+document.getElementById('doc_type').addEventListener('change', function() {
+  const selectedOption = this.value;
+  const printButton = document.getElementById('printTTN');
+
+  if (selectedOption === 'ttnFull') {
+    printButton.onclick = function() {
+      const selectedTTN = document.getElementById('ttnSearch').value;
+      if (selectedTTN) {
+        printTTN(selectedTTN);
+        $('#print-ttn-modal').modal('hide');
+      }
+    };
+  } else if (selectedOption === 'ttnMark') {
+    printButton.onclick = function() {
+      const selectedTTN = document.getElementById('ttnSearch').value;
+      if (selectedTTN) {
+        printMarking(selectedTTN);
+        $('#print-ttn-modal').modal('hide');
+      }
+    };
+  }
+});
+});
+
+// Обработчик изменения значения селекта #doc_type
+document.getElementById('doc_type').addEventListener('change', function() {
+  const selectedOption = this.value;
+  const printButton = document.getElementById('printTTN');
+
+  if (selectedOption === 'ttnFull') {
+    printButton.onclick = function() {
+      const selectedTTN = document.getElementById('ttnSearch').value;
+      if (selectedTTN) {
+        printTTN(selectedTTN);
+        $('#print-ttn-modal').modal('hide');
+      }
+    };
+  } else if (selectedOption === 'ttnMark') {
+    printButton.onclick = function() {
+      const selectedTTN = document.getElementById('ttnSearch').value;
+      if (selectedTTN) {
+        printMarking(selectedTTN);
+        $('#print-ttn-modal').modal('hide');
+      }
+    };
+  }
+});
+
+// Функция для печати ТТН
+function printTTN(ttnRef) {
+  const apiKey = API_KEY;
+  const printUrl = `https://my.novaposhta.ua/orders/printDocument/orders[]/${ttnRef}/type/pdf/apiKey/${apiKey}`;
+  window.open(printUrl, '_blank');
+}
+
+// Функция для печати маркування
+function printMarking(ttnRef) {
+  const apiKey = API_KEY;
+  const printUrl = `https://my.novaposhta.ua/orders/printMarking85x85/orders[]/${ttnRef}/type/pdf8/apiKey/${apiKey}`;
+  window.open(printUrl, '_blank');
+}
+
+
+
+
+
+
+$(document).ready(function() {
+  
+delivery_data();
+
+});
+
+// Очистка полей ввода при открытии модального окна создания доставки
+$('#createShipmentModal').on('show.bs.modal', function () {
+  $('#createShipmentForm')[0].reset();
+});
+
+// Очистка полей ввода при открытии модального окна создания контактного лица
+$('#contactPersonModal').on('show.bs.modal', function () {
+  $('#createContactPersonForm')[0].reset();
+});
+
+// Очистка полей ввода при открытии модального окна создания контрагента
+$('#counterpartyModal').on('show.bs.modal', function () {
+  $('#counterpartyModal form')[0].reset();
+});
+
+// Очистка полей ввода при открытии модального окна удаления контрагента
+$('#deleteCounterpartyModal').on('show.bs.modal', function () {
+  $('#deleteCounterpartyInput').val('');
+});
+
+// Очистка полей ввода при открытии модального окна печати ТТН
+$('#print-ttn-modal').on('show.bs.modal', function () {
+  $('#ttnSearch').val('');
+});
