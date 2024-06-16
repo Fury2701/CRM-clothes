@@ -164,6 +164,32 @@ class WooAPI:
     def delete_discount_coupon(self, id):
         return self.wcapi.delete(f"coupons/{id}").json()
 
+    def get_sales_report(self, date_min=None, date_max=None, period=None):
+        endpoint = "reports/sales"
+        params = {}
+        if date_min:
+            params['date_min'] = date_min
+        if date_max:
+            params['date_max'] = date_max
+        if period:
+            params['period'] = period
+        
+        response = self.wcapi.get(endpoint, params=params)
+        return response.json()
+
+    def get_top_sellers(self, period=None, date_min=None, date_max=None):
+        endpoint = "reports/top_sellers"
+        params = {}
+        if period:
+            params['period'] = period
+        if date_min:
+            params['date_min'] = date_min
+        if date_max:
+            params['date_max'] = date_max
+        
+        response = self.wcapi.get(endpoint, params=params)
+        return response.json()
+
 
 def get_woocomerce():
     url = "https://www.detskietkani.com/"

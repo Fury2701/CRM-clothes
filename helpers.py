@@ -386,10 +386,10 @@ def add_entry(ord_id: str, ttn_id: str, ref_code: str, client_ref: str):
 
 
 
-def delete_entry(ord_id):
+def delete_entry(ref_code):
     try:
         with Session() as db_session:
-            entry = db_session.query(nova_poshta).filter(nova_poshta.ord_id == ord_id).first()
+            entry = db_session.query(nova_poshta).filter(nova_poshta.ref_code == ref_code).first()
             if entry:
                 db_session.delete(entry)
                 db_session.commit()
@@ -541,6 +541,14 @@ def get_counteragents(page=1, page_size=20, search_name=None, search_phone=None)
             return entries, total_pages, page
     except Exception as e:
         return {"error": "DB error with NP: " + str(e)}
+
+def get_sales_report(date_min=None, date_max=None, period=None):
+    woo_api = get_woocomerce()
+    return woo_api.get_sales_report(date_min=date_min, date_max=date_max, period=period)
+
+def get_top_sellers(period=None, date_min=None, date_max=None):
+    woo_api = get_woocomerce()
+    return woo_api.get_top_sellers(period=period, date_min=date_min, date_max=date_max)
         
         
 

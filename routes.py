@@ -788,9 +788,30 @@ def delete_document_route():
 
     data = request.json
     document_refs = data['document_refs']
-    with NovaPoshtaClient() as client:
-        result = delete_internet_document(client, document_refs)
-    return jsonify(result)
+    try:
+        with NovaPoshtaClient() as client:
+            # Виклик методу для видалення документів у Nova Poshta API
+            result = delete_internet_document(client, document_refs)
+
+            # Перевірка успішності видалення
+            if result.get('success', False):
+                # Якщо видалення по API успішне, викликаємо функцію для видалення з бази даних
+                for doc in result.get('data', []):
+                    ref_code = doc.get('Ref')
+                    if ref_code:
+                        deleted = delete_entry(ref_code)
+                        if deleted:
+                            return jsonify({"success": True, "message": "Entry successfully deleted from database"})
+                        else:
+                            return jsonify({"error": "Failed to delete entry from database"}), 500
+                    else:
+                        return jsonify({"error": "Invalid document reference format"}), 400
+            else:
+                return jsonify({"error": "Failed to delete document in Nova Poshta API"}), 500
+
+    except Exception as e:
+        return jsonify({"error": f"Exception occurred: {str(e)}"}), 500
+
 
 @app.route('/counteragents', methods=['GET'])
 def counteragents():
@@ -907,4 +928,69 @@ def update_sprav_nova():
         return jsonify({"error": str(e)}), 400
 
 
+@app.route('/analytics', methods=['GET'])
+def analytics():
+
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    if session.get("lvl", 0) < 1:
+        return "Access Denied", 403
+
+    # Встановлюємо дати по замовчуванню на останній місяць
+    date_max = datetime.today().strftime('%Y-%m-%d')
+    date_min = (datetime.today() - timedelta(days=30)).strftime('%Y-%m-%d')
+    
+    sales_report = get_sales_report(date_min=date_min, date_max=date_max)
+    top_sellers = get_top_sellers(date_min=date_min, date_max=date_max)
+    
+    return render_template('analytics.html', sales_report=sales_report, top_sellers=top_sellers)
+
+@app.route('/sales_report', methods=['GET'])
+def sales_report_route():
+
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    date_min = request.args.get('date_min')
+    date_max = request.args.get('date_max')
+    period = request.args.get('period')
+    
+    try:
+        report = get_sales_report(date_min=date_min, date_max=date_max, period=period)
+        return jsonify(report)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/top_sellers', methods=['GET'])
+def top_sellers_route():
+
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    period = request.args.get('period')
+    date_min = request.args.get('date_min')
+    date_max = request.args.get('date_max')
+    
+    try:
+        report = get_top_sellers(period=period, date_min=date_min, date_max=date_max)
+        return jsonify(report)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/webhook', methods=['POST'])
+def webhook_handler():
+    # Перевіряємо наявність нових замовлень та оновлюємо стан
+    session['new_orders'] = True  # Приклад: зберігаємо в сесії
+
+    return 'Webhook received and processed'
+
+@app.route('/check_orders', methods=['GET'])
+def check_orders_route():
+    new_orders_exist = session.get('new_orders', False)  # Отримуємо значення, за замовчуванням False
+    
+    if new_orders_exist:
+        session['new_orders'] = False  # Змінюємо стан на False після перевірки
+
+    return jsonify({'new_orders_exist': new_orders_exist})
 
