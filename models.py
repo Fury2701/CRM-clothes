@@ -73,6 +73,7 @@ class nova_poshta(Base):
     ord_id = Column(Integer, nullable=False)
     ttn_id = Column(Integer, nullable=False)
     ref_code = Column(String, nullable=False)
+    client_name = Column(String, nullable=False)
     date= Column(DateTime, nullable=False)
 
 class counteragents(Base):

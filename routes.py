@@ -705,7 +705,9 @@ def delivery_data():
         {
             'id': entry.id,
             'ord_id': entry.ord_id,
+            'ttn_ref': entry.ref_code,
             'ttn_id': entry.ttn_id,
+            'client_name': entry.client_name,
             'date': entry.date.strftime('%Y-%m-%d %H:%M:%S')
         }
         for entry in entries
@@ -759,7 +761,8 @@ def create_document_route(ord_id):
             result_data = result[0]
             IntDocNumber = result_data["IntDocNumber"]
             ref = result_data["Ref"]
-        info= add_entry(ord_id,IntDocNumber,ref)
+            client_ref= data.get("contact_recipient")
+        info= add_entry(ord_id,IntDocNumber,ref, client_ref)
         if info==200:
             return jsonify(result_data), 200
         else: 

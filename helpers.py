@@ -361,20 +361,29 @@ def apply_discount(order_id, discount_amount, discount_type):
     except Exception as e:
         return {"error": "Database error" + str(e)}
 
-def add_entry(ord_id:str, ttn_id:str, ref_code:str):
+def add_entry(ord_id: str, ttn_id: str, ref_code: str, client_ref: str):
     try:
         with Session() as db_session:
+            # Знайти клієнта за contact_ref
+            client = db_session.query(counteragents).filter_by(contact_ref=client_ref).first()
+            
+            if client is None:
+                return {"error": "Client not found"}
+            
+            # Створити новий запис у таблиці nova_poshta
             new_entry = nova_poshta(
                 ord_id=ord_id,
                 ttn_id=ttn_id,
                 ref_code=ref_code,
+                client_name=client.name,  # Додаємо ім'я клієнта
                 date=datetime.now().date()
             )
             db_session.add(new_entry)
             db_session.commit()
             return 200
     except Exception as e:
-        return {"error": "DB error with NP" + str(e)}
+        return {"error": "DB error with NP: " + str(e)}
+
 
 
 def delete_entry(ord_id):
