@@ -9,7 +9,8 @@ class WooAPI:
             url=self.url,
             consumer_key=self.consumer_key,
             consumer_secret=self.consumer_secret,
-            version="wc/v3"
+            version="wc/v3",
+            timeout=15
         )
 
     def get_products(self, name=None, category=None, page=1, per_page=20):

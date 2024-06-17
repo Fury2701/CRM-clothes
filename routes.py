@@ -35,11 +35,22 @@ def logout():
     return redirect(url_for("login_page"))
 
 @app.route("/print", methods=['GET'])
-def print():
+def print_route():
     if "login" not in session:
         return redirect(url_for("login_page"))
- 
-    return render_template("print.html"), 200
+
+    order_id = request.args.get('id')
+    if not order_id:
+        return jsonify({"error": "Missing id parameter"}), 400
+
+    try:
+        order = get_order(order_id)
+        if not order:
+            return jsonify({"error": "Order not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    return render_template("print.html", order=order), 200
 
 @app.route("/user_page", methods=['GET'])
 def user_page():
