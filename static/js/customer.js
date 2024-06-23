@@ -68,6 +68,85 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  const analyticsImgButton = document.querySelector('.analytics-img');
+  const herfAnalyticsButton = document.querySelector('.herf-analytics');
+
+  analyticsImgButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    fetchAnalyticsData();
+  });
+
+  herfAnalyticsButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    fetchAnalyticsData();
+  });
+
+  function fetchAnalyticsData() {
+    fetch('/analytics')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error fetching analytics data');
+        }
+        return response.text();
+      })
+      .then(html => {
+        // Создаем временный элемент для парсинга HTML
+        const tempElement = document.createElement('div');
+        tempElement.innerHTML = html;
+
+        // Извлекаем данные sales_report и top_sellers из HTML
+        const salesReportElement = tempElement.querySelector('#sales-report');
+        const topSellersElement = tempElement.querySelector('#top-sellers');
+
+        const salesReportData = JSON.parse(salesReportElement.textContent);
+        const topSellersData = JSON.parse(topSellersElement.textContent);
+
+        console.log('Sales Report:', salesReportData);
+        console.log('Top Sellers:', topSellersData);
+
+        // Перенаправляем пользователя на страницу аналитики
+        window.location.href = '/analytics';
+      })
+      .catch(error => {
+        console.error('Error fetching analytics data:', error);
+      });
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const customerListImgButton = document.querySelector('.user-img');
+
+  customerListImgButton.addEventListener('click', function(e) {
+    e.preventDefault(); // Предотвращаем переход по ссылке
+
+    // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+    window.location.href = '/user_page';
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const customerListImgButton = document.querySelector('.menu-list .user-img');
+
+  customerListImgButton.addEventListener('click', function(e) {
+    e.preventDefault(); // Предотвращаем переход по ссылке
+
+    // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+    window.location.href = '/user_page';
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const customerListButton = document.querySelector('.menu-list .href-user');
+
+  customerListButton.addEventListener('click', function(e) {
+    e.preventDefault(); // Предотвращаем переход по ссылке
+
+    // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+    window.location.href = '/user_page';
+  });
+});
+
 $('.menu-btn').on('click', function(e) {
   e.preventDefault();
   $(this).hide();
@@ -240,7 +319,7 @@ loadCustomers(page, searchQuery);
       });
     }
 
-  function openCustomerModal(customerId) {
+    function openCustomerModal(customerId) {
       fetch(`/customerbyid?id=${customerId}`)
         .then(response => {
           if (!response.ok) {
@@ -258,9 +337,17 @@ loadCustomers(page, searchQuery);
           $('#editClientPhone').val(customer.billing.phone);
           $('#editClientAddress').val(`${customer.billing.address_1}, ${customer.billing.city}, ${customer.billing.state} ${customer.billing.postcode}, ${customer.billing.country}`);
     
-
+          // Загрузка кастомных статусов клиента
+          $('.client-tags').empty();
+          const customStatuses = customer.meta_data.find(meta => meta.key === '_custom_statuses');
+          if (customStatuses && Array.isArray(customStatuses.value)) {
+            customStatuses.value.forEach(status => {
+              createTag(status);
+            });
+          }
+    
           loadClientOrders(customerId);
-          // Открытие модального окна
+          
           $('#clientModal').modal('show');
         })
         .catch(error => {
@@ -276,6 +363,18 @@ loadCustomers(page, searchQuery);
   });
 
   function updateCustomer(customerId, data) {
+    // Получаем выбранные кастомные статусы
+    const selectedCustomStatuses = getSelectedCustomStatuses();
+    
+    // Добавляем кастомные статусы в мета-данные
+    if (!data.meta_data) {
+      data.meta_data = [];
+    }
+    data.meta_data.push({
+      key: '_custom_statuses',
+      value: selectedCustomStatuses
+    });
+  
     fetch('/update_customer', {
       method: 'POST',
       headers: {
@@ -294,13 +393,11 @@ loadCustomers(page, searchQuery);
     })
     .then(result => {
       console.log('Клиент успешно обновлен:', result);
-      // Дополнительные действия после успешного обновления клиента
       $('#clientModal').modal('hide');
       loadCustomers(currentPage);
     })
     .catch(error => {
       console.error('Ошибка при обновлении клиента:', error);
-      // Обработка ошибки
     });
   }
 
@@ -1027,39 +1124,56 @@ let current__Page = 1;
 let totalPages = 1;
 let isLoading = false;
 
-function loadProducts() {
-if (isLoading || current__Page > totalPages) {
-  return;
-}
+function loadProducts(searchQuery = '') {
+  if (isLoading || current__Page > totalPages) {
+    return;
+  }
 
-isLoading = true;
+  isLoading = true;
 
-fetch(`/data_products?page=${current__Page}`)
-  .then(response => response.json())
-  .then(data => {
-    const products = data.products;
-    current__Page = data.current_page + 1;
-    totalPages = data.total_pages;
+  const url = `/data_products?page=${current__Page}&name=${encodeURIComponent(searchQuery)}`;
 
-    const optionsContainer = document.querySelector('.options-container');
-    products.forEach(function(product) {
-      const option = document.createElement('div');
-      option.className = 'option';
-      option.dataset.value = product.id;
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      const products = data.products;
+      current__Page = data.current_page + 1;
+      totalPages = data.total_pages;
 
-      const imageSrc = product.images && product.images.length > 0 ? product.images[0].src : '';
-      option.innerHTML = `<img src="${imageSrc}"> ${product.name}`;
+      const optionsContainer = document.querySelector('.options-container');
+      products.forEach(function(product) {
+        const option = document.createElement('div');
+        option.className = 'option';
+        option.dataset.value = product.id;
 
-      optionsContainer.appendChild(option);
+        const imageSrc = product.images && product.images.length > 0 ? product.images[0].src : '';
+        option.innerHTML = `<img src="${imageSrc}"> ${product.name}`;
+
+        optionsContainer.appendChild(option);
+      });
+
+      isLoading = false;
+    })
+    .catch(error => {
+      console.error('Ошибка при загрузке товаров:', error);
+      isLoading = false;
     });
-
-    isLoading = false;
-  })
-  .catch(error => {
-    console.error('Ошибка при загрузке товаров:', error);
-    isLoading = false;
-  });
 }
+
+$('#productSearch').on('keypress', function(event) {
+  if (event.which === 13) {
+    const searchQuery = $(this).val().trim();
+    if (searchQuery !== '') {
+      current__Page = 1;
+      $('.options-container').empty();
+      loadProducts(searchQuery);
+    } else {
+      current__Page = 1;
+      $('.options-container').empty();
+      loadProducts();
+    }
+  }
+});
 
 $('.options-container').on('scroll', function() {
 const optionsContainer = this;
@@ -1361,20 +1475,20 @@ const tab1Content = `
         </div>
       </div>
     </div>
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-          Інформація про клієнта
-        </button>
-      </h2>
-      <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#orderAccordion" style="">
-        <div class="accordion-body">
-          <li>Ім'я: ${orderData.billing.last_name + " " + orderData.billing.first_name + " " + orderData.billing.company}</li>
-          <li>Номер телефону: ${orderData.billing.phone}</li>
-          <li>Email: ${orderData.billing.email}</li>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            Інформація про клієнта
+          </button>
+        </h2>
+        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#orderAccordion" style="">
+          <div class="accordion-body" id="customerInfoContent">
+            <li>Ім'я: ${orderData.billing.last_name + " " + orderData.billing.first_name + " " + orderData.billing.company}</li>
+            <li>Номер телефону: ${orderData.billing.phone}</li>
+            <li>Email: ${orderData.billing.email}</li>
+          </div>
         </div>
       </div>
-    </div>
     <div class="accordion-item">
       <h2 class="accordion-header">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
@@ -1429,7 +1543,45 @@ const tab1Content = `
     </div>
   </div>
 `;
+
+
 $('#tab1').html(tab1Content);
+
+  // Добавляем логику для вывода бейджей клиента
+  if (orderData.customer_id !== 0) {
+    fetch(`/customerbyid?id=${orderData.customer_id}`)
+      .then(response => response.json())
+      .then(customerData => {
+        const customer = JSON.parse(customerData);
+        const customStatuses = customer.meta_data.find(meta => meta.key === '_custom_statuses');
+        
+        let addedStatuses = new Set();
+        let statusesHtml = '';
+
+        if (customStatuses && Array.isArray(customStatuses.value)) {
+          customStatuses.value.forEach(status => {
+            if (!addedStatuses.has(status)) {
+              statusesHtml += `<span class="badge bg-secondary">${status}</span> `;
+              addedStatuses.add(status);
+            }
+          });
+        }
+
+        if (statusesHtml) {
+          const customerInfoElement = document.querySelector('#customerInfoContent');
+          const nameElement = customerInfoElement.querySelector('li:first-child');
+          nameElement.insertAdjacentHTML('beforeend', `
+            <div class="customer-tags" style="display: inline-block; margin-left: 10px;">
+              ${statusesHtml}
+            </div>
+          `);
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при получении данных о клиенте:', error);
+      });
+  }
+
 }
 
 function populateOrderTab2(orderData) {
@@ -1500,6 +1652,36 @@ function loadManagers() {
     });
 }
 
+let alertShown = false;
+
+function checkNewOrders() {
+  if (!alertShown) {
+    fetch('/check_orders')
+      .then(response => response.json())
+      .then(data => {
+        const orderAlert = document.getElementById('order-alert');
+        if (data.new_orders_exist && !alertShown) {
+          orderAlert.style.display = 'flex';
+          alertShown = true;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при проверке новых заказов:', error);
+      });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  checkNewOrders();
+  setInterval(checkNewOrders, 60000);
+
+  const closeBtn = document.querySelector('.order-alert .close-btn');
+  closeBtn.addEventListener('click', function() {
+    document.getElementById('order-alert').style.display = 'none';
+    alertShown = false;
+  });
+});
+
 $(document).ready(function() {
   
   loadCustomers();
@@ -1508,3 +1690,59 @@ $(document).ready(function() {
 
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  const logoutLink = document.querySelector('.href-exit');
+
+  logoutLink.addEventListener('click', function(event) {
+    event.preventDefault(); 
+    
+    fetch('/logout')
+      .then(response => {
+        if (response.redirected) {
+        
+          window.location.href = response.url;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при выполнении запроса:', error);
+      });
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const logoutLink = document.querySelector('.exit-img');
+
+  logoutLink.addEventListener('click', function(event) {
+    event.preventDefault(); 
+    
+    fetch('/logout')
+      .then(response => {
+        if (response.redirected) {
+        
+          window.location.href = response.url;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при выполнении запроса:', error);
+      });
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const logoutLink = document.querySelector('.exit1-img');
+
+  logoutLink.addEventListener('click', function(event) {
+    event.preventDefault(); 
+    
+    fetch('/logout')
+      .then(response => {
+        if (response.redirected) {
+        
+          window.location.href = response.url;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при выполнении запроса:', error);
+      });
+  });
+});

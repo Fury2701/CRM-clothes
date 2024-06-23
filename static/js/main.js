@@ -63,14 +63,12 @@ $(document).on('click', '#createOrderBtn', function() {
   const shippingPostcode = $('#shippingPostcode').val();
   const shippingMethod = $('#shippingMethod').val();
   const paymentMethod = $('#paymentMethod').val();
-  const productQuantity = parseInt($('#productQuantityCreate').val());
+  const productQuantity = parseFloat($('#productQuantityCreate').val());
 
-  const lineItems = [
-    {
-      product_id: parseInt(selectedProductId),
-      quantity: productQuantity,
-    }
-  ];
+  const lineItems = selectedProducts.map(product => ({
+    product_id: parseInt(product.id),
+    quantity: product.quantity,
+  }));
 
   // Создайте объект с данными заказа
   const orderData = {
@@ -115,6 +113,35 @@ $(document).on('click', '#createOrderBtn', function() {
   console.log(orderData)
 });
 
+let selectedProducts = [];
+
+// Функция для добавления товара в таблицу
+function addProductToTable(product) {
+  const tableBody = document.querySelector('#selectedProductsTable tbody');
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td><img src="${product.image}" alt="${product.name}" style="width: 50px; height: 50px;"></td>
+    <td>${product.name}</td>
+    <td><input type="number" class="form-control product-quantity" value="1" min="1"></td>
+    <td><button class="btn btn-danger btn-sm remove-product">Видалити</button></td>
+  `;
+  tableBody.appendChild(row);
+
+  // Добавляем обработчик для кнопки удаления
+  row.querySelector('.remove-product').addEventListener('click', function() {
+    row.remove();
+    selectedProducts = selectedProducts.filter(p => p.id !== product.id);
+  });
+
+  // Добавляем обработчик для изменения количества
+  row.querySelector('.product-quantity').addEventListener('change', function() {
+    const index = selectedProducts.findIndex(p => p.id === product.id);
+    if (index !== -1) {
+      selectedProducts[index].quantity = parseFloat(this.value);
+    }
+  });
+}
+
 // Обработчик клика на выбранную опцию товара
 document.querySelector('.selected-option-create').addEventListener('click', function() {
   document.querySelector('.options-container-create').style.display = 'block';
@@ -123,13 +150,21 @@ document.querySelector('.selected-option-create').addEventListener('click', func
 // Обработчик клика на опцию товара
 document.querySelector('.options-container-create').addEventListener('click', function(event) {
   if (event.target.classList.contains('option')) {
-    selectedProductId = event.target.dataset.value;
-    const selectedText = event.target.textContent;
-    document.querySelector('.selected-option-create').textContent = selectedText;
+    const productId = event.target.dataset.value;
+    const productName = event.target.textContent;
+    const productImage = event.target.querySelector('img').src;
+    
+    // Проверяем, не был ли уже добавлен этот товар
+    if (!selectedProducts.some(p => p.id === productId)) {
+      selectedProducts.push({id: productId, name: productName, image: productImage, quantity: 1});
+      addProductToTable({id: productId, name: productName, image: productImage});
+    }
+
+    document.querySelector('.selected-option-create').textContent = 'Виберіть товар';
     document.querySelector('.options-container-create').style.display = 'none';
-    console.log('Выбранный товар:', selectedProductId);
   }
 });
+
 
 // Обработчик клика вне выпадающего списка товаров
 document.addEventListener('click', function(event) {
@@ -141,6 +176,8 @@ document.addEventListener('click', function(event) {
 
 // Обработчик открытия модального окна для создания заказа
 $('#createOrderModal').on('show.bs.modal', function() {
+  selectedProducts = [];
+  document.querySelector('#selectedProductsTable tbody').innerHTML = '';
   // Очистка выбранного товара
   selectedProductId = null;
   document.querySelector('.selected-option-create').textContent = 'Виберіть товар';
@@ -151,28 +188,35 @@ $('#createOrderModal').on('show.bs.modal', function() {
   loadProducts();
 });
 
-// Обработчик события прокрутки для контейнера опций товаров
 $('.options-container-create').on('scroll', function() {
   const optionsContainer = this;
-  if (optionsContainer.scrollTop + optionsContainer.clientHeight >= optionsContainer.scrollHeight) {
+  if (optionsContainer.scrollTop + optionsContainer.clientHeight >= optionsContainer.scrollHeight - 20) {
+    console.log('Достигнут конец списка опций, загружаем следующую страницу');
     loadProducts();
   }
 });
 
-// Функция для загрузки товаров и создания опций
-function loadProducts() {
+function loadProducts(searchQuery = '') {
   if (isLoading || currentPage > totalPages) {
+    console.log('Загрузка товаров уже выполняется или достигнута последняя страница');
     return;
   }
 
   isLoading = true;
+  console.log('Загрузка товаров, страница:', currentPage);
 
-  fetch(`/data_products?page=${currentPage}`)
+  const url = `/data_products?page=${currentPage}&name=${encodeURIComponent(searchQuery)}`;
+
+  fetch(url)
     .then(response => response.json())
     .then(data => {
       const products = data.products;
-      currentPage = data.current_page + 1;
+      currentPage = data.current_page + 1; // Увеличиваем текущую страницу на 1
       totalPages = data.total_pages;
+
+      console.log('Получены товары:', products);
+      console.log('Текущая страница:', currentPage);
+      console.log('Всего страниц:', totalPages);
 
       // Создание опций для каждого товара и добавление их в контейнер опций
       const optionsContainer = document.querySelector('.options-container-create');
@@ -194,6 +238,23 @@ function loadProducts() {
       isLoading = false;
     });
 }
+
+$('#productSearchCreate').on('keypress', function(event) {
+  if (event.which === 13) { // Проверяем, была ли нажата клавиша Enter
+    const searchQuery = $(this).val().trim();
+    if (searchQuery !== '') { // Проверяем, что поле ввода не пустое
+      currentPage = 1;
+      $('.options-container-create').empty();
+      loadProducts(searchQuery);
+    } else {
+      // Если поле ввода пустое, загружаем все товары без фильтрации
+      currentPage = 1;
+      $('.options-container-create').empty();
+      loadProducts();
+    }
+  }
+});
+
 // Функция для отправки данных заказа на сервер
 function createOrder(newOrder) {
   fetch('/create_order', {
@@ -434,17 +495,18 @@ function loadOrders(page = 1) {
   fetch(`/dataorders?page=${page}`)
     .then(response => response.json())
     .then(data => {
-      
       loadOrders_response = data;
       // Очистить существующие строки в таблице
       $('#table1 tbody').empty();
 
       // Заполнить таблицу данными из ответа сервера
       fillOrdersTable(data.orders);
-      
 
       // Обновить пагинацию
       updatePagination(data.current_page, data.total_pages);
+
+      // Сбросить состояние уведомления
+      alertShown = false;
     })
     .catch(error => {
       console.error('Ошибка при загрузке заказов:', error);
@@ -986,94 +1048,102 @@ function deleteNote(noteId) {
 $(document).on('click', '#addProductBtn', function() {
   // Открытие дочернего модального окна
   $('#addProductModal').modal('show');
-let currentPage = 1;
-let totalPages = 1;
-let isLoading = false;
-
-// Функция для загрузки товаров и создания опций
-function loadProducts() {
-  if (isLoading || currentPage > totalPages) {
-    console.log('Загрузка товаров уже выполняется или достигнута последняя страница');
-    return;
-  }
-
-  isLoading = true;
-  console.log('Загрузка товаров, страница:', currentPage);
-
-  fetch(`/data_products?page=${currentPage}`)
-    .then(response => response.json())
-    .then(data => {
-      const products = data.products;
-      currentPage = data.current_page + 1; // Увеличиваем текущую страницу на 1
-      totalPages = data.total_pages;
-
-      console.log('Получены товары:', products);
-      console.log('Текущая страница:', currentPage);
-      console.log('Всего страниц:', totalPages);
-
-      // Создание опций для каждого товара и добавление их в контейнер опций
-      const optionsContainer = document.querySelector('.options-container');
-      products.forEach(function(product) {
-        const option = document.createElement('div');
-        option.className = 'option';
-        option.dataset.value = product.id;
-
-        const imageSrc = product.images && product.images.length > 0 ? product.images[0].src : '';
-        option.innerHTML = `<img src="${imageSrc}"> ${product.name}`;
-
-        optionsContainer.appendChild(option);
-      });
-
-      isLoading = false;
-    })
-    .catch(error => {
-      console.error('Ошибка при загрузке товаров:', error);
-      isLoading = false;
-    });
-}
-
-// Обработчик события прокрутки для контейнера опций
-$('.options-container').on('scroll', function() {
-  const optionsContainer = this;
-  console.log('Прокрутка контейнера опций');
-  console.log('Позиция прокрутки:', optionsContainer.scrollTop);
-  console.log('Высота контейнера:', optionsContainer.clientHeight);
-  console.log('Общая высота содержимого контейнера:', optionsContainer.scrollHeight);
-  if (optionsContainer.scrollTop + optionsContainer.clientHeight >= optionsContainer.scrollHeight) {
-    console.log('Достигнут конец списка опций, загружаем следующую страницу');
-    loadProducts();
-  }
-});
+  let currentPageForAddProduct = 1;
+  let totalPagesForAddProduct = 1;
+  let isLoadingForAddProduct = false;
   
-// Загрузка первой страницы товаров при открытии модального окна
-$('#addProductModal').on('shown.bs.modal', function() {
-  console.log('Дочернее модальное окно открыто');
-  currentPage = 1;
-  $('.options-container').empty();
-  loadProducts();
-});
-
-  // Обработчик клика на выбранную опцию
-  document.querySelector('.selected-option').addEventListener('click', function() {
-    document.querySelector('.options-container').style.display = 'block';
+  // Функция для загрузки товаров и создания опций
+  function loadProductsForAddProduct(searchQuery = '') {
+    if (isLoadingForAddProduct || currentPageForAddProduct > totalPagesForAddProduct) {
+      console.log('Загрузка товаров уже выполняется или достигнута последняя страница');
+      return;
+    }
+  
+    isLoadingForAddProduct = true;
+    console.log('Загрузка товаров, страница:', currentPageForAddProduct);
+  
+    const url = `/data_products?page=${currentPageForAddProduct}&name=${encodeURIComponent(searchQuery)}`;
+  
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const products = data.products;
+        currentPageForAddProduct = data.current_page + 1;
+        totalPagesForAddProduct = data.total_pages;
+  
+        console.log('Получены товары:', products);
+        console.log('Текущая страница:', currentPageForAddProduct);
+        console.log('Всего страниц:', totalPagesForAddProduct);
+  
+        const optionsContainer = document.querySelector('#addProductModal .options-container');
+        products.forEach(function(product) {
+          const option = document.createElement('div');
+          option.className = 'option';
+          option.dataset.value = product.id;
+  
+          const imageSrc = product.images && product.images.length > 0 ? product.images[0].src : '';
+          option.innerHTML = `<img src="${imageSrc}"> ${product.name}`;
+  
+          optionsContainer.appendChild(option);
+        });
+  
+        isLoadingForAddProduct = false;
+      })
+      .catch(error => {
+        console.error('Ошибка при загрузке товаров:', error);
+        isLoadingForAddProduct = false;
+      });
+  }
+  
+  // Обработчик клика по кнопке "Додати товар"
+  $(document).on('click', '#addProductBtn', function() {
+    $('#addProductModal').modal('show');
   });
-
-  // Обработчик клика на опцию
-  document.querySelector('.options-container').addEventListener('click', function(event) {
-    if (event.target.classList.contains('option')) {
-      selectedValue = event.target.dataset.value;
-      const selectedText = event.target.textContent;
-      document.querySelector('.selected-option').textContent = selectedText;
-      document.querySelector('.options-container').style.display = 'none';
-      console.log('Выбранный товар:', selectedValue);
+  
+  $('#productSearch').on('keypress', function(event) {
+    if (event.which === 13) {
+      const searchQuery = $(this).val().trim();
+      currentPageForAddProduct = 1;
+      $('#addProductModal .options-container').empty();
+      loadProductsForAddProduct(searchQuery);
     }
   });
-
+  
+  // Обработчик события прокрутки для контейнера опций
+  $('#addProductModal .options-container').on('scroll', function() {
+    const optionsContainer = this;
+    if (optionsContainer.scrollTop + optionsContainer.clientHeight >= optionsContainer.scrollHeight - 20) {
+      console.log('Достигнут конец списка опций, загружаем следующую страницу');
+      loadProductsForAddProduct();
+    }
+  });
+  
+  $('#addProductModal').on('shown.bs.modal', function() {
+    console.log('Дочернее модальное окно открыто');
+    currentPageForAddProduct = 1;
+    totalPagesForAddProduct = 1;
+    $('#addProductModal .options-container').empty();
+    loadProductsForAddProduct();
+  });
+  
+  // Обработчик клика на выбранную опцию
+  $('#addProductModal .selected-option').on('click', function() {
+    $('#addProductModal .options-container').toggle();
+  });
+  
+  // Обработчик клика на опцию
+  $('#addProductModal .options-container').on('click', '.option', function() {
+    selectedValue = $(this).data('value');
+    const selectedText = $(this).text();
+    $('#addProductModal .selected-option').text(selectedText);
+    $('#addProductModal .options-container').hide();
+    console.log('Выбранный товар:', selectedValue);
+  });
+  
   // Обработчик клика вне выпадающего списка
-  document.addEventListener('click', function(event) {
-    const customSelect = document.querySelector('.custom-select');
-    if (!customSelect.contains(event.target)) {
-      document.querySelector('.options-container').style.display = 'none';
+  $(document).on('click', function(event) {
+    if (!$(event.target).closest('#addProductModal .custom-select').length) {
+      $('#addProductModal .options-container').hide();
     }
   });
 
@@ -1258,20 +1328,18 @@ function populateModal(){
              </div>
            </div>
          </div>
-         <div class="accordion-item">
-           <h2 class="accordion-header">
-             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-               Інформація про кієнта
-             </button>
-           </h2>
-           <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
-             <div class="accordion-body">
-             <li>Замовник: ${orderData.customer_id === 0 ? orderData.billing.last_name + " " + orderData.billing.first_name + " " + orderData.billing.company : `<a href="#" class="customer-link" data-customer-id="${orderData.customer_id}">${orderData.billing.last_name + " " + orderData.billing.first_name + " " + orderData.billing.company}</a>`}</li>
-               <li>Номер телефону: ${orderData.billing.phone}</li>
-               <li>Email: ${orderData.billing.email}</li>
-             </div>
-           </div>
-         </div>
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                Інформація про кієнта
+              </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
+              <div class="accordion-body" id="customerInfoContent">
+                <!-- Здесь будет динамически вставлена информация о клиенте -->
+              </div>
+            </div>
+          </div>
          <div class="accordion-item">
          <h2 class="accordion-header">
            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
@@ -1370,6 +1438,67 @@ function populateModal(){
 </div>
    </div>
  `);
+
+ let customerInfoHtml = `
+ <li>Замовник: ${orderData.customer_id === 0 ? 
+   `${orderData.billing.last_name} ${orderData.billing.first_name} ${orderData.billing.company}` : 
+   `<a href="#" class="customer-link" data-customer-id="${orderData.customer_id}">${orderData.billing.last_name} ${orderData.billing.first_name} ${orderData.billing.company}</a>`}
+`;
+
+if (orderData.customer_id !== 0) {
+ fetch(`/customerbyid?id=${orderData.customer_id}`)
+   .then(response => response.json())
+   .then(customerData => {
+     const customer = JSON.parse(customerData);
+     const customStatuses = customer.meta_data.find(meta => meta.key === '_custom_statuses');
+     
+     let addedStatuses = new Set();
+     let statusesHtml = '';
+
+     if (customStatuses && Array.isArray(customStatuses.value)) {
+       customStatuses.value.forEach(status => {
+         if (!addedStatuses.has(status)) {
+           statusesHtml += `<span class="badge bg-secondary">${status}</span> `;
+           addedStatuses.add(status);
+         }
+       });
+     }
+
+     if (statusesHtml) {
+       customerInfoHtml += `
+         <div class="customer-tags" style="display: inline-block; margin-left: 10px;">
+           ${statusesHtml}
+         </div>
+       `;
+     }
+     
+     customerInfoHtml += `</li>`;
+     
+     // Обновляем содержимое элемента с информацией о клиенте
+     const customerInfoElement = document.querySelector('#customerInfoContent');
+     customerInfoElement.innerHTML = `
+       ${customerInfoHtml}
+       <li>Номер телефону: ${orderData.billing.phone}</li>
+       <li>Email: ${orderData.billing.email}</li>
+     `;
+   })
+   .catch(error => {
+     console.error('Ошибка при получении данных о клиенте:', error);
+     finishCustomerInfoHtml();
+   });
+} else {
+ finishCustomerInfoHtml();
+}
+
+function finishCustomerInfoHtml() {
+ customerInfoHtml += `</li>`;
+ const customerInfoElement = document.querySelector('#customerInfoContent');
+ customerInfoElement.innerHTML = `
+   ${customerInfoHtml}
+   <li>Номер телефону: ${orderData.billing.phone}</li>
+   <li>Email: ${orderData.billing.email}</li>
+ `;
+}
 
    // Отображаем ранее сохраненные кастомные статусы
    const customStatuses = orderData.meta_data.find(meta => meta.key === '_custom_statuses');
@@ -1715,6 +1844,107 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+// Обработчик клика по кнопке "Друк"
+$(document).on('click', '#printButton', function() {
+  const orderId = $('#myModal').data('order-id');
+  
+  // Отправляем GET-запрос на сервер по маршруту "/print" с параметром "id"
+  fetch(`/print?id=${orderId}`)
+    .then(response => {
+      if (response.ok) {
+        // Если ответ успешный, переходим на страницу "print.html"
+        window.location.href = `/print?id=${orderId}`;
+      } else {
+        response.json().then(data => {
+          console.error('Ошибка при отправке запроса на печать:', data.error);
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка при отправке запроса на печать:', error);
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const analyticsImgButton = document.querySelector('.analytics-img');
+  const herfAnalyticsButton = document.querySelector('.herf-analytics');
+
+  analyticsImgButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    fetchAnalyticsData();
+  });
+
+  herfAnalyticsButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    fetchAnalyticsData();
+  });
+
+  function fetchAnalyticsData() {
+    fetch('/analytics')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error fetching analytics data');
+        }
+        return response.text();
+      })
+      .then(html => {
+        // Создаем временный элемент для парсинга HTML
+        const tempElement = document.createElement('div');
+        tempElement.innerHTML = html;
+
+        // Извлекаем данные sales_report и top_sellers из HTML
+        const salesReportElement = tempElement.querySelector('#sales-report');
+        const topSellersElement = tempElement.querySelector('#top-sellers');
+
+        const salesReportData = JSON.parse(salesReportElement.textContent);
+        const topSellersData = JSON.parse(topSellersElement.textContent);
+
+        console.log('Sales Report:', salesReportData);
+        console.log('Top Sellers:', topSellersData);
+
+        // Перенаправляем пользователя на страницу аналитики
+        window.location.href = '/analytics';
+      })
+      .catch(error => {
+        console.error('Error fetching analytics data:', error);
+      });
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const customerListImgButton = document.querySelector('.user-img');
+
+  customerListImgButton.addEventListener('click', function(e) {
+    e.preventDefault(); // Предотвращаем переход по ссылке
+
+    // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+    window.location.href = '/user_page';
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const customerListImgButton = document.querySelector('.menu-list .user-img');
+
+  customerListImgButton.addEventListener('click', function(e) {
+    e.preventDefault(); // Предотвращаем переход по ссылке
+
+    // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+    window.location.href = '/user_page';
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const customerListButton = document.querySelector('.menu-list .href-user');
+
+  customerListButton.addEventListener('click', function(e) {
+    e.preventDefault(); // Предотвращаем переход по ссылке
+
+    // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+    window.location.href = '/user_page';
+  });
+});
+
+
 function openCustomerModal(customerId) {
   fetch(`/customerbyid?id=${customerId}`)
     .then(response => {
@@ -1733,9 +1963,17 @@ function openCustomerModal(customerId) {
       $('#editClientPhone').val(customer.billing.phone);
       $('#editClientAddress').val(`${customer.billing.address_1}, ${customer.billing.city}, ${customer.billing.state} ${customer.billing.postcode}, ${customer.billing.country}`);
 
+      // Загрузка кастомных статусов клиента
+      $('.client-tags').empty();
+      const customStatuses = customer.meta_data.find(meta => meta.key === '_custom_statuses');
+      if (customStatuses && Array.isArray(customStatuses.value)) {
+        customStatuses.value.forEach(status => {
+          createTag(status);
+        });
+      }
+
       loadClientOrders(customerId);
       
-      $('#myModal').modal('hide'); // Закрытие модального окна заказа перед открытием модального окна клиента
       $('#clientModal').modal('show');
     })
     .catch(error => {
@@ -1897,6 +2135,100 @@ function loadClientOrders(customerId, page = 1) {
       
       paginationContainer.show();
       }
+
+      function updateCustomer(customerId, data) {
+        // Получаем выбранные кастомные статусы
+        const selectedCustomStatuses = getSelectedCustomStatuses();
+        
+        // Добавляем кастомные статусы в мета-данные
+        if (!data.meta_data) {
+          data.meta_data = [];
+        }
+        data.meta_data.push({
+          key: '_custom_statuses',
+          value: selectedCustomStatuses
+        });
+      
+        fetch('/update_customer', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            id: customerId,
+            ...data
+          })
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Ошибка при обновлении клиента');
+          }
+          return response.json();
+        })
+        .then(result => {
+          console.log('Клиент успешно обновлен:', result);
+          $('#clientModal').modal('hide');
+          loadCustomers(currentPage);
+        })
+        .catch(error => {
+          console.error('Ошибка при обновлении клиента:', error);
+        });
+      }
+
+      // Обработчик клика на кнопку "Зберегти"
+$(document).on('click', '#saveChangesBtn', function() {
+  const customerId = $('#clientModalLabel').data('customer-id');
+  const name = $('#editClientName').val();
+  const email = $('#editClientEmail').val();
+  const phone = $('#editClientPhone').val();
+  const address = $('#editClientAddress').val();
+
+  const updatedData = {};
+
+  if (name) {
+    const [firstName, lastName] = name.split(' ');
+    if (firstName) {
+      updatedData.first_name = firstName;
+    }
+    if (lastName) {
+      updatedData.last_name = lastName;
+    }
+  }
+
+  if (email) {
+    updatedData.email = email;
+  }
+
+  if (phone || address) {
+    updatedData.billing = {};
+    if (phone) {
+      updatedData.billing.phone = phone;
+    }
+    if (address) {
+      const [address1, city, statePostcode, country] = address.split(', ');
+      if (address1) {
+        updatedData.billing.address_1 = address1;
+      }
+      if (city) {
+        updatedData.billing.city = city;
+      }
+      if (statePostcode) {
+        const [state, postcode] = statePostcode.split(' ');
+        if (state) {
+          updatedData.billing.state = state;
+        }
+        if (postcode) {
+          updatedData.billing.postcode = postcode;
+        }
+      }
+      if (country) {
+        updatedData.billing.country = country;
+      }
+    }
+  }
+
+  updateCustomer(customerId, updatedData);
+});
       
       // Обработчик клика по ссылке пагинации для заказов клиента
       $(document).on('click', '#clientOrdersPaginationContainer .page-link', function(e) {
@@ -1906,7 +2238,309 @@ function loadClientOrders(customerId, page = 1) {
       loadClientOrders(customerId, page);
       });
 
+      let alertShown = false;
 
+      function checkNewOrders() {
+        if (!alertShown) {
+          fetch('/check_orders')
+            .then(response => response.json())
+            .then(data => {
+              const orderAlert = document.getElementById('order-alert');
+              if (data.new_orders_exist && !alertShown) {
+                orderAlert.style.display = 'flex';
+                alertShown = true;
+              }
+            })
+            .catch(error => {
+              console.error('Ошибка при проверке новых заказов:', error);
+            });
+        }
+      }
+      
+      document.addEventListener('DOMContentLoaded', function() {
+        checkNewOrders();
+        setInterval(checkNewOrders, 60000);
+      
+        const closeBtn = document.querySelector('.order-alert .close-btn');
+        closeBtn.addEventListener('click', function() {
+          document.getElementById('order-alert').style.display = 'none';
+          alertShown = false;
+        });
+      });
+
+      let currentPageForCopy = 1;
+      let totalPagesForCopy = 1;
+      let isLoadingForCopy = false;
+      let selectedProductForCopy = null;
+      
+      function loadProductsForCopy(searchQuery = '') {
+        if (isLoadingForCopy || currentPageForCopy > totalPagesForCopy) return;
+      
+        isLoadingForCopy = true;
+        console.log('Загрузка товаров. Страница:', currentPageForCopy, 'Поисковый запрос:', searchQuery);
+      
+        fetch(`/data_products?page=${currentPageForCopy}&name=${encodeURIComponent(searchQuery)}`)
+          .then(response => response.json())
+          .then(data => {
+            console.log('Данные о товарах:', data);
+            const optionsContainer = $('.options-container-copy');
+            
+            if (currentPageForCopy === 1) {
+              optionsContainer.empty();
+            }
+      
+            if (data.products && Array.isArray(data.products)) {
+              data.products.forEach(product => {
+                const option = $('<div>', {
+                  class: 'option-copy',
+                  'data-value': product.id,
+                  'data-price': product.price,
+                  html: `
+                    <img src="${product.images[0].src}" alt="${product.name}">
+                    <span>${product.name}</span>
+                  `
+                });
+                optionsContainer.append(option);
+              });
+              currentPageForCopy++;
+              totalPagesForCopy = data.total_pages;
+            } else {
+              console.error('Неверный формат данных:', data);
+            }
+            isLoadingForCopy = false;
+          })
+          .catch(error => {
+            console.error('Помилка при завантаженні товарів:', error);
+            isLoadingForCopy = false;
+          });
+      }
+      
+      $('#productSearchForCopy').on('keypress', function(event) {
+        if (event.which === 13) {
+          event.preventDefault();
+          const searchQuery = $(this).val().trim();
+          if (searchQuery !== '') {
+            currentPageForCopy = 1;
+            $('.options-container-copy').empty();
+            loadProductsForCopy(searchQuery);
+          }
+        }
+      });
+      
+      $('.selected-option-copy').on('click', function() {
+        $('.options-container-copy').toggle();
+      });
+      
+      $(document).on('click', '.option-copy', function() {
+        const selectedText = $(this).find('span').text();
+        const selectedValue = $(this).data('value');
+        const selectedPrice = $(this).data('price');
+        $('.selected-option-copy').text(selectedText);
+        $('.options-container-copy').hide();
+        selectedProductForCopy = {
+          id: selectedValue,
+          name: selectedText,
+          price: selectedPrice,
+          image: $(this).find('img').attr('src')
+        };
+      });
+      
+      $('.options-container-copy').on('scroll', function() {
+        const container = $(this);
+        if (container.scrollTop() + container.innerHeight() >= container[0].scrollHeight - 20) {
+          loadProductsForCopy($('#productSearchForCopy').val().trim());
+        }
+      });
+      
+      function openAddProductModal(targetTableId) {
+        $('#addProductModalForCopy').data('targetTableId', targetTableId);
+        $('#addProductModalForCopy').modal('show');
+        currentPageForCopy = 1;
+        totalPagesForCopy = 1;
+        $('.options-container-copy').empty();
+        $('.selected-option-copy').text('Виберіть товар');
+        selectedProductForCopy = null;
+        loadProductsForCopy();
+      }
+      
+      $(document).on('click', function(event) {
+        if (!$(event.target).closest('.custom-select-copy').length) {
+          $('.options-container-copy').hide();
+        }
+      });
+      
+      $(document).on('click', '#addProductToCopyBtn', function() {
+        openAddProductModal('copyOrderProducts');
+      });
+      
+      $('#addProductConfirm').on('click', function() {
+        if (selectedProductForCopy) {
+          const quantity = $('#productQuantityForCopy').val();
+          if (quantity && quantity > 0) {
+            const targetTableId = $('#addProductModalForCopy').data('targetTableId');
+            const newRow = `
+              <tr data-product-id="${selectedProductForCopy.id}">
+                <td><img src="${selectedProductForCopy.image}" alt="${selectedProductForCopy.name}" width="50" height="50"></td>
+                <td>${selectedProductForCopy.name}</td>
+                <td><input type="number" class="form-control copyOrderQuantity" value="${quantity}"></td>
+                <td>${selectedProductForCopy.price}</td>
+                <td><button type="button" class="btn btn-danger btn-sm removeProduct">Видалити</button></td>
+              </tr>
+            `;
+            $(`#${targetTableId} tbody`).append(newRow);
+            $('#addProductModalForCopy').modal('hide');
+          } else {
+            alert('Будь ласка, введіть коректну кількість товару');
+          }
+        } else {
+          alert('Будь ласка, виберіть товар');
+        }
+      });
+      
+      $(document).on('click', '.removeProduct', function() {
+        $(this).closest('tr').remove();
+      });
+      
+      $('#createCopyOrderBtn').on('click', function() {
+        const newOrder = {
+          customer: {
+            first_name: $('#copyOrderCustomerName').val().split(' ')[0],
+            last_name: $('#copyOrderCustomerName').val().split(' ')[1] || '',
+            email: $('#copyOrderEmail').val(),
+            phone: $('#copyOrderPhone').val()
+          },
+          billing: {
+            first_name: $('#copyOrderCustomerName').val().split(' ')[0],
+            last_name: $('#copyOrderCustomerName').val().split(' ')[1] || '',
+            email: $('#copyOrderEmail').val(),
+            phone: $('#copyOrderPhone').val(),
+            address_1: $('#copyOrderAddress').val()
+          },
+          shipping: {
+            first_name: $('#copyOrderCustomerName').val().split(' ')[0],
+            last_name: $('#copyOrderCustomerName').val().split(' ')[1] || '',
+            address_1: $('#copyOrderAddress').val()
+          },
+          line_items: $('#copyOrderProducts tbody tr').map(function() {
+            return {
+              product_id: $(this).data('product-id'),
+              quantity: $(this).find('.copyOrderQuantity').val()
+            };
+          }).get(),
+          shipping_lines: [{
+            method_id: $('#copyOrderShippingMethod').val(),
+            method_title: $('#copyOrderShippingMethod option:selected').text()
+          }],
+          payment_method: $('#copyOrderPaymentMethod').val(),
+          payment_method_title: $('#copyOrderPaymentMethod option:selected').text()
+        };
+      
+        fetch('/create_order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(newOrder)
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Помилка при створенні копії замовлення');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Копія замовлення успішно створена:', data);
+          $('#copyOrderModal').modal('hide');
+          $('#myModal').modal('hide');
+          loadOrders();
+          
+        })
+        .catch(error => {
+          console.error('Помилка при створенні копії замовлення:', error);
+          
+        });
+      });
+      
+      $('#createOrderCopy').on('click', function() {
+        const orderId = $('#myModal').data('order-id');
+        createOrderCopy(orderId);
+      });
+      
+      function createOrderCopy(orderId) {
+        fetch(`/dataordersbyid?id=${orderId}`)
+          .then(response => response.json())
+          .then(originalOrder => {
+            populateCopyOrderModal(originalOrder);
+            $('#copyOrderModal').modal('show');
+          })
+          .catch(error => {
+            console.error('Помилка при отриманні даних замовлення:', error);
+            alert('Помилка при отриманні даних замовлення');
+          });
+      }
+      
+      function populateCopyOrderModal(order) {
+        $('#copyOrderModalBody').html(`
+          <form id="copyOrderForm">
+            <div class="mb-3">
+              <label for="copyOrderCustomerName" class="form-label">Ім'я клієнта</label>
+              <input type="text" class="form-control" id="copyOrderCustomerName" value="${order.billing.first_name} ${order.billing.last_name}">
+            </div>
+            <div class="mb-3">
+              <label for="copyOrderEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="copyOrderEmail" value="${order.billing.email}">
+            </div>
+            <div class="mb-3">
+              <label for="copyOrderPhone" class="form-label">Телефон</label>
+              <input type="tel" class="form-control" id="copyOrderPhone" value="${order.billing.phone}">
+            </div>
+            <div class="mb-3">
+              <label for="copyOrderAddress" class="form-label">Адреса</label>
+              <input type="text" class="form-control" id="copyOrderAddress" value="${order.billing.address_1}">
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><strong>Товари</strong></label>
+              <table class="table" id="copyOrderProducts">
+                <thead>
+                  <tr>
+                    <th>Зображення</th>
+                    <th>Назва</th>
+                    <th>Кількість</th>
+                    <th>Ціна</th>
+                    <th>Дія</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${order.line_items.map(item => `
+                    <tr data-product-id="${item.product_id}">
+                      <td><img src="${item.image.src}" alt="${item.name}" width="50" height="50"></td>
+                      <td>${item.name}</td>
+                      <td><input type="number" class="form-control copyOrderQuantity" value="${item.quantity}"></td>
+                      <td>${item.price}</td>
+                      <td><button type="button" class="btn btn-danger btn-sm removeProduct">Видалити</button></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+              <button type="button" class="btn btn-primary" id="addProductToCopyBtn">Додати товар</button>
+            </div>
+            <div class="mb-3">
+              <label for="copyOrderShippingMethod" class="form-label">Метод доставки</label>
+              <select class="form-control" id="copyOrderShippingMethod">
+                <option value="flat_rate" ${order.shipping_lines[0].method_id === 'flat_rate' ? 'selected' : ''}>Нова Пошта</option>
+                <option value="free_shipping" ${order.shipping_lines[0].method_id === 'free_shipping' ? 'selected' : ''}>Укрпошта</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="copyOrderPaymentMethod" class="form-label">Метод оплати</label>
+              <select class="form-control" id="copyOrderPaymentMethod">
+                <option value="bacs" ${order.payment_method === 'bacs' ? 'selected' : ''}>Переказ на Р/Р</option>
+                <option value="cod" ${order.payment_method === 'cod' ? 'selected' : ''}>Готівка при отриманні</option>
+              </select>
+            </div>
+          </form>
+        `);
+      }
 
 // Вызвать функцию loadOrders() при загрузке страницы
 $(document).ready(function() {
@@ -1916,3 +2550,59 @@ loadOrders();
 load_custom_status();
 });                  
 
+document.addEventListener('DOMContentLoaded', function() {
+  const logoutLink = document.querySelector('.href-exit');
+
+  logoutLink.addEventListener('click', function(event) {
+    event.preventDefault(); 
+    
+    fetch('/logout')
+      .then(response => {
+        if (response.redirected) {
+        
+          window.location.href = response.url;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при выполнении запроса:', error);
+      });
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const logoutLink = document.querySelector('.exit-img');
+
+  logoutLink.addEventListener('click', function(event) {
+    event.preventDefault(); 
+    
+    fetch('/logout')
+      .then(response => {
+        if (response.redirected) {
+        
+          window.location.href = response.url;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при выполнении запроса:', error);
+      });
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const logoutLink = document.querySelector('.exit1-img');
+
+  logoutLink.addEventListener('click', function(event) {
+    event.preventDefault(); 
+    
+    fetch('/logout')
+      .then(response => {
+        if (response.redirected) {
+        
+          window.location.href = response.url;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при выполнении запроса:', error);
+      });
+  });
+});

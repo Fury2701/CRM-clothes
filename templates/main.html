@@ -19,6 +19,9 @@
     <a class="home-img" href="#"><img src="/static/images/home2.png" width="30px" height="30px" ></a>
     <a class="offer-list-img" href="#"><img src="/static/images/shopping-cart2.png" width="25px" height="26px" ></a>
     <a class="clients-img" href="#"><img src="/static/images/group2.png" width="30px" height="30px" ></a>
+    <a class="analytics-img" href="#"> <img src="/static/images/analytics.png" width="30px" height="30px" > </a>
+    <a class="user-img" href="#"><img src="/static/images/user.png" width="30px" height="30px" ></a>
+    <a class="exit-img" href="#"><img src="/static/images/exit.png" width="30px" height="30px" ></a>
     <div class="div-70x70px">
 
     </div>
@@ -40,14 +43,21 @@
         <a class="menu-btn" href="#"><img src="/static/images/logo.png" width="70px" height="70px" ></a>
 
      <nav class="menu-list">
-        <a class="home-img" href="#"><img src="/static/images/home2.png" width="30px" height="30px" ></a>
+        <a class="home-img" href="#"><img src="/static/images/home1.png" width="30px" height="30px" ></a>
         <a id="href-main" href="#">Головна</a>
 
-        <a class="offer-list-img" href="#"><img src="/static/images/shopping-cart2.png" width="25px" height="26px" ></a>
+        <a class="offer-list-img" href="#"><img src="/static/images/shopping-cart1.png" width="25px" height="26px" ></a>
         <a id="href-offer-list" href="#">Список товарів</a>
 
-        <a class="clients-img" href="#"><img src="/static/images/group2.png" width="30px" height="30px" ></a>
-        <a id="href-clients" href="#">Кієнти</a>
+        <a class="clients-img" href="#"><img src="/static/images/group1.png" width="30px" height="30px" ></a>
+        <a id="href-clients" href="#">Клієнти</a>
+
+        <a class="analytics-img" href="#"><img src="/static/images/analytics1.png" width="30px" height="30px" ></a> </a>
+        <a class="herf-analytics" style="font-size: large;" href="#">Аналітика</a>
+        <a class="user-img" href="#"><img src="/static/images/user1.png" width="30px" height="30px" ></a> </a>
+        <a class="href-user" style="font-size: large;" href="#">Користувачі</a>
+        <a class="exit1-img" href="#"><img src="/static/images/exit1.png" width="30px" height="30px" ></a>
+        <a class="href-exit" style="font-size: large;" href="#">Вийти</a>
      </nav>
 
     </div >
@@ -68,6 +78,11 @@
           <button id="create-offer" class="btn btn-primary" href="#" type="button">Створити замовлення</button>
         </li>
       </ul>
+      <div id="order-alert" class="order-alert" style="display: none;">
+        <img src="/static/images/bell.png" alt="Bell Icon" class="bell-icon">
+        <span>Ви отримали нове замовлення</span>
+        <button class="close-btn">&times;</button>
+      </div>
       </div>     
 
     <div class="main-conent-div">
@@ -96,35 +111,14 @@
               <option value="">Всі менеджери</option>
             </select>
 
-            <button class="btn btn-secondary dropdown-toggle" id="filterDD" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Фільтр замовлення
-            </button>
-            <ul class="dropdown-menu">
+             <div class="filterDD">
               <li class="form-check">
                 <input class="form-check-input" type="checkbox" value="" id="CheckOldest">
                 <label class="form-check-label" for="CheckOldest">
                   Від старіших
                 </label>
               </li>
-              <li class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="filter4">
-                <label class="form-check-label" for="filter4">
-                  Фільтр 4
-                </label>
-              </li>
-              <li class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="filter5">
-                <label class="form-check-label" for="filter5">
-                  Фільтр 5
-                </label>
-              </li>
-              <li class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="filter6">
-                <label class="form-check-label" for="filter6">
-                  Фільтр 6
-                </label>
-              </li>
-            </ul>
+             </div>
             
             <div class="input-group mb-3">
               <button class="btn btn-outline-secondary" type="button" id="searchButton">Пошук</button>
@@ -211,15 +205,30 @@
                   </select>
                 </div>
                 <div class="mb-3">
+                  <label for="productSearchCreate" class="form-label">Пошук товару</label>
+                  <input type="text" class="form-control" id="productSearchCreate" placeholder="Введіть назву товару">
+                </div>
+                <div class="mb-3">
                   <label for="productSelectCreate" class="form-label">Товар</label>
                   <div class="custom-select-create">
                     <div class="selected-option-create">Виберіть товар</div>
                     <div class="options-container-create"></div>
                   </div>
                 </div>
+                
                 <div class="mb-3">
-                  <label for="productQuantityCreate" class="form-label">Кількість</label>
-                  <input type="number" class="form-control" id="productQuantityCreate" min="1" required>
+                  <table id="selectedProductsTable" class="table">
+                    <thead>
+                      <tr>
+                        <th>Зображення</th>
+                        <th>Товар</th>
+                        <th>Кількість</th>
+                        <th>Дія</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                  </table>
                 </div>
               </form>
             </div>
@@ -266,10 +275,11 @@
         </div>
         
       </div>
-      <div class="modal-footer ">
+      <div class="modal-footer">
         <button type="button" class="btn btn-outline-danger" id="delete-order" href="#">Видалити замовлення</button>
+        <button type="button" class="btn btn-outline-secondary" id="createOrderCopy">Створити копію</button>
         <button type="button" class="btn btn-outline-primary" id="save-info" href="#">Зберегти</button>
-        <button type="button" class="btn btn-primary" id="save-button" href="#">Друк</button>
+        <button type="button" class="btn btn-primary" id="printButton" href="#">Друк</button>
       </div>
     </div>
   </div>
@@ -285,6 +295,10 @@
         <div class="modal-body">
           <!-- Форма для добавления товара -->
           <form>
+            <div class="mb-3">
+              <label for="productSearch" class="form-label">Пошук товару</label>
+              <input type="text" class="form-control" id="productSearch" placeholder="Введіть назву товару">
+            </div>
             <div class="mb-3">
               <label for="productSelect" class="form-label">Виберіть товар</label>
               <div class="custom-select">
@@ -303,6 +317,56 @@
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
           <button type="button" class="btn btn-primary" id="saveProductBtn">Зберегти</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="copyOrderModal" tabindex="-1" aria-labelledby="copyOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="copyOrderModalLabel">Створити копію замовлення</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="copyOrderModalBody">
+        <!-- Здесь будет форма для редактирования заказа -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+        <button type="button" class="btn btn-primary" id="createCopyOrderBtn">Створити копію</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addProductModalForCopy" tabindex="-1" aria-labelledby="addProductForCopyModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addProductForCopyModalLabel">Додати товар</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="productSearchForCopy" class="form-label">Пошук товару</label>
+          <input type="text" class="form-control" id="productSearchForCopy" placeholder="Введіть назву товару">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Виберіть товар</label>
+          <div class="custom-select-copy">
+            <div class="selected-option-copy">Виберіть товар</div>
+            <div class="options-container-copy"></div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="productQuantityForCopy" class="form-label">Кількість</label>
+          <input type="number" class="form-control" id="productQuantityForCopy" value="1" min="1">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+        <button type="button" class="btn btn-primary" id="addProductConfirm">Додати</button>
       </div>
     </div>
   </div>
@@ -353,6 +417,23 @@
                       </tr>
                     </tbody>
                   </table>
+                </div>
+                <div class="client-tags">
+                  <!-- Теги будут добавляться сюда динамически -->
+                </div>
+                <div class="dropdown">
+                  <button class="add-tag-btn" type="button" id="addCustomStatusBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                    +
+                  </button>
+                  <div class="dropdown-menu">
+                    <div class="dropdown-item">
+                      <input type="text" class="form-control" id="newCustomStatusInput" placeholder="Новий статус">
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <div id="customStatusList">
+                      <!-- Список кастомных статусов будет добавлен сюда динамически -->
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

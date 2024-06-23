@@ -42,7 +42,7 @@
 
   .menu-btn {
     z-index: 1000;
-
+  
     position: absolute;
     right: -70px;
     top: 0px;
@@ -52,7 +52,14 @@
     font-size: 24px;
     line-height: 33px;
     color: #ffffff;
-}
+  }
+  
+  #status-management {
+    margin-top: 10px;
+    margin-right: 15px;
+    border: 1px solid #353535;
+    color: #353535;
+  }
   
   #export {
     margin-top: 10px;
@@ -69,7 +76,12 @@
 
   }
   
-
+  #create-offer {
+    margin-top: 10px;
+    margin-right: 60px;
+    background-color: #0057FF;
+  }
+  
   .full-height-70px-width-div {
     position: fixed;
     top: 0;
@@ -86,7 +98,7 @@
     left: 0;
     width: 70px;
     height: 70px;
-    background-color: #2c2c2c;
+    background-color:#2c2c2c;
     z-index: -2;
     cursor: pointer;
   }
@@ -107,7 +119,7 @@
     left: 0;
     width: 70px;
     height: 70px;
-    background-color: #2c2c2c;
+    background-color:#2c2c2c;
     z-index: -2;
     cursor: pointer;
   }
@@ -123,7 +135,7 @@
     font-size: 24px;
     line-height: 33px;
     color: #ffffff;
-}
+  }
   
   #active-page {
     position: absolute;
@@ -172,15 +184,29 @@
     overflow-x: auto;
   }
   
+  
+  .btn.btn-secondary.dropdown-toggle {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: absolute;
+    height: 38px;
+    left: 25px;
+    top: 25px;
+    border: 1px solid #CACACA;
+    border-radius: 5px;
+  }
+  
   .input-group.mb-3 {
     position: absolute;
     display: flex;
     height: 38px;
-    left: 170px;
+    left: 377px;
     width: auto;
     margin-right: 185px;
     right: 50px;
-    top: 35px;
+    top: 24px;
     border: 1px solid #CACACA;
     border-radius: 5px;
     z-index: 10;
@@ -201,7 +227,7 @@
     left: 19px;
   }
   
-  .products-img {
+  .offer-list-img {
     position: absolute;
     opacity: 1;
     top: 172px;
@@ -212,6 +238,13 @@
     position: absolute;
     opacity: 1;
     top: 217px;
+    left: 21px;
+  }
+  .analytics-img{
+   
+    position: absolute;
+    opacity: 1;
+    top: 250px;
     left: 21px;
   }
   
@@ -229,7 +262,7 @@
     color: #CACACA;
   }
   
-  #href-products {
+  #href-offer-list {
     position: absolute;
     width: 149px;
     height: 22px;
@@ -257,20 +290,67 @@
     color: #CACACA;
   }
   
-  #clientsTable {
-    width: 100%;
-    border-collapse: collapse;
+  .herf-analytics{
+    position: absolute;
+    width: 61px;
+    height: 22px;
+    left: 61px;
+    top: 250px;
+    font-family: 'Fixel Display';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 19px;
+    line-height: 22px;
+    color: #CACACA;
   }
   
-  #clientsTable th,
-  #clientsTable td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
+  #filterDD{
+    margin-left: 167px;
+  }
+  .form-check{
+    margin-left: -15px;
+  }
+  .dropdown-list {
+    
+    max-width: fit-content;
+    text-align: center;
+    height: auto;
+    border: 1px solid #CACACA;
+    border-radius: 5px;
+  }
+  
+  .dropdown-menu .form-check-label {
+    margin-left: 25px;
+    margin-right: 5px;
+  }
+  
+  .dropdown-menu .form-check-input {
+    position: relative;
+    left: 30px;
+  }
+  
+  .content-shifted {
+    position: relative;
+    margin-left: 250px;
+    transition: 0.5s;
+  }
+  
+  #if_Paid {
+    width: 60px;
+    height: auto;
   }
   
   .modal-body {
     font-size: 16px;
+  }
+  
+  .table-input {
+    width: 66px;
+    border: 0;
+  }
+  
+  #table-input-summ {
+    width: 80px;
   }
   
   .modal-footer {
@@ -300,44 +380,52 @@
     margin-left: 5px;
     margin-right: 0;
   }
-  .content-shifted {
-    margin-left: 327px;
-    transition: margin-left 0.5s;
+  .status-sort-select{
+    position: relative;
+    top: -20px;
+    margin-right: 30px;
+    z-index: 10;
   }
-
-  #createClientModal .modal-dialog {
-    max-width: 550px;
+  .status-sort-div{
+    z-index: 10 !important;
+  }
+  #sortDropdown{
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    position: relative !important;
+    height: 38px !important;
+    left: 25px !important;
+    top: 25px !important;
+    border: 1px solid #CACACA !important;
+    border-radius: 5px !important;
+  }
+  @media screen and (max-width: 768px) {
+    .mytable th:nth-child(3),
+    .mytable td:nth-child(3) {
+      display: none;
+    }
   }
   
-  #createClientModal .modal-body {
-    max-height: 650px;
-    overflow-y: auto;
+  
+  #noteTable td.note-text {
+    width: 90%;
+    font-size: 15px;
   }
   
-  #if_Paid {
-    width: 60px;
-    height: auto;
+  #noteTable td.note-timestamp,
+  #noteTable td.note-author {
+    font-size: 12px;
   }
-  
-  .table-input {
-    width: 66px;
-    border: 0;
-  }
-  
-  #table-input-summ {
-    width: 80px;
-  }
-  
-  #discount_type {
-    width: 60px;
+  #discount_type{
+    width: 60px; 
     border-radius: 5px;
   }
-  
-  #discount_amount {
+  #discount_amount{
     width: 80px;
     border-radius: 5px;
   }
-  
   #addProductBtn {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
@@ -345,6 +433,7 @@
     border-radius: 0.2rem;
     position: absolute;
     right: 1rem;
+    
   }
   
   .accordion-body {
@@ -352,6 +441,9 @@
     padding-bottom: 3rem;
   }
   
+  .add-product-menu-content {
+    max-width: 300px;
+  }
   .custom-select {
     position: relative;
     width: 100%;
@@ -394,15 +486,21 @@
     height: 50px;
     margin-right: 10px;
   }
-  
-  #createNoteBtn {
+  #create_coupon{
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+    position: absolute;
+    right: 1rem;
+    top:1rem;
+  }
+  #createNoteBtn{
     margin-top: 5px;
   }
-  
-  #sendSMSBtn {
+  #sendSMSBtn{
     margin-top: 5px;
   }
-  
   #smsTable td.sms-text {
     width: 90%;
     font-size: 15px;
@@ -413,6 +511,7 @@
     font-size: 12px;
   }
   
+  
   .client-tags {
     position: relative;
     display: flex;
@@ -422,24 +521,20 @@
     max-width: calc(100% - 85px);
     margin-right: 40px;
     min-height: 28px;
-    padding-left: 30px; /* Добавлено свойство padding-left */
   }
-  
   .client-tags #customStatusList {
     position: relative;
   }
   
-  #customStatusList {
+  #customStatusList{
     max-height: 200px;
     overflow-y: auto;
   }
-  
   #customStatusList .dropdown-item:hover {
     background-color: #007efc;
     color: #e0e0e0;
     cursor: pointer;
   }
-  
   .client-tags .toast {
     background-color: #e0e0e0;
     border-radius: 16px;
@@ -462,11 +557,9 @@
     cursor: pointer;
     font-size: 12px;
   }
-  
-  .btn-close {
+  .btn-close{
     margin-top: 4px;
   }
-  
   .add-tag-btn {
     display: inline-block;
     padding: 2px 2px;
@@ -476,28 +569,245 @@
     border-radius: 50%;
     font-size: 25px;
     cursor: pointer;
-    position: relative;
-    top: -40px;
-    left: 0;
+    position: absolute;
+    top: -30px;
+    right: -20px;
   }
-  
   .client-tags .dropdown-toggle::after {
     display: none;
-    color: #f5f5f5;
   }
   
-  .delete-custom-status {
+  .delete-custom-status{
     height: 18px;
     width: 18px;
   }
   
-  #orderModal .modal-body {
+  #myModal .modal-body{
     max-height: 700px;
     overflow-y: auto;
   }
+  .child-row {
+    display: none;
+  }
+  
+  .child-row td {
+    padding: 0;
+  }
+  
+  .custom-tags-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: calc(100% - 85px);
+    margin-right: 40px;
+    min-height: 28px;
+  }
+  
+  .custom-tags-container .custom-status-list {
+    position: relative;
+  }
+  
+  .custom-status-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .custom-status-list .dropdown-item:hover {
+    background-color: #007efc;
+    color: #e0e0e0;
+    cursor: pointer;
+  }
+  
+  .custom-tags-container .toast {
+    background-color: #e0e0e0;
+    border-radius: 16px;
+    padding: 2px 6px !important;
+    margin-right: 6px;
+    margin-bottom: 10px;
+    max-width: fit-content !important;
+    font-size: 14px;
+  }
+  
+  .custom-tags-container .toast-body {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    padding: 3px 3px !important;
+  }
+  
+  .custom-tags-container .btn-close {
+    margin-left: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  
+  .custom-tags-container .btn-close {
+    margin-top: 4px;
+  }
+  
+  .custom-tags-container .add-tag-btn {
+    display: inline-block;
+    padding: 2px 2px;
+    background-color: #fff;
+    color: #333;
+    border: none;
+    border-radius: 50%;
+    font-size: 25px;
+    cursor: pointer;
+    position: absolute;
+    top: -30px;
+    right: -20px;
+  }
+  
+  .custom-tags-container .dropdown-toggle::after {
+    display: none;
+  }
+  
+  .custom-tags-container .delete-custom-status {
+    height: 18px;
+    width: 18px;
+  }
+  
+  .dropdown-container {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .manager-dropdown {
+    margin-top: 15px;
+    border-radius: 5px;
+    border-color: #c9c9c9;
+    padding: 4px;
+    max-width: fit-content;
+  }
+  
+  /* Стили для нового селекта */
+  .custom-select-create {
+    position: relative;
+    width: 100%;
+    cursor: pointer;
+  }
+  
+  .selected-option-create {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+  }
+  
+  .options-container-create {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    background-color: #fff;
+    display: none;
+  }
+  
+  .option-create {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .option-create:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .option-create img {
+    width: 50px;
+    height: 50px;
+    margin-right: 10px;
+  }
+  
+  #createOrderModal .modal-dialog {
+    max-width: 550px;
+  }
+  
+  #createOrderModal .modal-body {
+    max-height: 650px;
+    overflow-y: auto;
+  }
+  #managerFilter{
+    max-width: fit-content;
+    margin-top: -33px;
+    
+  }
+/* Используйте те же стили, что и для страницы заказов */
+/* Добавьте дополнительные стили для элементов страницы аналитики */
 
+.sales-report, .top-sellers {
+    margin-bottom: 20px;
+}
 
- .analytics-img{
+#salesReport, #topSellers {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}  
+
+.sales-report .row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.sales-report .col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding: 0 15px;
+}
+
+.sales-report ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sales-report li {
+    margin-bottom: 10px;
+}
+
+.sales-report-custom {
+    margin-top: 30px;
+}
+
+.sales-report-custom h4 {
+    margin-bottom: 20px;
+}
+
+.sales-report-custom .input-group {
+    margin-bottom: 20px;
+}
+
+.sales-report-custom .row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.sales-report-custom .col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    padding: 0 15px;
+}
+
+.sales-report-custom ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sales-report-custom li {
+    margin-bottom: 10px;
+}
+
+.analytics-img{
  
   position: absolute;
   opacity: 1;
@@ -597,73 +907,4 @@
   font-size: 19px;
   line-height: 22px;
   color: #CACACA;
-}
-
-.client-tags {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  max-width: calc(100% - 85px);
-  margin-right: 40px;
-  min-height: 28px;
-  padding-left: 30px;
-}
-
-.client-tags .toast {
-  background-color: #e0e0e0;
-  border-radius: 16px;
-  padding: 2px 6px !important;
-  margin-right: 6px;
-  margin-bottom: 10px;
-  max-width: fit-content !important;
-  font-size: 12px;
-}
-
-.client-tags .toast-body {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  padding: 3px 3px !important;
-}
-
-.client-tags .btn-close {
-  margin-left: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.add-tag-btn {
-  display: inline-block;
-  padding: 2px 2px;
-  background-color: #fff;
-  color: #333;
-  border: none;
-  border-radius: 50%;
-  font-size: 25px;
-  cursor: pointer;
-  position: relative;
-  top: -40px;
-  left: 0;
-}
-
-#customStatusList {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-#customStatusList .dropdown-item:hover {
-  background-color: #007efc;
-  color: #e0e0e0;
-  cursor: pointer;
-}
-
-.delete-custom-status {
-  height: 18px;
-  width: 18px;
-}
-
-.customer-tags .badge {
-  margin-right: 5px;
 }

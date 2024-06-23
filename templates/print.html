@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Замовлення №{{ order.id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    .header {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .total {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>Номер замовлення: {{ order.id }}</h2>
+    <p>Дата: {{ order.date_created }}</p>
+    <p>ПІБ замовника: {{ order.billing.last_name }} {{ order.billing.first_name }} {{ order.billing.company }}</p>
+    <p>Адреса доставки: 
+      {% set address_parts = [] %}
+      {% if order.shipping.address_1 %}{% set address_parts = address_parts + [order.shipping.address_1] %}{% endif %}
+      {% if order.shipping.city %}{% set address_parts = address_parts + [order.shipping.city] %}{% endif %}
+      {% if order.shipping.postcode %}{% set address_parts = address_parts + [order.shipping.postcode] %}{% endif %}
+      {% if order.shipping.country %}{% set address_parts = address_parts + [order.shipping.country] %}{% endif %}
+      {{ address_parts | join(', ') }}
+    </p>
+    <p>Телефон: {{ order.billing.phone }}</p>
+    <p>Спосіб доставки: {{ order.shipping_lines[0].method_title }}</p>
+    <p>Коментар покупця: {{ order.customer_note or 'Немає' }}</p>
+  </div>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Картинка</th>
+        <th>Назва</th>
+        <th>Артикул</th>
+        <th>Кількість</th>
+        <th>Ціна за од.</th>
+        <th>Сума</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in order.line_items %}
+      <tr>
+        <td>
+          {% if item.image %}
+            <img src="{{ item.image.src }}" alt="{{ item.name }}" width="75" height="75">
+          {% else %}
+            Немає картинки
+          {% endif %}
+        </td>
+        <td>{{ item.name }}</td>
+        <td>{{ item.sku }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.price }} {{ order.currency_symbol }}</td>
+        <td>{{ item.total }} {{ order.currency_symbol }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr class="total">
+        <td colspan="5">Загальна сума:</td>
+        <td>{{ order.total }} {{ order.currency_symbol }}</td>
+      </tr>
+    </tfoot>
+  </table>
+  
+</body>
+</html>

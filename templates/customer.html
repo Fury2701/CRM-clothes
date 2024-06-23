@@ -14,9 +14,12 @@
     <div class="full-page-background"></div>    
     <div class="my-content">    
         <div class="full-height-70px-width-div">
-            <a class="home-img" href="#"><img src="/static/images/home1.png" width="30px" height="30px" ></a>
-            <a class="products-img" href="#"><img src="/static/images/shopping-cart1.png" width="25px" height="26px" ></a>
-            <a class="clients-img" href="#"><img src="/static/images/group1.png" width="30px" height="30px" ></a>
+            <a class="home-img" href="#"><img src="/static/images/home2.png" width="30px" height="30px" ></a>
+            <a class="products-img" href="#"><img src="/static/images/shopping-cart2.png" width="25px" height="26px" ></a>
+            <a class="clients-img" href="#"><img src="/static/images/group2.png" width="30px" height="30px" ></a>
+            <a class="analytics-img" href="#"> <img src="/static/images/analytics.png" width="30px" height="30px" > </a>
+            <a class="user-img" href="#"><img src="/static/images/user.png" width="30px" height="30px" ></a>
+            <a class="exit-img" href="#"><img src="/static/images/exit.png" width="30px" height="30px" ></a>
             <div class="div-70x70px"></div>
         </div>
 
@@ -34,6 +37,12 @@
                 <a id="href-products" href="#">Список товарів</a>
                 <a class="clients-img" href="#"><img src="/static/images/group1.png" width="30px" height="30px" ></a>
                 <a id="href-clients" href="#">Клієнти</a>
+                <a class="analytics-img" href="#"><img src="/static/images/analytics1.png" width="30px" height="30px" ></a> </a>
+                <a class="herf-analytics" style="font-size: large;" href="#">Аналітика</a>
+                <a class="user-img" href="#"><img src="/static/images/user1.png" width="30px" height="30px" ></a> </a>
+                <a class="href-user" style="font-size: large;" href="#">Користувачі</a>
+                <a class="exit1-img" href="#"><img src="/static/images/exit1.png" width="30px" height="30px" ></a>
+                <a class="href-exit" style="font-size: large;" href="#">Вийти</a>
             </nav>
         </div >
         
@@ -51,6 +60,11 @@
                     <button id="create-client" class="btn btn-primary" href="#" type="button">Додати клієнта</button>
                 </li>
             </ul>
+            <div id="order-alert" class="order-alert" style="display: none;">
+              <img src="/static/images/bell.png" alt="Bell Icon" class="bell-icon">
+              <span>Ви отримали нове замовлення</span>
+              <button class="close-btn">&times;</button>
+            </div>
         </div>     
 
         <div class="main-conent-div">
@@ -194,6 +208,23 @@
                       </tbody>
                     </table>
                   </div>
+                  <div class="client-tags">
+                    <!-- Теги будут добавляться сюда динамически -->
+                  </div>
+                  <div class="dropdown">
+                    <button class="add-tag-btn" type="button" id="addCustomStatusBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                      +
+                    </button>
+                    <div class="dropdown-menu">
+                      <div class="dropdown-item">
+                        <input type="text" class="form-control" id="newCustomStatusInput" placeholder="Новий статус">
+                      </div>
+                      <div class="dropdown-divider"></div>
+                      <div id="customStatusList">
+                        <!-- Список кастомных статусов будет добавлен сюда динамически -->
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -290,6 +321,10 @@
       <div class="modal-body">
         <!-- Форма для добавления товара -->
         <form>
+          <div class="mb-3">
+            <label for="productSearch" class="form-label">Пошук товару</label>
+            <input type="text" class="form-control" id="productSearch" placeholder="Введіть назву товару">
+          </div>
           <div class="mb-3">
             <label for="productSelect" class="form-label">Виберіть товар</label>
             <div class="custom-select">

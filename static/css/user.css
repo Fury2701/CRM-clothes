@@ -34,15 +34,15 @@
     color: #CACACA;
     margin-top: 10px;
   }
-  
+
   .menu-btn img, .menu2-btn img {
     box-sizing: border-box;
     padding: 5px;
   }
-
+  
   .menu-btn {
     z-index: 1000;
-
+  
     position: absolute;
     right: -70px;
     top: 0px;
@@ -52,28 +52,18 @@
     font-size: 24px;
     line-height: 33px;
     color: #ffffff;
-}
+  }
   
-#export {
-  margin-top: 10px;
-  margin-right: 15px;
-  border: 1px solid #353535;
-  color: #353535;
-}
-#export:hover {
-  color: #ffffff;
-}
-#create-client {
-  margin-top: 10px;
-  margin-right: 60px;
-
-}
-  
-  #create-product {
+  #create-user {
     margin-top: 10px;
     margin-right: 60px;
-    background-color: #0057FF;
+
   }
+  
+  #create-user:hover{
+    transition:150ms;
+    background-color: #45aac4;
+   }
   
   .full-height-70px-width-div {
     position: fixed;
@@ -128,7 +118,7 @@
     font-size: 24px;
     line-height: 33px;
     color: #ffffff;
-}
+  }
   
   #active-page {
     position: absolute;
@@ -181,7 +171,7 @@
     position: absolute;
     display: flex;
     height: 38px;
-    left: 340px;
+    left: 170px;
     width: auto;
     margin-right: 185px;
     right: 50px;
@@ -191,12 +181,6 @@
     z-index: 10;
   }
   
-  @media screen and (min-width: 1300px) {
-    .input-group.mb-3 {
-      width: 600px;
-    }
-  }
-
   .mytable {
     margin-top: 100px;
     margin-left: 25px;
@@ -219,11 +203,26 @@
     left: 21px;
   }
   
-  .categories-img {
+  .clients-img {
     position: absolute;
     opacity: 1;
     top: 217px;
     left: 21px;
+  }
+
+  .analytics-img{
+ 
+    position: absolute;
+    opacity: 1;
+    top: 260px;
+    left: 21px;
+  }
+
+  .user-img{
+    position: absolute;
+    opacity: 1;
+    top: 300px;
+    left: 21px; 
   }
   
   #href-main {
@@ -254,7 +253,7 @@
     color: #CACACA;
   }
   
-  #href-categories {
+  #href-clients {
     position: absolute;
     width: 61px;
     height: 22px;
@@ -266,245 +265,9 @@
     font-size: 19px;
     line-height: 22px;
     color: #CACACA;
-  }
-  
-  .form-check {
-    margin-left: -15px;
-  }
-  
-  .dropdown-list {
-    max-width: fit-content;
-    text-align: center;
-    height: auto;
-    border: 1px solid #CACACA;
-    border-radius: 5px;
-  }
-  
-  .dropdown-menu .form-check-label {
-    margin-left: 25px;
-    margin-right: 5px;
-  }
-  
-  .dropdown-menu .form-check-input {
-    position: relative;
-    left: 30px;
-  }
-  
-  .content-shifted {
-    position: relative;
-    margin-left: 250px;
-    transition: 0.5s;
-  }
-  
-  .modal-body {
-    font-size: 16px;
-  }
-  
-  .modal-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .modal-footer .btn {
-    margin-left: 5px;
-  }
-  
-  .modal-footer .btn:first-child {
-    margin-left: 0;
-  }
-  
-  .modal-footer .btn-outline-danger {
-    margin-right: auto;
-  }
-  
-  .modal-footer .btn-outline-primary {
-    margin-left: auto;
-    margin-right: 5px;
-  }
-  
-  .modal-footer .btn-primary {
-    margin-left: 5px;
-    margin-right: 0;
-  }
-  
-  @media screen and (max-width: 768px) {
-    .mytable th:nth-child(3),
-    .mytable td:nth-child(3) {
-      display: none;
-    }
-  }
-  
-  .custom-select {
-    position: relative;
-    width: 100%;
-    cursor: pointer;
-  }
-  
-  .selected-option {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #fff;
-  }
-  
-  .options-container {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    border-top: none;
-    border-radius: 0 0 4px 4px;
-    background-color: #fff;
-    display: none;
-  }
-  
-  .option {
-    padding: 10px;
-    display: flex;
-    align-items: center;
-  }
-  
-  .option:hover {
-    background-color: #f5f5f5;
-  }
-  
-  .option img {
-    width: 50px;
-    height: 50px;
-    margin-right: 10px;
-  }
-  
-  #createProductModal .modal-dialog {
-    max-width: 550px;
-  }
-  
-  #createProductModal .modal-body {
-    max-height: 650px;
-    overflow-y: auto;
-  }
-  
-  #categoryFilter {
-    max-width: fit-content;
-    margin-top: 16px;
-  }
-  #productsTable {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  #productsTable th,
-  #productsTable td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  #productsTable th:nth-child(3),
-  #productsTable td:nth-child(3),
-  #productsTable th:nth-child(4),
-  #productsTable td:nth-child(4),
-  #productsTable th:nth-child(5),
-  #productsTable td:nth-child(5) {
-    width: 13%;
-  }
-  
-  #productImagesGallery img {
-    max-width: 100%;
-    max-height: 400px;
-    object-fit: contain;
-  }
-  .fancybox-container {
-    z-index: 10000;
+   }
 
-  }
-  
-  .fancybox-overlay {
-    z-index: 10000;
-    
-  }
-  #productModal .modal-body {
-    max-height: 650px;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  #inProduct-table {
-    table-layout: fixed;
-    width: 100%;
-  }
-  
-  #inProduct-table th,
-  #inProduct-table td {
-    padding: 8px;
-    word-wrap: break-word;
-  }
-  
-  #inProduct-table th:nth-child(1),
-  #inProduct-table td:nth-child(1) {
-    width: 12%;
-  }
-  
-  #inProduct-table th:nth-child(2),
-  #inProduct-table td:nth-child(2) {
-    width: 30%;
-  }
-  
-  #inProduct-table th:nth-child(3),
-  #inProduct-table td:nth-child(3) {
-    width: 25%;
-  }
-  
-  #inProduct-table th:nth-child(4),
-  #inProduct-table td:nth-child(4) {
-    width: 13%;
-  }
-  
-  #inProduct-table th:nth-child(5),
-  #inProduct-table td:nth-child(5) {
-    width: 20%;
-  }
-  input[type="text"] {
-    white-space: normal;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    hyphens: auto;
-    width: 100%;
-    min-width: 0;
-  }
-  #addAtributeBtn{
-    font-size: 14px;
-    padding: 4px;
-  }
-  .delete-attribute{
-    font-size: 22px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .out-of-stock {
-    color: red;
-  }
-
-  .analytics-img{
- 
-    position: absolute;
-    opacity: 1;
-    top: 260px;
-    left: 21px;
-  }
-  
-  .user-img{
-    position: absolute;
-    opacity: 1;
-    top: 300px;
-    left: 21px; 
-  }
-  
-  .herf-analytics{
+   .herf-analytics{
     position: absolute;
     width: 61px;
     height: 22px;
@@ -529,8 +292,77 @@
     line-height: 22px;
     color: #CACACA;
   }
+   
+   #usersTable {
+    width: 100%;
+    border-collapse: collapse;
+   }
+   
+   #usersTable th,
+   #usersTable td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+   }
+   
+   .modal-body {
+    font-size: 16px;
+   }
+   
+   .modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+   }
+   
+   .modal-footer .btn {
+    margin-left: 5px;
+   }
+   
+   .modal-footer .btn:first-child {
+    margin-left: 0;
+   }
+   
+   .modal-footer .btn-outline-danger {
+    margin-right: auto;
+   }
+   
+   .modal-footer .btn-outline-primary {
+    margin-left: auto;
+    margin-right: 5px;
+   }
+   
+   .modal-footer .btn-primary {
+    margin-left: 5px;
+    margin-right: 0;
+   }
+   
+   .content-shifted {
+    margin-left: 327px;
+    transition: margin-left 0.5s;
+   }
+   
+   #createUserModal .modal-dialog {
+    max-width: 550px;
+   }
+   
+   #createUserModal .modal-body {
+    max-height: 650px;
+    overflow-y: auto;
+   }
+   
+   
+   #searchButton:hover {
+    transition: 150ms;
+    background-color: #45aac4;
+    
+   }
+   #details-button{
+    padding: 3px !important;
+    font-size: 15px;
+   }
 
-  .order-alert {
+   .order-alert {
     position: fixed;
     top: 20px;
     right: 20px;
@@ -563,18 +395,6 @@
     cursor: pointer;
   }
 
-  .image-container {
-    position: relative;
-    display: inline-block;
-    margin: 10px;
-  }
-  
-  .delete-image {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-  }
-
   .exit-img{
     position: absolute;
     opacity: 1;
@@ -601,13 +421,4 @@
     font-size: 19px;
     line-height: 22px;
     color: #CACACA;
-}
-
-.edit-price-icon {
-  color: #007bff;
-  transition: color 0.3s;
-}
-
-.edit-price-icon:hover {
-  color: #0056b3;
 }

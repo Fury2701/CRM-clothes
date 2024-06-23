@@ -272,6 +272,34 @@ def product_info_page():
 
     return jsonify(product_json), 200
 
+# Маршрут для обробки POST запиту на /productbyid
+@app.route("/productbyid_extend", methods=['POST'])
+def product_info_page_extend():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    
+    try:
+        data = request.get_json()
+        ids = data.get('ids', [])
+        
+        # Список для зберігання інформації про товари
+        products_info = []
+        
+        for product_id in ids:
+            try:
+                product = get_wc_product(str(product_id))
+                if product:
+                    products_info.append(product)
+                else:
+                    products_info.append({"id": product_id, "message": "Product not found"})
+            except Exception as e:
+                products_info.append({"id": product_id, "error_message": str(e)})
+        
+        return jsonify(products_info), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 @app.route("/category", methods=['GET'])
 def category():
     if "login" not in session:
@@ -293,7 +321,8 @@ def data_products():
         name = request.args.get('name', None, type=str)
         category = request.args.get('category', None, type=int)
         page = request.args.get('page', 1, type=int)
-        products, total_pages = get_wc_products(name=name, category=category, page=page, per_page=20)
+        sku = request.args.get('sku', None)
+        products, total_pages = get_wc_products(sku=sku, name=name, category=category, page=page, per_page=20)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
@@ -1004,4 +1033,93 @@ def check_orders_route():
         session['new_orders'] = False  # Змінюємо стан на False після перевірки
 
     return jsonify({'new_orders_exist': new_orders_exist})
+
+def calculate_customer_stats(customer_id):
+    page = 1
+    per_page = 100
+    total_orders = []
+    total_amount = 0
+
+    while True:
+        orders, total_pages = get_wc_orders(customer=customer_id, full_name=None, page=page, per_page=per_page)
+        
+        if isinstance(orders, list):
+            total_orders.extend(orders)
+            
+            for order in orders:
+                if isinstance(order, dict):
+                    total_amount += float(order.get('total', 0))
+        
+        if page >= total_pages:
+            break
+        
+        page += 1
+
+    order_count = len(total_orders)
+    
+    return order_count, total_amount
+
+@app.route('/customer/<int:customer_id>', methods=['GET'])
+def customer_info(customer_id):
+    customer = get_customer(customer_id)
+    order_count, total_amount = calculate_customer_stats(customer_id)
+    
+    return jsonify({
+        'customer': customer,
+        'order_count': order_count,
+        'total_amount': total_amount
+    })
+
+def get_all_customers():
+    all_customers = []
+    page = 1
+    per_page = 100
+    
+    while True:
+        customers, total_pages = get_customers(page=page, per_page=per_page)
+        all_customers.extend(customers)
+        
+        if page >= total_pages:
+            break
+        
+        page += 1
+    
+    return all_customers
+
+@app.route('/customers/sort-by-orders', methods=['GET'])
+def customers_sort_by_orders():
+    return sort_customers('orders_count')
+
+@app.route('/customers/sort-by-total', methods=['GET'])
+def customers_sort_by_total():
+    return sort_customers('total_amount')
+
+def sort_customers(sort_key):
+    all_customers = get_all_customers()
+    
+    # Initialize missing keys and calculate statistics
+    for customer in all_customers:
+        if 'orders_count' not in customer or customer['orders_count'] == 0:
+            customer['orders_count'], customer['total_amount'] = calculate_customer_stats(customer['id'])
+    
+    # Sort customers based on the provided sort_key
+    customers_sorted = sorted(all_customers, key=lambda customer: customer.get(sort_key, 0), reverse=True)
+    
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 20))
+    
+    start = (page - 1) * per_page
+    end = start + per_page
+    page_customers = customers_sorted[start:end]
+    
+    total_pages = (len(customers_sorted) + per_page - 1) // per_page
+    
+    return jsonify({
+        'customers': page_customers,
+        'current_page': page,
+        'total_pages': total_pages
+    })
+
+
+
 

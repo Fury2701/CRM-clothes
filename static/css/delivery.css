@@ -35,6 +35,11 @@ body {
     margin-top: 10px;
 }
 
+.menu-btn img, .menu2-btn img {
+    box-sizing: border-box;
+    padding: 5px;
+  }
+
 .menu-btn {
     z-index: 1000;
 
@@ -197,7 +202,7 @@ body {
     position: absolute;
     opacity: 1;
     top: 217px;
-    left: 19px;
+    left: 21px;
 }
 
 #href-main {
@@ -233,7 +238,35 @@ body {
     width: 61px;
     height: 22px;
     left: 61px;
-    top: 214px;
+    top: 217px;
+    font-family: 'Fixel Display';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 19px;
+    line-height: 22px;
+    color: #CACACA;
+}
+
+.exit-img{
+    position: absolute;
+    opacity: 1;
+    top: 89.3vh;
+    left: 21px;
+}
+
+.exit1-img{
+    position: absolute;
+    opacity: 1;
+    top: 89.3vh;
+    left: 110px;
+}
+
+.href-exit{
+    position: absolute;
+    width: 61px;
+    height: 22px;
+    left: 145px;
+    top: 90vh;
     font-family: 'Fixel Display';
     font-style: normal;
     font-weight: 400;
@@ -442,4 +475,78 @@ body {
   }
   #print-ttn-modal .modal-body{
     height: 300px;
+  }
+
+  .analytics-img{
+ 
+    position: absolute;
+    opacity: 1;
+    top: 260px;
+    left: 21px;
+  }
+  
+  .user-img{
+    position: absolute;
+    opacity: 1;
+    top: 300px;
+    left: 21px; 
+  }
+  
+  .herf-analytics{
+    position: absolute;
+    width: 61px;
+    height: 22px;
+    left: 61px;
+    top: 260px;
+    font-family: 'Fixel Display';
+    font-style: normal;
+    font: 12px;
+    line-height: 22px;
+    color: #CACACA;
+  }
+  
+  .href-user{
+    position: absolute;
+    width: 61px;
+    height: 22px;
+    left: 61px;
+    top: 300px;
+    font-family: 'Fixel Display';
+    font-style: normal;
+    font: 12px;
+    line-height: 22px;
+    color: #CACACA;
+  }
+
+  .order-alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #dff0d8;
+    border: 1px solid #d6e9c6;
+    color: #3c763d;
+    padding: 15px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 9999;
+  }
+  
+  .order-alert .bell-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+  }
+  
+  .order-alert span {
+    flex-grow: 1;
+  }
+  
+  .order-alert .close-btn {
+    background: none;
+    border: none;
+    color: #3c763d;
+    font-size: 20px;
+    cursor: pointer;
   }

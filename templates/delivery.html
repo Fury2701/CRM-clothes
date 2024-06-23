@@ -17,6 +17,9 @@
             <a class="home-img" href="#"><img src="/static/images/home2.png" width="30px" height="30px" ></a>
             <a class="products-img" href="#"><img src="/static/images/shopping-cart2.png" width="25px" height="26px" ></a>
             <a class="clients-img" href="#"><img src="/static/images/group2.png" width="30px" height="30px" ></a>
+            <a class="analytics-img" href="#"> <img src="/static/images/analytics.png" width="30px" height="30px" > </a>
+            <a class="user-img" href="#"><img src="/static/images/user.png" width="30px" height="30px" ></a>
+            <a class="exit-img" href="#"><img src="/static/images/exit.png" width="30px" height="30px" ></a>
             <div class="div-70x70px"></div>
         </div>
 
@@ -28,12 +31,18 @@
             </div>
             <a class="menu-btn" href="#"><img src="/static/images/logo.png" width="70px" height="70px" ></a>
             <nav class="menu-list">
-                <a class="home-img" href="#"><img src="/static/images/home2.png" width="30px" height="30px" ></a>
+                <a class="home-img" href="#"><img src="/static/images/home1.png" width="30px" height="30px" ></a>
                 <a id="href-main" href="#">Головна</a>
-                <a class="products-img" href="#"><img src="/static/images/shopping-cart2.png" width="25px" height="26px" ></a>
+                <a class="products-img" href="#"><img src="/static/images/shopping-cart1.png" width="25px" height="26px" ></a>
                 <a id="href-products" href="#">Список товарів</a>
-                <a class="clients-img" href="#"><img src="/static/images/group2.png" width="30px" height="30px" ></a>
+                <a class="clients-img" href="#"><img src="/static/images/group1.png" width="30px" height="30px" ></a>
                 <a id="href-clients" href="#">Клієнти</a>
+                <a class="analytics-img" href="#"><img src="/static/images/analytics1.png" width="30px" height="30px" ></a> </a>
+                <a class="herf-analytics" style="font-size: large;" href="#">Аналітика</a>
+                <a class="user-img" href="#"><img src="/static/images/user1.png" width="30px" height="30px" ></a>
+                <a class="href-user" style="font-size: large;" href="#">Користувачі</a>
+                <a class="exit1-img" href="#"><img src="/static/images/exit1.png" width="30px" height="30px" ></a>
+                <a class="href-exit" style="font-size: large;" href="#">Вийти</a>
             </nav>
         </div >
         
@@ -49,6 +58,11 @@
                     <button id="create-shipment" class="btn btn-primary" href="#" type="button">Створити доставку</button>
                 </li>
             </ul>
+            <div id="order-alert" class="order-alert" style="display: none;">
+              <img src="/static/images/bell.png" alt="Bell Icon" class="bell-icon">
+              <span>Ви отримали нове замовлення</span>
+              <button class="close-btn">&times;</button>
+            </div>
         </div>     
 
         <div class="main-content-div">
@@ -65,10 +79,10 @@
                         <thead>
                             <tr>
                                 <th scope="col">Номер ТТН</th>
-                                <th scope="col">Відправник</th>
+                                <th scope="col">Номер замовлення</th>
                                 <th scope="col">Отримувач</th>
-                                <th scope="col">Статус</th>
                                 <th scope="col">Дата створення</th>
+                                <th scope="col"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,7 +92,7 @@
 
                 <nav aria-label="Page navigation">
                     <ul class="pagination justify-content-center" id="paginationContainer"></ul>
-                </nav>
+                  </nav>
             </div>
         </div>
 
@@ -127,7 +141,7 @@
                     <label for="paymentMethod" class="form-label">Форма розрахунку</label>
                     <select class="form-select" id="paymentMethod" name="paymentMethod" required>
                         <option value="Cash">Готівка</option>
-                        <option value="NonCash">Безготівковий розрахунок</option>
+                        
                     </select>
                 </div>
                 <div class="mb-3">
@@ -148,7 +162,30 @@
                 <div class="mb-3">
                     <label for="seatsAmount" class="form-label">Кількість місць відправлення</label>
                     <input type="number" class="form-control" id="seatsAmount" name="seatsAmount" min="1" required>
-                </div>
+                  </div>
+                  <div class="seat-options">
+                    <h6>Параметри місця відправлення (тільки для відправлення на поштомат)</h6>
+                    <div class="mb-3">
+                      <label class="form-label">Об'єм (м³)</label>
+                      <input type="number" class="form-control volumetric-volume" min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Ширина (см)</label>
+                      <input type="number" class="form-control volumetric-width" min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Довжина (см)</label>
+                      <input type="number" class="form-control volumetric-length" min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Висота (см)</label>
+                      <input type="number" class="form-control volumetric-height" min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Вага (кг)</label>
+                      <input type="number" class="form-control weight" min="0" step="0.01">
+                    </div>
+                  </div>
                 <div class="mb-3">
                     <label for="description" class="form-label">Опис відправлення</label>
                     <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
@@ -336,9 +373,9 @@
             <div>
                 <label for="doc_type" class="form-label">Форма розрахунку</label>
                 <select class="form-select" id="doc_type" name="doc_type" required>
-                    <option value="ttnFull">Накладна</option>
-                    <option value="ttnMark">Наліпка</option>
-                </select>
+                  <option value="ttnFull" selected>Накладна</option>
+                  <option value="ttnMark">Наліпка</option>
+              </select>
             </div>
           <div class="mb-3">
             <label for="ttnSearch" class="form-label">Пошук ТТН за номером замовлення:</label>
@@ -349,7 +386,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрити</button>
+          
           <button type="button" class="btn btn-primary" id="printTTN">Отримати для друку</button>
         </div>
       </div>
@@ -358,7 +395,7 @@
 
         <!-- Модальне вікно для перегляду інформації про доставку -->
         <div class="modal fade" id="shipmentModal" tabindex="-1" aria-labelledby="shipmentModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-md">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="shipmentModalLabel"></h5>
@@ -369,6 +406,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрити</button>
+                        <button type="button" class="btn btn-danger" id="deleteTTNButton">Видалити</button>
                     </div>
                 </div>
             </div>

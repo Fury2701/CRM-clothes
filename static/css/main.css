@@ -35,7 +35,13 @@
   margin-top: 10px;
 }
 
+.menu-btn img, .menu2-btn img {
+  box-sizing: border-box;
+  padding: 5px;
+}
+
 .menu-btn {
+  
   z-index: 1000;
 
   position: absolute;
@@ -61,6 +67,14 @@
   margin-right: 15px;
   border: 1px solid #353535;
   color: #353535;
+}
+#export:hover {
+  color: #ffffff;
+}
+#create-client {
+  margin-top: 10px;
+  margin-right: 60px;
+
 }
 
 #create-offer {
@@ -225,7 +239,21 @@
   position: absolute;
   opacity: 1;
   top: 217px;
-  left: 19px;
+  left: 21px;
+}
+.analytics-img{
+ 
+  position: absolute;
+  opacity: 1;
+  top: 260px;
+  left: 21px;
+}
+
+.user-img{
+  position: absolute;
+  opacity: 1;
+  top: 300px;
+  left: 21px; 
 }
 
 #href-main {
@@ -261,7 +289,7 @@
   width: 61px;
   height: 22px;
   left: 61px;
-  top: 214px;
+  top: 217px;
   font-family: 'Fixel Display';
   font-style: normal;
   font-weight: 400;
@@ -269,9 +297,71 @@
   line-height: 22px;
   color: #CACACA;
 }
-#filterDD{
-  margin-left: 167px;
+
+.herf-analytics{
+  position: absolute;
+  width: 61px;
+  height: 22px;
+  left: 61px;
+  top: 260px;
+  font-family: 'Fixel Display';
+  font-style: normal;
+  font: 12px;
+  line-height: 22px;
+  color: #CACACA;
 }
+
+.href-user{
+  position: absolute;
+  width: 61px;
+  height: 22px;
+  left: 61px;
+  top: 300px;
+  font-family: 'Fixel Display';
+  font-style: normal;
+  font: 12px;
+  line-height: 22px;
+  color: #CACACA;
+}
+.filterDD{
+  margin-top:-38px;
+  margin-left: 182px;
+}
+
+.filterDD {
+  display: flex;
+  align-items: center;
+}
+
+#CheckOldest {
+  display: none; /* Hide the default checkbox */
+}
+
+#CheckOldest + label {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#CheckOldest:checked + label {
+  background-color: #6C747E;
+  color: white;
+  border-color: #545a61;
+}
+
+#CheckOldest + label::before {
+  content: '\2610'; /* Unicode for an empty checkbox */
+  margin-right: 5px;
+}
+
+#CheckOldest:checked + label::before {
+  content: '\2611'; /* Unicode for a checked checkbox */
+}
+
 .form-check{
   margin-left: -15px;
 }
@@ -334,6 +424,11 @@
 
 .modal-footer .btn-outline-danger {
   margin-right: auto;
+}
+
+.modal-footer #createOrderCopy {
+margin-right: 265px;
+z-index: 100;
 }
 
 .modal-footer .btn-outline-primary {
@@ -655,6 +750,56 @@
   cursor: pointer;
 }
 
+.selected-options-create {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.selected-options-create::after {
+  content: '\25BC';
+  font-size: 0.8em;
+  margin-left: 10px;
+}
+
+.options-container-create {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  background-color: #fff;
+  display: none;
+  z-index: 1000;
+}
+
+.option {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.option:hover {
+  background-color: #f0f0f0;
+}
+
+.option.selected {
+  background-color: #e0e0e0;
+}
+
+.custom-select-create {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+}
+
 .selected-option-create {
   padding: 10px;
   border: 1px solid #ccc;
@@ -704,4 +849,212 @@
   max-width: fit-content;
   margin-top: -33px;
   
+}
+
+.order-alert {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #dff0d8;
+  border: 1px solid #d6e9c6;
+  color: #3c763d;
+  padding: 15px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  z-index: 9999;
+}
+
+.order-alert .bell-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+.order-alert span {
+  flex-grow: 1;
+}
+
+.order-alert .close-btn {
+  background: none;
+  border: none;
+  color: #3c763d;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.option.selected {
+  background-color: #e0e0e0;
+}
+
+.product-quantity {
+  width: 50px;
+  margin: 0 10px;
+}
+
+.remove-product {
+  margin-left: 10px;
+}
+
+.product-quantity {
+  width: 80px;
+}
+
+.remove-product {
+  padding: 2px 5px;
+  font-size: 12px;
+}
+
+#selectedProductsTable {
+  margin-top: 10px;
+}
+
+#selectedProductsTable img {
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+#selectedProductsTable td {
+  vertical-align: middle;
+}
+
+.custom-select-copy {
+  position: relative;
+  width: 100%;
+}
+
+.selected-option-copy {
+  padding: 10px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.options-container-copy {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-top: none;
+  display: none;
+  z-index: 1000;
+  background-color: white;
+}
+
+.option-copy {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.option-copy:hover {
+  background-color: #f0f0f0;
+}
+
+.option-copy img {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+  object-fit: cover;
+}
+
+.exit-img{
+  position: absolute;
+  opacity: 1;
+  top: 89.3vh;
+  left: 21px;
+}
+
+.exit1-img{
+  position: absolute;
+  opacity: 1;
+  top: 89.3vh;
+  left: 110px;
+}
+
+.href-exit{
+  position: absolute;
+  width: 61px;
+  height: 22px;
+  left: 145px;
+  top: 90vh;
+  font-family: 'Fixel Display';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 22px;
+  color: #CACACA;
+}
+
+.client-tags {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: calc(100% - 85px);
+  margin-right: 40px;
+  min-height: 28px;
+  padding-left: 30px;
+}
+
+.client-tags .toast {
+  background-color: #e0e0e0;
+  border-radius: 16px;
+  padding: 2px 6px !important;
+  margin-right: 6px;
+  margin-bottom: 10px;
+  max-width: fit-content !important;
+  font-size: 12px;
+}
+
+.client-tags .toast-body {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 3px 3px !important;
+}
+
+.client-tags .btn-close {
+  margin-left: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.add-tag-btn {
+  display: inline-block;
+  padding: 2px 2px;
+  background-color: #fff;
+  color: #333;
+  border: none;
+  border-radius: 50%;
+  font-size: 25px;
+  cursor: pointer;
+  position: relative;
+  top: 0px;
+  left: 0;
+}
+
+#customStatusList {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#customStatusList .dropdown-item:hover {
+  background-color: #007efc;
+  color: #e0e0e0;
+  cursor: pointer;
+}
+
+.delete-custom-status {
+  height: 18px;
+  width: 18px;
+}
+
+.customer-tags .badge {
+  margin-right: 5px;
 }

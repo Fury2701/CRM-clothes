@@ -13,7 +13,7 @@ class WooAPI:
             timeout=15
         )
 
-    def get_products(self, name=None, category=None, page=1, per_page=20):
+    def get_products(self, sku=None ,name=None, category=None, page=1, per_page=20):
         params = {
             "page": page,
             "per_page": per_page
@@ -23,6 +23,9 @@ class WooAPI:
 
         if name:
             params["search"] = name
+
+        if sku:
+            params["sku"] = sku
 
         response = self.wcapi.get("products", params=params)
         products = response.json()

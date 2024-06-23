@@ -211,6 +211,75 @@ $(document).on('click', '.pagination .page-link', function(e) {
   loadProducts(page);
 });     
 
+function togglePriceEdit(icon, priceType) {
+  const container = icon.parentElement;
+  const priceSpan = container.querySelector('span');
+  const productId = icon.closest('tr').dataset.productId;
+  const currentPrice = priceSpan.textContent !== 'Акційної ціни немає' ? parseFloat(priceSpan.textContent) : 0;
+
+  if (icon.className.includes('fa-edit')) {
+    // Переключение в режим редактирования
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = '0.01';
+    input.value = currentPrice || '';
+    input.style.width = '80px';
+    container.insertBefore(input, priceSpan);
+    priceSpan.style.display = 'none';
+    icon.className = 'fas fa-check edit-price-icon';
+  } else {
+    // Сохранение изменений
+    const input = container.querySelector('input');
+    const newPrice = input.value ? parseFloat(input.value).toFixed(2) : '';
+    if (newPrice !== currentPrice.toFixed(2)) {
+      updateProductPrice(productId, newPrice, priceType);
+    }
+    if (priceType === 'sale' && (newPrice === '' || parseFloat(newPrice) === 0)) {
+      priceSpan.textContent = 'Акційної ціни немає';
+    } else {
+      priceSpan.textContent = newPrice ? `${newPrice} грн` : '0.00 грн';
+    }
+    priceSpan.style.display = '';
+    container.removeChild(input);
+    icon.className = 'fas fa-edit edit-price-icon';
+  }
+}
+
+function updateProductPrice(productId, newPrice, priceType) {
+  const data = {
+    id: productId
+  };
+  
+  if (priceType === 'regular') {
+    data.regular_price = newPrice;
+  } else if (priceType === 'sale') {
+    data.sale_price = newPrice;
+  }
+
+  fetch('/update_product', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Ошибка при обновлении цены товара');
+    }
+    return response.json();
+  })
+  .then(result => {
+    console.log('Цена товара успешно обновлена:', result);
+    // Обновление цены в таблице происходит в функции togglePriceEdit
+  })
+  .catch(error => {
+    console.error('Ошибка при обновлении цены товара:', error);
+    alert('Не удалось обновить цену товара. Пожалуйста, попробуйте еще раз.');
+  });
+}
+
+
 function populateProductsTable(products) {
   const tableBody = document.querySelector('#productsTable tbody');
   tableBody.innerHTML = '';
@@ -239,10 +308,18 @@ function populateProductsTable(products) {
     nameLink.dataset.bsTarget = '#productModal';
     nameCell.appendChild(nameLink);
     row.appendChild(nameCell);
+
+    const skuCell = document.createElement('td');
+    skuCell.textContent = product.sku;
+    row.appendChild(skuCell);
  
+    // Создание ячейки для цен
     const priceCell = document.createElement('td');
-    priceCell.textContent = product.price;
+    priceCell.appendChild(createPriceElement(product.regular_price, 'regular'));
+    priceCell.appendChild(document.createElement('br'));
+    priceCell.appendChild(createPriceElement(product.sale_price, 'sale'));
     row.appendChild(priceCell);
+    
  
     const categoryCell = document.createElement('td');
     if (product.categories && product.categories.length > 0) {
@@ -260,6 +337,7 @@ function populateProductsTable(products) {
       }
     } else if (product.stock_status === 'outofstock') {
       quantityCell.textContent = 'Немає в наявності';
+      quantityCell.style.color = 'red'; // Добавляем стиль для красного цвета
     } else {
       quantityCell.textContent = '-';
     }
@@ -267,7 +345,38 @@ function populateProductsTable(products) {
  
     tableBody.appendChild(row);
   });
- }
+}
+
+function createPriceElement(price, type) {
+  const container = document.createElement('div');
+  container.style.display = 'flex';
+  container.style.alignItems = 'center';
+
+  const priceSpan = document.createElement('span');
+  if (type === 'regular') {
+    priceSpan.textContent = `${parseFloat(price).toFixed(2)} грн`;
+  } else { // type === 'sale'
+    if (price && parseFloat(price) > 0) {
+      priceSpan.textContent = `${parseFloat(price).toFixed(2)} грн`;
+    } else {
+      priceSpan.textContent = 'Акційної ціни немає';
+    }
+  }
+  priceSpan.style.marginRight = '5px';
+
+  const editIcon = document.createElement('i');
+  editIcon.className = 'fas fa-edit edit-price-icon';
+  editIcon.style.cursor = 'pointer';
+
+  container.appendChild(priceSpan);
+  container.appendChild(editIcon);
+
+  editIcon.addEventListener('click', function() {
+    togglePriceEdit(this, type);
+  });
+
+  return container;
+}
  
  function openProductModal(productId) {
   fetch(`/productbyid?id=${productId}`)
@@ -299,11 +408,10 @@ function populateProductsTable(products) {
 
       // Добавление ячейки с названием товара (поле ввода)
       const nameCell = $('<td>');
-      const nameInput = $('<textarea>').addClass('form-control').attr('id', 'productName').attr('rows', '3');
+      const nameInput = $('<textarea>').addClass('form-control').attr('id', 'editProductName').attr('rows', '3');
       nameInput.val(product.name); // Установка значения названия товара
       nameCell.append(nameInput);
       row.append(nameCell);
-
       // Добавление ячейки с наличием товара (селект с опциями)
       const availabilityCell = $('<td>');
       const availabilitySelect = $('<select>').addClass('form-select').attr('id', 'productAvailability');
@@ -316,7 +424,7 @@ function populateProductsTable(products) {
 
       // Добавление ячейки с ценой товара (поле ввода)
       const priceCell = $('<td>');
-      const priceInput = $('<input>').attr('type', 'number').attr('step', '0.1').addClass('form-control').attr('id', 'productPrice');
+      const priceInput = $('<input>').attr('type', 'number').attr('step', '0.1').addClass('form-control').attr('id', 'editProductPrice');
       priceInput.val(product.price); // Установка значения цены
       priceCell.append(priceInput);
       row.append(priceCell);
@@ -331,7 +439,7 @@ function populateProductsTable(products) {
 
       // Добавление строки в таблицу
       $('#inProduct-table tbody').append(row);
-
+      $('#productSku').text(`Артикул: ${product.sku}`);
 updateAttributeList(product.attributes);
 
 // Функция для обновления списка атрибутов
@@ -369,11 +477,22 @@ function updateAttributeList(attributes) {
       // Проверка наличия изображений товара
       if (product.images && product.images.length > 0) {
         // Создание элементов изображений для каждого изображения товара
-        product.images.forEach(image => {
+        product.images.forEach((image, index) => {
+          const imageContainer = $('<div>').addClass('image-container');
           const imageLink = $('<a>').attr('href', image.src).attr('data-fancybox', 'product-images');
-          const imageElement = $('<img>').attr('src', image.src).attr('alt', product.name);
+          const imageElement = $('<img>').attr('src', image.src).attr('alt', product.name).css({maxWidth: '250px', maxHeight: '250px'});
           imageLink.append(imageElement);
-          $('#productImagesGallery').append(imageLink);
+          imageContainer.append(imageLink);
+
+          // Добавление кнопки удаления
+          const deleteButton = $('<button>')
+            .addClass('btn btn-danger btn-sm delete-image')
+            .text('Видалити')
+            .attr('data-image-index', index)
+            .attr('data-product-id', productId);
+          imageContainer.append(deleteButton);
+
+          $('#productImagesGallery').append(imageContainer);
         });
       } else {
         // Если изображения отсутствуют, вывести сообщение
@@ -415,7 +534,6 @@ $(document).on('click', '#productsTable tbody tr td:nth-child(2) a', function(ev
 $(document).on('click', '#productImagesGallery img', function() {
   $('#productModal').modal('hide');
 });
-
 function updateProduct(productId, data) {
   fetch('/update_product', {
     method: 'POST',
@@ -463,9 +581,9 @@ $(document).on('input', '#productName', function() {
 $(document).on('click', '#saveChangesBtn', function() {
   const productId = $('#productModalLabel').data('product-id');
   const availability = $('#productAvailability').val();
-  const price = $('#productPrice').val();
-  const pname = $('#productName').val();
-  const description = $('#productDescription').val();
+  const price = $('#editProductPrice').val();
+  const name = $('#editProductName').val();
+  const description = $('#editProductDescription').val();
 
   const updatedData = {
     stock_status: availability
@@ -477,8 +595,8 @@ $(document).on('click', '#saveChangesBtn', function() {
   }
 
   // Проверка наличия значения названия товара
-  if (pname) {
-    updatedData.name = pname;
+  if (name) {
+    updatedData.name = name;
   }
 
   // Проверка наличия значения описания товара
@@ -488,7 +606,13 @@ $(document).on('click', '#saveChangesBtn', function() {
 
   // Получение обновленных атрибутов из списка атрибутов
   const updatedAttributes = getUpdatedAttributes();
-  updatedData.attributes = updatedAttributes;
+  if (updatedAttributes){
+   updatedData.attributes = updatedAttributes; 
+  }
+  else{
+    updatedData.attributes = []
+  }
+  
 
   updateProduct(productId, updatedData);
 });
@@ -499,15 +623,19 @@ function getUpdatedAttributes() {
 
   $('#productAttributesList li').each(function() {
     const attributeText = $(this).clone().children().remove().end().text().trim();
-    const [name, options] = attributeText.split(': ');
-    const attribute = {
-      name: name,
-      options: options.split(', ')
-    };
-    attributes.push(attribute);
+    if (attributeText !== 'Атрибуты не указаны') {
+      const [name, options] = attributeText.split(': ');
+      if (name && options) {
+        const attribute = {
+          name: name,
+          options: options.split(', ')
+        };
+        attributes.push(attribute);
+      }
+    }
   });
 
-  return attributes;
+  return attributes.length > 0 ? attributes : null;
 }
 
 // Обработчик клика на кнопку "Додати атрибут"
@@ -549,6 +677,36 @@ $(document).on('click', '#saveCategoryBtn', function() {
     });
 });
 
+$(document).on('click', '.delete-image', function(e) {
+  e.preventDefault();
+  const imageIndex = $(this).data('image-index');
+  const productId = $(this).data('product-id');
+  
+  if (confirm('Вы уверены, что хотите удалить это изображение?')) {
+    deleteProductImage(productId, imageIndex);
+  }
+});
+
+function deleteProductImage(productId, imageIndex) {
+  fetch(`/productbyid?id=${productId}`)
+    .then(response => response.json())
+    .then(productJson => {
+      const product = JSON.parse(productJson);
+      const updatedImages = product.images.filter((_, index) => index !== imageIndex);
+      
+      return updateProduct(productId, { images: updatedImages });
+    })
+    .then(result => {
+      console.log('Изображение успешно удалено:', result);
+      // Обновление списка изображений товара
+      openProductModal(productId);
+    })
+    .catch(error => {
+      console.error('Ошибка при удалении изображения:', error);
+      // Обработка ошибки
+    });
+}
+
 // Обработчик клика на кнопку "Додати зображення"
 $(document).on('click', '#addImgBtn', function() {
   $('#addImageModal').modal('show');
@@ -556,34 +714,44 @@ $(document).on('click', '#addImgBtn', function() {
 // Обработчик клика на кнопку "Зберегти" в модальном окне добавления изображения
 $(document).on('click', '#addImageSaveBtn', function() {
   const productId = $('#productModalLabel').data('product-id');
-  const imageFile = $('#imageFile')[0].files[0];
+  const imageUrl = $('#imageUrl').val();
 
-  if (imageFile) {
-    const formData = new FormData();
-    formData.append('id', productId);
-    formData.append('imageFile', imageFile);
+  if (imageUrl) {
+    // Получаем текущие данные о товаре
+    fetch(`/productbyid?id=${productId}`)
+      .then(response => response.json())
+      .then(productJson => {
+        const product = JSON.parse(productJson);
+        const currentImages = product.images || [];
 
-    fetch('/update_product', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Ошибка при добавлении изображения');
-      }
-      return response.json();
-    })
-    .then(result => {
-      console.log('Изображение успешно добавлено:', result);
-      // Закрытие модального окна
-      $('#addImageModal').modal('hide');
-      // Обновление списка изображений товара
-      updateProductImages(productId);
-    })
-    .catch(error => {
-      console.error('Ошибка при добавлении изображения:', error);
-      // Обработка ошибки
-    });
+        // Создаем новый объект изображения
+        const newImage = {
+          src: imageUrl,
+        };
+
+        // Добавляем новое изображение к существующим
+        const updatedImages = [...currentImages, newImage];
+
+        // Создаем объект данных для обновления
+        const data = {
+          id: productId,
+          images: updatedImages
+        };
+
+        // Отправляем запрос на обновление товара
+        return updateProduct(productId, data);
+      })
+      .then(result => {
+        console.log('Изображение успешно добавлено:', result);
+        // Закрытие модального окна
+        $('#addImageModal').modal('hide');
+        // Обновление списка изображений товара
+        openProductModal(productId);
+      })
+      .catch(error => {
+        console.error('Ошибка при добавлении изображения:', error);
+        // Обработка ошибки
+      });
   }
 });
 
@@ -661,7 +829,7 @@ $(document).on('click', '#createProductBtn', function() {
   const productQuantity = $('#productQuantity').val();
   const productDescription = $('#productDescription').val();
   const productShortDescription = $('#productShortDescription').val();
-  const productImage = $('#productImage')[0].files[0];
+  const productImageUrl = $('#productImageUrl').val();
 
   const data = {
     name: productName,
@@ -672,7 +840,7 @@ $(document).on('click', '#createProductBtn', function() {
     categories: productCategoryIds.map(id => ({ id: parseInt(id) })),
     stock_quantity: productQuantity,
     manage_stock: true,
-    images: []
+    images: [{ src: productImageUrl }]
   };
  createProduct(data);
 
@@ -818,8 +986,179 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+  const analyticsImgButton = document.querySelector('.analytics-img');
+  const herfAnalyticsButton = document.querySelector('.herf-analytics');
+
+  analyticsImgButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    fetchAnalyticsData();
+  });
+
+  herfAnalyticsButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    fetchAnalyticsData();
+  });
+
+  function fetchAnalyticsData() {
+    fetch('/analytics')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error fetching analytics data');
+        }
+        return response.text();
+      })
+      .then(html => {
+        // Создаем временный элемент для парсинга HTML
+        const tempElement = document.createElement('div');
+        tempElement.innerHTML = html;
+
+        // Извлекаем данные sales_report и top_sellers из HTML
+        const salesReportElement = tempElement.querySelector('#sales-report');
+        const topSellersElement = tempElement.querySelector('#top-sellers');
+
+        const salesReportData = JSON.parse(salesReportElement.textContent);
+        const topSellersData = JSON.parse(topSellersElement.textContent);
+
+        console.log('Sales Report:', salesReportData);
+        console.log('Top Sellers:', topSellersData);
+
+        // Перенаправляем пользователя на страницу аналитики
+        window.location.href = '/analytics';
+      })
+      .catch(error => {
+        console.error('Error fetching analytics data:', error);
+      });
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const customerListImgButton = document.querySelector('.user-img');
+
+  customerListImgButton.addEventListener('click', function(e) {
+    e.preventDefault(); // Предотвращаем переход по ссылке
+
+    // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+    window.location.href = '/user_page';
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const customerListImgButton = document.querySelector('.menu-list .user-img');
+
+  customerListImgButton.addEventListener('click', function(e) {
+    e.preventDefault(); // Предотвращаем переход по ссылке
+
+    // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+    window.location.href = '/user_page';
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const customerListButton = document.querySelector('.menu-list .href-user');
+
+  customerListButton.addEventListener('click', function(e) {
+    e.preventDefault(); // Предотвращаем переход по ссылке
+
+    // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+    window.location.href = '/user_page';
+  });
+});
+
+let alertShown = false;
+
+function checkNewOrders() {
+  if (!alertShown) {
+    fetch('/check_orders')
+      .then(response => response.json())
+      .then(data => {
+        const orderAlert = document.getElementById('order-alert');
+        if (data.new_orders_exist && !alertShown) {
+          orderAlert.style.display = 'flex';
+          alertShown = true;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при проверке новых заказов:', error);
+      });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  checkNewOrders();
+  setInterval(checkNewOrders, 60000);
+
+  const closeBtn = document.querySelector('.order-alert .close-btn');
+  closeBtn.addEventListener('click', function() {
+    document.getElementById('order-alert').style.display = 'none';
+    alertShown = false;
+  });
+});
+
+let resetName="Однотонна фланель світло-оливкового кольору, ширина 240 см";
+let dataresetname={
+  name:resetName,
+};
+
   // Вызвать функцию loadProducts() при загрузке страницы
 $(document).ready(function() {
   loadCategories();
-  loadProducts();  
+  loadProducts(); 
   }); 
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const logoutLink = document.querySelector('.href-exit');
+  
+    logoutLink.addEventListener('click', function(event) {
+      event.preventDefault(); 
+      
+      fetch('/logout')
+        .then(response => {
+          if (response.redirected) {
+          
+            window.location.href = response.url;
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка при выполнении запроса:', error);
+        });
+    });
+  });
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const logoutLink = document.querySelector('.exit-img');
+  
+    logoutLink.addEventListener('click', function(event) {
+      event.preventDefault(); 
+      
+      fetch('/logout')
+        .then(response => {
+          if (response.redirected) {
+          
+            window.location.href = response.url;
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка при выполнении запроса:', error);
+        });
+    });
+  });
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const logoutLink = document.querySelector('.exit1-img');
+  
+    logoutLink.addEventListener('click', function(event) {
+      event.preventDefault(); 
+      
+      fetch('/logout')
+        .then(response => {
+          if (response.redirected) {
+          
+            window.location.href = response.url;
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка при выполнении запроса:', error);
+        });
+    });
+  });

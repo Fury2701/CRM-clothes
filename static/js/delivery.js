@@ -91,6 +91,85 @@ document.addEventListener('DOMContentLoaded', function() {
       window.location.href = '/customer?page=1';
     });
   });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const analyticsImgButton = document.querySelector('.analytics-img');
+    const herfAnalyticsButton = document.querySelector('.herf-analytics');
+  
+    analyticsImgButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      fetchAnalyticsData();
+    });
+  
+    herfAnalyticsButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      fetchAnalyticsData();
+    });
+  
+    function fetchAnalyticsData() {
+      fetch('/analytics')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Error fetching analytics data');
+          }
+          return response.text();
+        })
+        .then(html => {
+          // Создаем временный элемент для парсинга HTML
+          const tempElement = document.createElement('div');
+          tempElement.innerHTML = html;
+  
+          // Извлекаем данные sales_report и top_sellers из HTML
+          const salesReportElement = tempElement.querySelector('#sales-report');
+          const topSellersElement = tempElement.querySelector('#top-sellers');
+  
+          const salesReportData = JSON.parse(salesReportElement.textContent);
+          const topSellersData = JSON.parse(topSellersElement.textContent);
+  
+          console.log('Sales Report:', salesReportData);
+          console.log('Top Sellers:', topSellersData);
+  
+          // Перенаправляем пользователя на страницу аналитики
+          window.location.href = '/analytics';
+        })
+        .catch(error => {
+          console.error('Error fetching analytics data:', error);
+        });
+    }
+  });
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const customerListImgButton = document.querySelector('.user-img');
+  
+    customerListImgButton.addEventListener('click', function(e) {
+      e.preventDefault(); // Предотвращаем переход по ссылке
+  
+      // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+      window.location.href = '/user_page';
+    });
+  });
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const customerListImgButton = document.querySelector('.menu-list .user-img');
+  
+    customerListImgButton.addEventListener('click', function(e) {
+      e.preventDefault(); // Предотвращаем переход по ссылке
+  
+      // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+      window.location.href = '/user_page';
+    });
+  });
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const customerListButton = document.querySelector('.menu-list .href-user');
+  
+    customerListButton.addEventListener('click', function(e) {
+      e.preventDefault(); // Предотвращаем переход по ссылке
+  
+      // Перенаправляем пользователя на страницу "/customer" с параметром "page=1"
+      window.location.href = '/user_page';
+    });
+  });
   
   $('.menu-btn').on('click', function(e) {
     e.preventDefault();
@@ -437,6 +516,8 @@ function createCounterparty(data) {
     } else {
         console.log('Контрагент успешно создан:', result);
         $('#counterpartyModal').modal('hide');
+      
+        loadTTNsForTable();
         
     }
 })
@@ -797,50 +878,92 @@ document.getElementById('createShipmentForm').addEventListener('submit', functio
   const paymentMethod = document.getElementById('paymentMethod').value;
   const dateTime = document.getElementById('dateTime').value;
   const formattedDateTime = formatDate(dateTime);
-  const cargoType = 'Cargo';
+  const cargoType = 'Parcel';
   const weight = document.getElementById('weight').value;
   const serviceType = document.getElementById('serviceType').value;
   const seatsAmount = document.getElementById('seatsAmount').value;
   const description = document.getElementById('description').value;
   const cost = document.getElementById('cost').value;
-  const AfterpaymentOnGoodsCost = document.getElementById('afterpaymentOnGoodsCost').value;
   const citySender = senderCitySearchInput.getAttribute('data-ref');
-  const cityRecipient = recipientCitySearchInput.getAttribute('data-ref');
   const sender = document.getElementById('senderInput').dataset.ref;
   const senderAddress = senderWarehouseSearchInput.getAttribute('data-ref');
-  const recipientAddress = recipientWarehouseSearchInput.getAttribute('data-ref');
-  const contactSender = document.getElementById('senderInput').dataset.contactRef; // Получаем реф контактного лица отправителя
-  const sendersPhone = "0669693502";
+  const contactSender = document.getElementById('senderInput').dataset.contactRef;
+  const sendersPhone = document.getElementById('senderPhone').value;
+  const cityRecipient = recipientCitySearchInput.getAttribute('data-ref');
   const recipient = document.getElementById('recipientInput').dataset.ref;
+  const recipientAddress = recipientWarehouseSearchInput.getAttribute('data-ref');
   const contactRecipient = document.getElementById('recipientInput').dataset.contactRef;
   const recipientsPhone = document.getElementById('recipientPhone').value;
   const ord_id = document.getElementById('ord_id').value;
-  // Создание объекта с данными для отправки на сервер
-  const data = {
-    sender_warehouse_index: senderWarehouseIndex,
-    recipient_warehouse_index: recipientWarehouseIndex,
-    payer_type: payerType,
-    payment_method: paymentMethod,
-    date_time: formattedDateTime,
-    cargo_type: cargoType,
-    weight: weight,
-    service_type: serviceType,
-    seats_amount: seatsAmount,
-    description: description,
-    cost: cost,
-    afterpayment_ongoodscost:AfterpaymentOnGoodsCost,
-    city_sender: citySender, 
-    sender: sender, 
-    sender_address: senderAddress, 
-    contact_sender: contactSender, 
-    senders_phone: sendersPhone,
-    city_recipient: cityRecipient, 
-    recipient: recipient, 
-    recipient_address: recipientAddress, 
-    contact_recipient: contactRecipient, 
-    recipients_phone: recipientsPhone
-  };
-  console.log(data);
+  const AfterpaymentOnGoodsCost = document.getElementById('afterpaymentOnGoodsCost').value;
+
+// Создание объекта с данными для отправки на сервер
+const data = {
+  sender_warehouse_index: senderWarehouseIndex,
+  recipient_warehouse_index: recipientWarehouseIndex,
+  payer_type: payerType,
+  payment_method: paymentMethod,
+  date_time: formattedDateTime,
+  cargo_type: cargoType,
+  weight: weight,
+  service_type: serviceType,
+  seats_amount: seatsAmount,
+  description: description,
+  cost: cost,
+  city_sender: citySender, 
+  sender: sender, 
+  sender_address: senderAddress, 
+  contact_sender: contactSender, 
+  senders_phone: sendersPhone,
+  city_recipient: cityRecipient, 
+  recipient: recipient, 
+  recipient_address: recipientAddress, 
+  contact_recipient: contactRecipient, 
+  recipients_phone: recipientsPhone
+};
+
+// Добавление свойства afterpayment_ongoodscost только если значение не пустое
+if (AfterpaymentOnGoodsCost) {
+  data.afterpayment_ongoodscost = AfterpaymentOnGoodsCost;
+}
+  // Добавление параметров для каждого места отправления в объект data
+  const seatsOptions = document.querySelectorAll('.seat-options');
+
+  // Флаг для проверки наличия пустых полей
+  let hasEmptyFields = false;
+
+  seatsOptions.forEach((seatOptions, index) => {
+    const volumetricVolume = seatOptions.querySelector('.volumetric-volume').value;
+    const volumetricWidth = seatOptions.querySelector('.volumetric-width').value;
+    const volumetricLength = seatOptions.querySelector('.volumetric-length').value;
+    const volumetricHeight = seatOptions.querySelector('.volumetric-height').value;
+    const weight = seatOptions.querySelector('.weight').value;
+
+    // Проверка наличия пустых полей
+    if (!volumetricVolume || !volumetricWidth || !volumetricLength || !volumetricHeight || !weight) {
+      hasEmptyFields = true;
+      return;
+    }
+
+    // Если все поля заполнены, добавляем объект в массив OptionsSeat
+    if (!data.options_seat) {
+      data.options_seat = [];
+    }
+
+    data.options_seat.push({
+      volumetricVolume: volumetricVolume,
+      volumetricWidth: volumetricWidth,
+      volumetricLength: volumetricLength,
+      volumetricHeight: volumetricHeight,
+      weight: weight
+    });
+  });
+
+  // Если есть пустые поля, удаляем свойство OptionsSeat из объекта data
+  if (hasEmptyFields) {
+    delete data.options_seat;
+  }
+
 // Отправка POST-запроса на сервер для создания ТТН
 fetch(`/create_internet_document/${ord_id}`, {
   method: 'POST',
@@ -861,11 +984,11 @@ fetch(`/create_internet_document/${ord_id}`, {
     if (result.error) {
       
       console.error('Ошибка создания ТТН:', result.error);
-      // Закрытие модального окна
-      $('#createShipmentModal').modal('hide');
+     
+      
       // Обновление списка ТТН на странице (если необходимо)
     } else {
-      
+      $('#createShipmentModal').modal('hide');
       console.log('ТТН успешно создана:', result.data);
     }
   })
@@ -981,45 +1104,93 @@ function deleteCounterparty(counterpartyRef, counterpartyId) {
     });
 }
 
-function delivery_data(){
-const url = '/delivery_data';
+function delivery_data() {
+  const url = '/delivery_data';
 
-const params = new URLSearchParams({
-  page: 1,
-  order_by: 'date',
-  order: 'desc',
-  search_ord_id: 123
-});
-
-fetch(`${url}`, {
-  method: 'GET',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  credentials: 'same-origin'
-})
-  .then(response => response.json())
-  .then(data => {
-    console.log(data);
-    // Обработка полученных данных
-    const entries = data.entries;
-    const totalPages = data.total_pages;
-    const currentPage = data.current_page;
-
-    // Дальнейшие действия с полученными данными
-  })
-  .catch(error => {
-    console.error('Ошибка:', error);
+  const params = new URLSearchParams({
+    page: 1,
+    order_by: 'date',
+    order: 'desc',
+    search_ord_id: 123
   });
+
+  fetch(`${url}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    credentials: 'same-origin'
+  })
+    .then(response => response.json())
+    .then(data => {
+      console.log(data);
+      // Обработка полученных данных
+      const entries = data.entries;
+      const totalPages = data.total_pages;
+      const currentPage = data.current_page;
+
+      // Очистка таблицы перед заполнением новыми данными
+      const tableBody = document.querySelector('#shipmentsTable tbody');
+      tableBody.innerHTML = '';
+
+      // Заполнение таблицы полученными данными
+      entries.forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td data-ttn-ref="${entry.ttn_ref}">${entry.ttn_id}</td>
+          <td>${entry.ord_id}</td>
+          <td>${entry.client_name}</td>
+          <td>${formatDate(entry.date)}</td>
+          <td><a class="details" href="#">Детальніше</a></td>
+        `;
+        tableBody.appendChild(row);
+        updatePagination(data.current_page, data.total_pages);
+      });
+    })
+    .catch(error => {
+      console.error('Ошибка:', error);
+    });
 }
 
-  // Обробник кліка для кнопки "Створити доставку"
-  document.getElementById("print-ttn").addEventListener("click", function() {
-    // Отримуємо модальне вікно за його id
-    var modal = new bootstrap.Modal(document.getElementById("print-ttn-modal"));
-    
-    modal.show();
-  });
+// Функция для форматирования даты
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+}
+
+// Обработчик клика на кнопку "Створити доставку"
+document.getElementById("print-ttn").addEventListener("click", function() {
+  // Отримуємо модальне вікно за його id
+  var modal = new bootstrap.Modal(document.getElementById("print-ttn-modal"));
+  
+  modal.show();
+});
+
+$('#print-ttn-modal').on('shown.bs.modal', function () {
+  const selectedOption = document.getElementById('doc_type').value;
+  const printButton = document.getElementById('printTTN');
+
+  if (selectedOption === 'ttnFull') {
+    printButton.onclick = function() {
+      const selectedTTN = document.getElementById('ttnSearch').value;
+      if (selectedTTN) {
+        printTTN(selectedTTN);
+        $('#print-ttn-modal').modal('hide');
+      }
+    };
+  } else if (selectedOption === 'ttnMark') {
+    printButton.onclick = function() {
+      const selectedTTN = document.getElementById('ttnSearch').value;
+      if (selectedTTN) {
+        printMarking(selectedTTN);
+        $('#print-ttn-modal').modal('hide');
+      }
+    };
+  }
+});
 
   let currentTTNPage = 1;
   let totalTTNPages = 1;
@@ -1055,7 +1226,9 @@ function loadTTNs(orderId = '', page = 1, append = false) {
 
       entries.forEach(entry => {
         const ttnItem = document.createElement('li');
-        ttnItem.textContent = `ТТН: ${entry.ttn_id}, Замовлення: ${entry.ord_id}, Дата: ${entry.date}`;
+        const dateObj = new Date(entry.date.split(' ')[0]); // Создаем объект Date из части строки даты без времени
+        const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}.${(dateObj.getMonth() + 1).toString().padStart(2, '0')}.${dateObj.getFullYear()}`; // Форматируем дату в формате "дд.мм.гггг"
+        ttnItem.textContent = `ТТН: ${entry.ttn_id}, Замовлення: ${entry.ord_id}, Дата: ${formattedDate}`;
         ttnItem.dataset.ttnRef = entry.ttn_id; // Сохраняем ttnRef вместо ttnId
         ttnList.appendChild(ttnItem);
       });
@@ -1178,16 +1351,6 @@ function printMarking(ttnRef) {
 }
 
 
-
-
-
-
-$(document).ready(function() {
-  
-delivery_data();
-
-});
-
 // Очистка полей ввода при открытии модального окна создания доставки
 $('#createShipmentModal').on('show.bs.modal', function () {
   $('#createShipmentForm')[0].reset();
@@ -1211,4 +1374,356 @@ $('#deleteCounterpartyModal').on('show.bs.modal', function () {
 // Очистка полей ввода при открытии модального окна печати ТТН
 $('#print-ttn-modal').on('show.bs.modal', function () {
   $('#ttnSearch').val('');
+});
+
+function loadTTNsForTable(ttnId = '', page = 1) {
+  return getDeliveryData(page, ttnId)
+    .then(data => {
+      const entries = data.entries;
+      totalTTNPages = data.total_pages;
+      const tableBody = document.querySelector('#shipmentsTable tbody');
+
+      tableBody.innerHTML = '';
+
+      entries.forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td data-ttn-ref="${entry.ttn_ref}">${entry.ttn_id}</td>
+          <td>${entry.ord_id}</td>
+          <td>${entry.client_name}</td>
+          <td>${formatDate(entry.date)}</td>
+          <td><a class="details" href="#">Детальніше</a></td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      return TablecurrentTTNPage;
+    })
+    .catch(error => {
+      console.error('Error loading TTNs:', error);
+    });
+}
+let client_name;
+let TablecurrentTTNPage = 1;
+// Обработчик клика на кнопку поиска
+document.getElementById('searchButton').addEventListener('click', function() {
+  const ttnId = document.getElementById('searchInput').value;
+  TablecurrentTTNPage = 1;
+  loadTTNsForTable(ttnId);
+});
+
+// Обработчик ввода текста в поле поиска ТТН
+document.getElementById('searchInput').addEventListener('input', function() {
+  const ttnId = this.value;
+  TablecurrentTTNPage = 1;
+  loadTTNsForTable(ttnId);
+});
+
+
+
+$(document).on('click', '.details', function() {
+  const row = $(this).closest('tr');
+  const ttnId = row.find('td:first-child').text();
+  const ordId = row.find('td:nth-child(2)').text();
+  client_name = row.find('td:nth-child(3)').text();
+  const ttnRef = row.find('td:first-child').attr('data-ttn-ref');
+  const modal = document.querySelector('#shipmentModal');
+  modal.setAttribute('data-ttn-ref', ttnRef);
+  console.log('ttn-ref', ttnRef);
+  
+  const data = [
+    {
+      DocumentNumber: ttnId,
+      Phone: '' // Додайте номер телефону, якщо потрібно
+    }
+  ];
+
+  fetch('/nova_tracking', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (result.error) {
+        console.error('Помилка трекінгу посилки:', result.error);
+        // Обробка помилки
+      } else {
+        console.log('Результат трекінгу посилки:', result);
+        
+        // Заповнення заголовку модального вікна
+        const modalTitle = document.querySelector('#shipmentModal .modal-title');
+        modalTitle.innerHTML = `ТТН: ${ttnId} Замовлення №${ordId}`;
+        
+        // Відображення результату трекінгу посилки
+        displayShipmentInfo(result);
+      }
+    })
+    .catch(error => {
+      console.error('Помилка запиту:', error);
+      // Обробка помилки
+    });
+});
+
+let ttnNumber = '';
+function displayShipmentInfo(shipmentInfo, ttnRef) {
+  // Перевірка, чи shipmentInfo є масивом
+  if (Array.isArray(shipmentInfo) && shipmentInfo.length > 0) {
+    // Використовуємо перший елемент масиву
+    const shipment = shipmentInfo[0];
+
+    const modalBody = document.querySelector('#shipmentModal .modal-body');
+    ttnNumber=shipment.Number;
+    // Очистка попереднього вмісту модального вікна
+    modalBody.innerHTML = '';
+
+    // Створення груп інформації
+    const generalInfo = document.createElement('div');
+    const recipientInfo = document.createElement('div');
+    const senderInfo = document.createElement('div');
+
+// Заповнення загальної інформації
+let afterpaymentInfo;
+if (shipment.AfterpaymentOnGoodsCost) {
+   afterpaymentInfo = `<p><strong>Наложений платіж:</strong> ${shipment.AfterpaymentOnGoodsCost} грн</p>`;
+} else {
+   afterpaymentInfo = '<p><strong>Наложений платіж:</strong> Відсутній</p>';
+}
+
+let payerType;
+if (shipment.PayerType === "Sender") {
+   payerType = "Відправник";
+} else if (shipment.PayerType === "Recipient") {
+   payerType = "Одержувач";
+} else {
+   payerType = shipment.PayerType;
+}
+
+generalInfo.innerHTML = `
+ <h4>Загальна інформація</h4>
+ <p><strong>Статус:</strong> ${shipment.Status}</p>
+ <p><strong>Платник доставки:</strong> ${payerType}</p>
+ <p><strong>Вартість доставки:</strong> ${shipment.DocumentCost} грн</p>
+ ${afterpaymentInfo}
+ <p><strong>Вага відправлення:</strong> ${shipment.DocumentWeight} кг</p>
+ <p><strong>Дата створення:</strong> ${shipment.DateCreated}</p>
+`;
+
+    // Заповнення інформації про одержувача
+    recipientInfo.innerHTML = `
+      <h4>Інформація про одержувача</h4>
+      <p><strong>Одержувач:</strong> ${client_name}</p>
+      <p><strong>Місто одержувача:</strong> ${shipment.CityRecipient}</p>
+      <p><strong>Відділення одержувача:</strong> ${shipment.WarehouseRecipient}</p>
+    `;
+
+    // Заповнення інформації про відправника
+    senderInfo.innerHTML = `
+      <h4>Інформація про відправника</h4>
+      <p><strong>Місто відправника:</strong> ${shipment.CitySender}</p>
+      <p><strong>Відділення відправника:</strong> ${shipment.WarehouseSender}</p>
+    `;
+
+    // Додавання груп інформації до модального вікна
+    modalBody.appendChild(generalInfo);
+    modalBody.appendChild(recipientInfo);
+    modalBody.appendChild(senderInfo);
+
+    // Відкриття модального вікна
+    $('#shipmentModal').modal('show');
+  } else {
+    console.error('Неправильний формат даних про посилку');
+  }
+}
+
+// Обработчик события click для кнопки "Видалити"
+$(document).on('click', '#deleteTTNButton', function() {
+  const ttnId = document.querySelector('#shipmentModal .modal-title').textContent.split('ТТН: ')[1].split(' ')[0];
+  const modal = document.querySelector('#shipmentModal');
+  const ttnRef = modal.getAttribute('data-ttn-ref');
+  console.log(ttnRef);
+  if (confirm(`Ви дійсно хочете видалити ТТН ${ttnId}?`)) {
+    deleteTTN(ttnRef);
+  }
+});
+
+// Функция для удаления ТТН
+function deleteTTN(ttnId) {
+  const data = {
+    document_refs: [ttnId]
+  };
+
+  fetch('/delete_internet_document', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
+        console.log('ТТН успішно видалено');
+        // Обновление таблицы на странице
+        delivery_data();
+        // Закрытие модального окна
+        $('#shipmentModal').modal('hide');
+      } else {
+        console.error('Помилка видалення ТТН:', result.error);
+        // Обработка ошибки
+      }
+    })
+    .catch(error => {
+      console.error('Помилка запиту:', error);
+      // Обработка ошибки
+    });
+}
+
+function updatePagination(currentPage, totalPages) {
+  try {
+    const paginationContainer = $('#paginationContainer');
+    paginationContainer.empty();
+
+    if (!totalPages || totalPages <= 1) {
+      throw new Error('Total pages not available or less than or equal to 1');
+    }
+
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = startPage + maxVisiblePages - 1;
+
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    if (startPage > 1) {
+      paginationContainer.append(`<li class="page-item"><a class="page-link" href="#" data-page="1">1</a></li>`);
+      if (startPage > 2) {
+        paginationContainer.append(`<li class="page-item"><span class="page-link">...</span></li>`);
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      paginationContainer.append(`<li class="page-item${i === currentPage ? ' active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`);
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        paginationContainer.append(`<li class="page-item"><span class="page-link">...</span></li>`);
+      }
+      paginationContainer.append(`<li class="page-item"><a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a></li>`);
+    }
+
+    // Показать пагинацию
+    paginationContainer.show();
+  } catch (error) {
+    console.error('Ошибка при обновлении пагинации:', error);
+    // Скрыть пагинацию, если возникла ошибка или total_pages не доступны
+    $('#paginationContainer').hide();
+  }
+}
+
+// Обработчик события клика по ссылке пагинации
+$(document).on('click', '.pagination .page-link', function(e) {
+  e.preventDefault();
+  const page = $(this).data('page');
+  const searchQuery = $('#searchInput').val().trim();
+  delivery_data(page, searchQuery);
+});
+
+let alertShown = false;
+
+function checkNewOrders() {
+  if (!alertShown) {
+    fetch('/check_orders')
+      .then(response => response.json())
+      .then(data => {
+        const orderAlert = document.getElementById('order-alert');
+        if (data.new_orders_exist && !alertShown) {
+          orderAlert.style.display = 'flex';
+          alertShown = true;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при проверке новых заказов:', error);
+      });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  checkNewOrders();
+  setInterval(checkNewOrders, 60000);
+
+  const closeBtn = document.querySelector('.order-alert .close-btn');
+  closeBtn.addEventListener('click', function() {
+    document.getElementById('order-alert').style.display = 'none';
+    alertShown = false;
+  });
+});
+
+
+$(document).ready(function() {
+  
+delivery_data();
+
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const logoutLink = document.querySelector('.href-exit');
+
+  logoutLink.addEventListener('click', function(event) {
+    event.preventDefault(); 
+    
+    fetch('/logout')
+      .then(response => {
+        if (response.redirected) {
+        
+          window.location.href = response.url;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при выполнении запроса:', error);
+      });
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const logoutLink = document.querySelector('.exit-img');
+
+  logoutLink.addEventListener('click', function(event) {
+    event.preventDefault(); 
+    
+    fetch('/logout')
+      .then(response => {
+        if (response.redirected) {
+        
+          window.location.href = response.url;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при выполнении запроса:', error);
+      });
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const logoutLink = document.querySelector('.exit1-img');
+
+  logoutLink.addEventListener('click', function(event) {
+    event.preventDefault(); 
+    
+    fetch('/logout')
+      .then(response => {
+        if (response.redirected) {
+        
+          window.location.href = response.url;
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка при выполнении запроса:', error);
+      });
+  });
 });
