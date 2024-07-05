@@ -39,54 +39,81 @@ $(document).ready(function() {
 
   let currentPage = 1
 
-// Функция для загрузки товаров
-function loadProducts(page = currentPage) {
-  fetch(`/data_products?page=${page}`)
-    .then(response => response.json())
-    .then(data => {
-      console.log(data);
-      populateProductsTable(data.products);
-      updatePagination(data.current_page, data.total_pages);
-      currentPage = data.current_page; // Обновляем текущую страницу
-    })
-    .catch(error => {
-      console.error('Ошибка при загрузке заказов:', error);
-    });
-}
-
-function loadProductsByName(page = 1, prodName = '') {
+  let currentSearchParams = {
+    page: 1,
+    searchTerm: '',
+    category: '',
+    searchBySku: false
+  };
   
-  const url = `/data_products?page=${page}${prodName ? '&name=' + encodeURIComponent(prodName) : ''}`;
+  function loadProducts(params = {}) {
+    currentSearchParams = { ...currentSearchParams, ...params };
+  
+    let url = `/data_products?page=${currentSearchParams.page}`;
+  
+    if (currentSearchParams.searchTerm) {
+      const encodedSearchTerm = encodeURIComponent(currentSearchParams.searchTerm);
+      if (currentSearchParams.searchBySku) {
+        url += `&sku=${encodedSearchTerm}`;
+      } else {
+        url += `&name=${encodedSearchTerm}`;
+      }
+    }
+  
+    if (currentSearchParams.category) {
+      url += `&category=${currentSearchParams.category}`;
+    }
+  
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        console.log('Received data:', data);
+        $('#productsTable tbody').empty();
+        populateProductsTable(data.products);
+        updatePagination(data.current_page, data.total_pages);
+      })
+      .catch(error => {
+        console.error('Ошибка при загрузке товаров:', error);
+      });
+  }
+  
+  // Обработчик изменения чекбокса
+  document.getElementById('CheckOldest').addEventListener('change', function() {
+    currentSearchParams.searchBySku = this.checked;
+    if (currentSearchParams.searchTerm) {
+      loadProducts({ page: 1 }); // Перезагружаем первую страницу с новыми параметрами
+    }
+  });
+
+function loadProductsByName(page = 1, searchTerm = '') {
+  let url;
+  const encodedSearchTerm = encodeURIComponent(searchTerm);
+
+  if (searchTerm.toLowerCase().startsWith('о-')) {
+    // Если поисковый запрос начинается с "О-", ищем только по SKU
+    url = `/data_products?page=${page}&sku=${encodedSearchTerm}`;
+  } else {
+    // В противном случае ищем по имени
+    url = `/data_products?page=${page}&name=${encodedSearchTerm}`;
+  }
 
   fetch(url)
     .then(response => response.json())
     .then(data => {
-      console.log(data);
-      // Очистить существующие строки в таблице
+      console.log('Received data:', data);
       $('#productsTable tbody').empty();
-
-      // Заполнить таблицу данными из ответа сервера
-      
       populateProductsTable(data.products);
-      // Обновить пагинацию
       updatePagination(data.current_page, data.total_pages);
     })
     .catch(error => {
-      console.error('Ошибка при загрузке заказов:', error);
+      console.error('Ошибка при загрузке товаров:', error);
     });
 }
 
-// Обработчик изменения выбранной категории
+// Обработчик изменения категории
 document.getElementById('categoryFilter').addEventListener('change', function() {
-  const selectedCategoryId = this.value;
-
-  if (selectedCategoryId === '') {
-    // Если выбрана опция "Товари по всім категоріям", вызываем функцию loadProducts(1)
-    loadProducts(1);
-  } else {
-    // Иначе, загружаем товары по выбранной категории
-    loadProductsByCategory(1, selectedCategoryId);
-  }
+  const category = this.value;
+  loadProducts({ page: 1, category: category });
 });
 
 function loadProductsByCategory(page = 1, categoryId) {
@@ -109,18 +136,16 @@ function loadProductsByCategory(page = 1, categoryId) {
 
 // Обработчик клика по кнопке поиска
 document.getElementById('searchButton').addEventListener('click', function() {
-  const prodName = document.getElementById('searchInput').value;
-  loadProductsByName(1,prodName); // Загружаем первую страницу результатов поиска
+  const searchTerm = document.getElementById('searchInput').value.trim();
+  loadProducts({ page: 1, searchTerm: searchTerm });
 });
 
 // Обработчик нажатия клавиши Enter в поле ввода поиска
 document.getElementById('searchInput').addEventListener('keyup', function(event) {
   if (event.keyCode === 13) {
     event.preventDefault();
-    const prodName = document.getElementById('searchInput').value.trim();
-    
-      loadProductsByName(1, prodName); // Загружаем первую страницу результатов поиска
-  
+    const searchTerm = this.value.trim();
+    loadProducts({ page: 1, searchTerm: searchTerm });
   }
 });
 
@@ -203,13 +228,13 @@ function updatePagination(currentPage, totalPages) {
           $('#paginationContainer').hide();
         }
       }      
-
-// Обработчик клика по ссылке пагинации
-$(document).on('click', '.pagination .page-link', function(e) {
-  e.preventDefault();
-  const page = $(this).data('page');
-  loadProducts(page);
-});     
+  // Добавьте обработчик события для ссылок пагинации
+  $(document).on('click', '.pagination .page-link', function(e) {
+    e.preventDefault();
+    const page = $(this).data('page');
+    loadProducts({ page: page });
+  });
+     
 
 function togglePriceEdit(icon, priceType) {
   const container = icon.parentElement;
@@ -230,14 +255,17 @@ function togglePriceEdit(icon, priceType) {
   } else {
     // Сохранение изменений
     const input = container.querySelector('input');
-    const newPrice = input.value ? parseFloat(input.value).toFixed(2) : '';
-    if (newPrice !== currentPrice.toFixed(2)) {
-      updateProductPrice(productId, newPrice, priceType);
-    }
+    let newPrice = input.value ? parseFloat(input.value).toFixed(2) : '';
+    
     if (priceType === 'sale' && (newPrice === '' || parseFloat(newPrice) === 0)) {
-      priceSpan.textContent = 'Акційної ціни немає';
+        newPrice = " ";
+        priceSpan.textContent = 'Акційної ціни немає';
     } else {
-      priceSpan.textContent = newPrice ? `${newPrice} грн` : '0.00 грн';
+        priceSpan.textContent = newPrice ? `${newPrice} грн` : '0.00 грн';
+    }
+    
+    if (newPrice !== currentPrice.toFixed(2)) {
+        updateProductPrice(productId, newPrice, priceType);
     }
     priceSpan.style.display = '';
     container.removeChild(input);
@@ -419,7 +447,28 @@ function createPriceElement(price, type) {
       const outOfStockOption = $('<option>').attr('value', 'outofstock').text('Не в наявності');
       availabilitySelect.append(inStockOption, outOfStockOption);
       availabilitySelect.val(product.stock_status);
-      availabilityCell.append(availabilitySelect);
+      
+      const quantityInputGroup = $('<div>').addClass('input-group input-group-sm mt-2');
+      const quantityInput = $('<input>').attr({
+        type: 'number',
+        id: 'inModalproductQuantity',
+        class: 'form-control',
+        min: '0',
+        style: 'max-width: 80px;'
+      });
+      const quantityAddon = $('<span>').addClass('input-group-text').text('од');
+      
+      quantityInputGroup.append(quantityInput, quantityAddon);
+      
+      if (product.stock_status === 'instock') {
+        quantityInput.val(product.stock_quantity);
+        quantityInput.prop('disabled', false);
+      } else {
+        quantityInput.val('');
+        quantityInput.prop('disabled', true);
+      }
+      
+      availabilityCell.append(availabilitySelect, quantityInputGroup);
       row.append(availabilityCell);
 
       // Добавление ячейки с ценой товара (поле ввода)
@@ -439,6 +488,17 @@ function createPriceElement(price, type) {
 
       // Добавление строки в таблицу
       $('#inProduct-table tbody').append(row);
+
+      availabilitySelect.on('change', function() {
+        if (this.value === 'instock') {
+          quantityInput.prop('disabled', false);
+          quantityInput.val(product.stock_quantity || 0);
+        } else {
+          quantityInput.prop('disabled', true);
+          quantityInput.val('');
+        }
+      });
+
       $('#productSku').text(`Артикул: ${product.sku}`);
 updateAttributeList(product.attributes);
 
@@ -584,36 +644,51 @@ $(document).on('click', '#saveChangesBtn', function() {
   const price = $('#editProductPrice').val();
   const name = $('#editProductName').val();
   const description = $('#editProductDescription').val();
+  const quantity = $('#inModalproductQuantity').val();
 
   const updatedData = {
-    stock_status: availability
+    stock_status: availability,
+    manage_stock: true // Важно для WooCommerce
   };
 
-  // Проверка наличия значения цены
+  if (availability === 'instock') {
+    const parsedQuantity = parseInt(quantity, 10);
+    if (isNaN(parsedQuantity)) {
+      updatedData.stock_quantity = null;
+      updatedData.manage_stock = false;
+    } else {
+      updatedData.stock_quantity = parsedQuantity;
+      // Если количество 0, но статус 'instock', установим минимальное положительное значение
+      if (parsedQuantity === 0) {
+        updatedData.stock_quantity = null;
+        updatedData.manage_stock = false;
+      }
+    }
+  } else {
+    updatedData.stock_quantity = 0;
+    updatedData.manage_stock = false;
+  }
+
   if (price) {
     updatedData.regular_price = price.toString();
   }
 
-  // Проверка наличия значения названия товара
   if (name) {
     updatedData.name = name;
   }
 
-  // Проверка наличия значения описания товара
   if (description) {
     updatedData.description = description;
   }
 
-  // Получение обновленных атрибутов из списка атрибутов
   const updatedAttributes = getUpdatedAttributes();
-  if (updatedAttributes){
-   updatedData.attributes = updatedAttributes; 
+  if (updatedAttributes) {
+    updatedData.attributes = updatedAttributes;
+  } else {
+    updatedData.attributes = [];
   }
-  else{
-    updatedData.attributes = []
-  }
-  
 
+  console.log(updatedData);
   updateProduct(productId, updatedData);
 });
 

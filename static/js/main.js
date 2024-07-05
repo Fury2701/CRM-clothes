@@ -46,12 +46,188 @@ $(document).on('click', '#create-offer', function() {
   $('#createOrderModal').modal('show');
 });
 
-let selectedProductId;
-let currentPage = 1;
-let totalPages = 1;
-let isLoading = false;
+let currentPageForCreate = 1;
+let totalPagesForCreate = 1;
+let isLoadingForCreate = false;
+let selectedProductForCreate = null;
+let searchBySkuForCreate = false;
+let selectedProducts = []; // Массив для хранения выбранных товаров
 
-// Обработчик клика по кнопке "Створити замовлення" в модальном окне
+function loadProductsForCreate(searchQuery = '') {
+  if (isLoadingForCreate || currentPageForCreate > totalPagesForCreate) return;
+
+  isLoadingForCreate = true;
+  console.log('Загрузка товаров. Страница:', currentPageForCreate, 'Поисковый запрос:', searchQuery);
+
+  let url = `/data_products?page=${currentPageForCreate}`;
+  if (searchQuery) {
+    url += searchBySkuForCreate ? `&sku=${encodeURIComponent(searchQuery)}` : `&name=${encodeURIComponent(searchQuery)}`;
+  }
+
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Данные о товарах:', data);
+      const optionsContainer = $('.options-container-create');
+      
+      if (currentPageForCreate === 1) {
+        optionsContainer.empty();
+      }
+
+      if (data.products && Array.isArray(data.products)) {
+        data.products.forEach(product => {
+          const option = $('<div>', {
+            class: 'option-create',
+            'data-value': product.id,
+            'data-price': product.price,
+            html: `
+              <img src="${product.images[0].src}" alt="${product.name}">
+              <span>${product.name} (Артикул: ${product.sku})</span>
+            `
+          });
+          optionsContainer.append(option);
+        });
+        currentPageForCreate++;
+        totalPagesForCreate = data.total_pages;
+      } else {
+        console.error('Неверный формат данных:', data);
+      }
+      isLoadingForCreate = false;
+    })
+    .catch(error => {
+      console.error('Помилка при завантаженні товарів:', error);
+      isLoadingForCreate = false;
+    });
+}
+
+$('#searchBySkuForCreate').on('change', function() {
+  searchBySkuForCreate = $(this).is(':checked');
+});
+
+$('#productSearchCreate').on('keypress', function(event) {
+  if (event.which === 13) {
+    event.preventDefault();
+    const searchQuery = $(this).val().trim();
+    if (searchQuery !== '') {
+      currentPageForCreate = 1;
+      $('.options-container-create').empty();
+      loadProductsForCreate(searchQuery);
+    }
+  }
+});
+
+$('.selected-option-create').on('click', function() {
+  $('.options-container-create').toggle();
+});
+
+$(document).on('click', '.option-create', function() {
+  const selectedText = $(this).find('span').text();
+  const selectedValue = $(this).data('value');
+  const selectedPrice = $(this).data('price');
+  const selectedImage = $(this).find('img').attr('src');
+  
+  selectedProductForCreate = {
+    id: selectedValue,
+    name: selectedText,
+    price: selectedPrice,
+    image: selectedImage
+  };
+
+  // Добавляем выбранный товар в таблицу
+  addProductToTable(selectedProductForCreate);
+
+  $('.selected-option-create').text('Виберіть товар');
+  $('.options-container-create').hide();
+});
+
+function addProductToTable(product) {
+  const tableBody = document.querySelector('#selectedProductsTable tbody');
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td><img src="${product.image}" alt="${product.name}" style="width: 50px; height: 50px;"></td>
+    <td>${product.name}</td>
+    <td><input type="number" class="form-control product-quantity" value="1" min="1"></td>
+    <td>${product.price}</td>
+    <td><button class="btn btn-danger btn-sm remove-product">Видалити</button></td>
+  `;
+  tableBody.appendChild(row);
+
+  // Добавляем товар в массив выбранных товаров
+  selectedProducts.push({...product, quantity: 1});
+
+  // Добавляем обработчик для кнопки удаления
+  row.querySelector('.remove-product').addEventListener('click', function() {
+    row.remove();
+    selectedProducts = selectedProducts.filter(p => p.id !== product.id);
+  });
+
+  // Добавляем обработчик для изменения количества
+  row.querySelector('.product-quantity').addEventListener('change', function() {
+    const index = selectedProducts.findIndex(p => p.id === product.id);
+    if (index !== -1) {
+      selectedProducts[index].quantity = parseFloat(this.value);
+    }
+  });
+}
+
+$('.options-container-create').on('scroll', function() {
+  const container = $(this);
+  if (container.scrollTop() + container.innerHeight() >= container[0].scrollHeight - 20) {
+    loadProductsForCreate($('#productSearchCreate').val().trim());
+  }
+});
+
+$('#createOrderModal').on('show.bs.modal', function() {
+  selectedProducts = [];
+  document.querySelector('#selectedProductsTable tbody').innerHTML = '';
+  selectedProductForCreate = null;
+  document.querySelector('.selected-option-create').textContent = 'Виберіть товар';
+  
+  currentPageForCreate = 1;
+  $('.options-container-create').empty();
+  loadProductsForCreate();
+});
+
+$(document).on('click', function(event) {
+  if (!$(event.target).closest('.custom-select-create').length) {
+    $('.options-container-create').hide();
+  }
+});
+
+// Обработчик события закрытия модального окна
+$('#createOrderModal').on('hidden.bs.modal', function () {
+  // Очистка всех текстовых полей и полей ввода
+  $('#createOrderModal input[type="text"], #createOrderModal input[type="email"], #createOrderModal input[type="tel"], #createOrderModal input[type="number"]').val('');
+  
+  // Сброс значений выпадающих списков
+  $('#shippingMethod, #paymentMethod').val('');
+  
+  // Очистка таблицы выбранных товаров
+  $('#selectedProductsTable tbody').empty();
+  
+  // Сброс выбранного товара
+  $('.selected-option-create').text('Виберіть товар');
+  
+  // Очистка массива выбранных товаров
+  selectedProducts = [];
+  
+  // Сброс чекбокса поиска по артикулу
+  $('#searchBySkuForCreate').prop('checked', false);
+  searchBySkuForCreate = false;
+  
+  // Очистка поля поиска товара
+  $('#productSearchCreate').val('');
+  
+  // Сброс страниц загрузки товаров
+  currentPageForCreate = 1;
+  totalPagesForCreate = 1;
+  
+  // Очистка контейнера опций товаров
+  $('.options-container-create').empty();
+});
+
+
+// Обработчик клика на кнопку "Створити замовлення"
 $(document).on('click', '#createOrderBtn', function() {
   const customerFirstName = $('#customerFirstName').val();
   const customerLastName = $('#customerLastName').val();
@@ -63,7 +239,6 @@ $(document).on('click', '#createOrderBtn', function() {
   const shippingPostcode = $('#shippingPostcode').val();
   const shippingMethod = $('#shippingMethod').val();
   const paymentMethod = $('#paymentMethod').val();
-  const productQuantity = parseFloat($('#productQuantityCreate').val());
 
   const lineItems = selectedProducts.map(product => ({
     product_id: parseInt(product.id),
@@ -110,149 +285,7 @@ $(document).on('click', '#createOrderBtn', function() {
 
   // Отправьте данные заказа на сервер
   createOrder(orderData);
-  console.log(orderData)
-});
-
-let selectedProducts = [];
-
-// Функция для добавления товара в таблицу
-function addProductToTable(product) {
-  const tableBody = document.querySelector('#selectedProductsTable tbody');
-  const row = document.createElement('tr');
-  row.innerHTML = `
-    <td><img src="${product.image}" alt="${product.name}" style="width: 50px; height: 50px;"></td>
-    <td>${product.name}</td>
-    <td><input type="number" class="form-control product-quantity" value="1" min="1"></td>
-    <td><button class="btn btn-danger btn-sm remove-product">Видалити</button></td>
-  `;
-  tableBody.appendChild(row);
-
-  // Добавляем обработчик для кнопки удаления
-  row.querySelector('.remove-product').addEventListener('click', function() {
-    row.remove();
-    selectedProducts = selectedProducts.filter(p => p.id !== product.id);
-  });
-
-  // Добавляем обработчик для изменения количества
-  row.querySelector('.product-quantity').addEventListener('change', function() {
-    const index = selectedProducts.findIndex(p => p.id === product.id);
-    if (index !== -1) {
-      selectedProducts[index].quantity = parseFloat(this.value);
-    }
-  });
-}
-
-// Обработчик клика на выбранную опцию товара
-document.querySelector('.selected-option-create').addEventListener('click', function() {
-  document.querySelector('.options-container-create').style.display = 'block';
-});
-
-// Обработчик клика на опцию товара
-document.querySelector('.options-container-create').addEventListener('click', function(event) {
-  if (event.target.classList.contains('option')) {
-    const productId = event.target.dataset.value;
-    const productName = event.target.textContent;
-    const productImage = event.target.querySelector('img').src;
-    
-    // Проверяем, не был ли уже добавлен этот товар
-    if (!selectedProducts.some(p => p.id === productId)) {
-      selectedProducts.push({id: productId, name: productName, image: productImage, quantity: 1});
-      addProductToTable({id: productId, name: productName, image: productImage});
-    }
-
-    document.querySelector('.selected-option-create').textContent = 'Виберіть товар';
-    document.querySelector('.options-container-create').style.display = 'none';
-  }
-});
-
-
-// Обработчик клика вне выпадающего списка товаров
-document.addEventListener('click', function(event) {
-  const customSelect = document.querySelector('.custom-select-create');
-  if (!customSelect.contains(event.target)) {
-    document.querySelector('.options-container-create').style.display = 'none';
-  }
-});
-
-// Обработчик открытия модального окна для создания заказа
-$('#createOrderModal').on('show.bs.modal', function() {
-  selectedProducts = [];
-  document.querySelector('#selectedProductsTable tbody').innerHTML = '';
-  // Очистка выбранного товара
-  selectedProductId = null;
-  document.querySelector('.selected-option-create').textContent = 'Виберіть товар';
-  
-  // Загрузка первой страницы товаров
-  currentPage = 1;
-  $('.options-container-create').empty();
-  loadProducts();
-});
-
-$('.options-container-create').on('scroll', function() {
-  const optionsContainer = this;
-  if (optionsContainer.scrollTop + optionsContainer.clientHeight >= optionsContainer.scrollHeight - 20) {
-    console.log('Достигнут конец списка опций, загружаем следующую страницу');
-    loadProducts();
-  }
-});
-
-function loadProducts(searchQuery = '') {
-  if (isLoading || currentPage > totalPages) {
-    console.log('Загрузка товаров уже выполняется или достигнута последняя страница');
-    return;
-  }
-
-  isLoading = true;
-  console.log('Загрузка товаров, страница:', currentPage);
-
-  const url = `/data_products?page=${currentPage}&name=${encodeURIComponent(searchQuery)}`;
-
-  fetch(url)
-    .then(response => response.json())
-    .then(data => {
-      const products = data.products;
-      currentPage = data.current_page + 1; // Увеличиваем текущую страницу на 1
-      totalPages = data.total_pages;
-
-      console.log('Получены товары:', products);
-      console.log('Текущая страница:', currentPage);
-      console.log('Всего страниц:', totalPages);
-
-      // Создание опций для каждого товара и добавление их в контейнер опций
-      const optionsContainer = document.querySelector('.options-container-create');
-      products.forEach(function(product) {
-        const option = document.createElement('div');
-        option.className = 'option';
-        option.dataset.value = product.id;
-
-        const imageSrc = product.images && product.images.length > 0 ? product.images[0].src : '';
-        option.innerHTML = `<img src="${imageSrc}"> ${product.name}`;
-
-        optionsContainer.appendChild(option);
-      });
-
-      isLoading = false;
-    })
-    .catch(error => {
-      console.error('Ошибка при загрузке товаров:', error);
-      isLoading = false;
-    });
-}
-
-$('#productSearchCreate').on('keypress', function(event) {
-  if (event.which === 13) { // Проверяем, была ли нажата клавиша Enter
-    const searchQuery = $(this).val().trim();
-    if (searchQuery !== '') { // Проверяем, что поле ввода не пустое
-      currentPage = 1;
-      $('.options-container-create').empty();
-      loadProducts(searchQuery);
-    } else {
-      // Если поле ввода пустое, загружаем все товары без фильтрации
-      currentPage = 1;
-      $('.options-container-create').empty();
-      loadProducts();
-    }
-  }
+  console.log(orderData);
 });
 
 // Функция для отправки данных заказа на сервер
@@ -391,12 +424,15 @@ function getUpdatedFields(orderId) {
     }));
   }
 
-  const selectedCustomStatuses = getSelectedCustomStatuses();
-  if (selectedCustomStatuses.length > 0) {
+  const selectedCustomStatuses = getSelectedOrderStatuses();
+  // Удаляем дубликаты
+  const uniqueStatuses = [...new Set(selectedCustomStatuses)];
+  
+  if (uniqueStatuses.length > 0) {
     updatedFields.meta_data = [
       {
         key: '_custom_statuses',
-        value: selectedCustomStatuses
+        value: uniqueStatuses
       }
     ];
   } else {
@@ -645,11 +681,16 @@ function fillOrdersTable(orders) {
     const imageUrl = order.line_items && order.line_items[0] && order.line_items[0].image ? order.line_items[0].image.src : '';
     row.append($('<td>').html(`<img src="${imageUrl}" width="100" height="100">`));
 
+    // Изменяем эту часть, добавляя количество товаров
+    const itemCount = order.line_items ? order.line_items.length : 0;
     row.append($('<td>').addClass('modal-link-cell').html(`
-    <a href="#" data-bs-toggle="modal" data-bs-target="#myModal">${order.id}</a>
+      <a href="#" data-bs-toggle="modal" data-bs-target="#myModal">${order.id}</a>
       <br>
-        ${order.date_created}
+      ${order.date_created}
+      <br>
+      <span style="font-size: 0.9em; color: #666;">Товарів: ${itemCount} од.</span>
     `));
+
     row.append($('<td>').text(order.total + " " + order.currency));
     row.append($('<td>').html(`${order.billing.last_name + " " + order.billing.first_name + " " + order.billing.company}<br>${order.billing.phone}`));
     
@@ -668,6 +709,7 @@ function fillOrdersTable(orders) {
     selectDropdown.append($('<option>').attr('value', 'failed').text('Невдалий'));
     selectDropdown.append($('<option>').attr('value', 'trash').text('Корзина'));
     selectDropdown.val(order.status); // Установить значение статуса для текущего заказа
+
     // Создание элемента select для списка менеджеров
     const managerDropdown = $('<select>').addClass('manager-dropdown');
 
@@ -695,9 +737,12 @@ function fillOrdersTable(orders) {
 
     $('#table1 tbody').append(row);
 
-    // Создайте дочерний ряд для кастомных тегов
+    // Здесь начинается новый код
+    // Создайте дочерний ряд для кастомных тегов, информации о доставке и комментария заказчика
     const childRow = $('<tr>').addClass('child-row').attr('data-order-id', order.id);
     const childCell = $('<td>').attr('colspan', row.find('td').length);
+    
+    // Контейнер для кастомных тегов (оставьте существующий код)
     const customTagsContainer = $('<div>').addClass('custom-tags-container');
     
     order.meta_data.forEach(meta => {
@@ -714,14 +759,68 @@ function fillOrdersTable(orders) {
         });
       }
     });
+
+    // Функция для формирования адреса доставки
+    function formatShippingAddress(billing) {
+      const addressParts = [
+        billing.address_1,
+        billing.address_2,
+        billing.city,
+        billing.state,
+        billing.postcode,
+        billing.country
+      ].filter(Boolean); // Удаляем пустые значения
+
+      return addressParts.join(', ');
+    }
+
+    // Формируем имя получателя
+    const recipientName = [order.shipping.first_name, order.shipping.last_name, order.shipping.company]
+      .filter(Boolean)
+      .join(' ');
+
+    // Формируем информацию о доставке
+    let shippingInfoHTML = '<strong>Інформація про доставку:</strong><br>';
     
-    childCell.append(customTagsContainer);
+    if (order.shipping_lines && order.shipping_lines.length > 0) {
+      shippingInfoHTML += `Метод: ${order.shipping_lines[0].method_title}<br>`;
+    }
+    
+    const formattedAddress = formatShippingAddress(order.billing);
+    if (formattedAddress) {
+      shippingInfoHTML += `Адреса: ${formattedAddress}<br>`;
+    }
+    
+    if (recipientName) {
+      shippingInfoHTML += `Отримувач: ${recipientName}<br>`;
+    }
+    
+    if (order.shipping.phone) {
+      shippingInfoHTML += `Телефон: ${order.shipping.phone}`;
+    }
+
+    // Если нет никакой информации о доставке, выводим сообщение
+    if (shippingInfoHTML === '<strong>Інформація про доставку:</strong><br>') {
+      shippingInfoHTML += 'Інформація про доставку відсутня';
+    }
+
+    // Добавляем информацию о доставке
+    const shippingInfo = $('<div>').addClass('shipping-info').html(shippingInfoHTML);
+
+    // Добавляем комментарий заказчика
+    const customerNote = $('<div>').addClass('customer-note').html(`
+      <strong>Коментар замовника:</strong><br>
+      ${order.customer_note ? order.customer_note : 'Немає коментаря'}
+    `);
+
+    childCell.append(customTagsContainer, shippingInfo, customerNote);
     childRow.append(childCell);
     
     // Добавьте дочерний ряд после основного ряда заказа
     row.after(childRow);
   });
 }
+
 $(document).on('change', '#table1 .status-cell .manager-dropdown', function() {
   const orderId = $(this).closest('tr').attr('data-order-id');
   const selectedManagerId = $(this).val();
@@ -825,7 +924,7 @@ function loadSMS() {
     .then(response => response.json())
     .then(data => {
       
-
+      console.log(data);
       // Очищаем тело таблицы перед заполнением
       $('#smsTable tbody').empty();
 
@@ -906,18 +1005,19 @@ $(document).on('click', '#sendSMSBtn', function() {
 
 // Функция для отправки SMS
 function sendSMS(orderId, smsData) {
-  const requestData = {
+  const requested_data = {
     id: orderId,
+    message_type:"sms",
     phone_number: smsData.phone_number,
     message_text: smsData.message_text
   };
-
+  console.log(requested_data);
   fetch('/send_phone_sms', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(requestData)
+    body: JSON.stringify(requested_data)
   })
     .then(response => {
       if (!response.ok) {
@@ -1051,6 +1151,7 @@ $(document).on('click', '#addProductBtn', function() {
   let currentPageForAddProduct = 1;
   let totalPagesForAddProduct = 1;
   let isLoadingForAddProduct = false;
+  let searchBySkuForAddProduct = false;
   
   // Функция для загрузки товаров и создания опций
   function loadProductsForAddProduct(searchQuery = '') {
@@ -1062,7 +1163,10 @@ $(document).on('click', '#addProductBtn', function() {
     isLoadingForAddProduct = true;
     console.log('Загрузка товаров, страница:', currentPageForAddProduct);
   
-    const url = `/data_products?page=${currentPageForAddProduct}&name=${encodeURIComponent(searchQuery)}`;
+    let url = `/data_products?page=${currentPageForAddProduct}`;
+    if (searchQuery) {
+      url += searchBySkuForAddProduct ? `&sku=${encodeURIComponent(searchQuery)}` : `&name=${encodeURIComponent(searchQuery)}`;
+    }
   
     fetch(url)
       .then(response => response.json())
@@ -1082,7 +1186,7 @@ $(document).on('click', '#addProductBtn', function() {
           option.dataset.value = product.id;
   
           const imageSrc = product.images && product.images.length > 0 ? product.images[0].src : '';
-          option.innerHTML = `<img src="${imageSrc}"> ${product.name}`;
+          option.innerHTML = `<img src="${imageSrc}"> ${product.name} (Артикул: ${product.sku})`;
   
           optionsContainer.appendChild(option);
         });
@@ -1095,9 +1199,9 @@ $(document).on('click', '#addProductBtn', function() {
       });
   }
   
-  // Обработчик клика по кнопке "Додати товар"
-  $(document).on('click', '#addProductBtn', function() {
-    $('#addProductModal').modal('show');
+  // Обработчик изменения чекбокса поиска по артикулу
+  $('#searchBySkuForAddProduct').on('change', function() {
+    searchBySkuForAddProduct = $(this).is(':checked');
   });
   
   $('#productSearch').on('keypress', function(event) {
@@ -1114,7 +1218,7 @@ $(document).on('click', '#addProductBtn', function() {
     const optionsContainer = this;
     if (optionsContainer.scrollTop + optionsContainer.clientHeight >= optionsContainer.scrollHeight - 20) {
       console.log('Достигнут конец списка опций, загружаем следующую страницу');
-      loadProductsForAddProduct();
+      loadProductsForAddProduct($('#productSearch').val().trim());
     }
   });
   
@@ -1125,6 +1229,7 @@ $(document).on('click', '#addProductBtn', function() {
     $('#addProductModal .options-container').empty();
     loadProductsForAddProduct();
   });
+
   
   // Обработчик клика на выбранную опцию
   $('#addProductModal .selected-option').on('click', function() {
@@ -1165,9 +1270,29 @@ $(document).on('click', '#saveProductBtn', function() {
       line_items: [newLineItem]
     };
     
-    updateOrder(orderId, updatedFields);
-    
-    $('#addProductModal').modal('hide');
+    // Оборачиваем updateOrder в Promise
+    new Promise((resolve, reject) => {
+      updateOrder(orderId, updatedFields);
+      // Предполагаем, что updateOrder выполняется синхронно
+      // Если это асинхронная функция с колбэком, нужно будет изменить эту часть
+      resolve();
+    })
+    .then(() => {
+      // Отправляем запрос на сервер для получения данных о заказе по его ID
+      return fetch(`/dataordersbyid?id=${orderId}`);
+    })
+    .then(response => response.json())
+    .then(data => {
+      orderData = data;
+      console.log(orderData);
+      populateModal();
+    })
+    .catch(error => {
+      console.error('Ошибка при обновлении или получении данных о заказе:', error);
+    })
+    .finally(() => {
+      $('#addProductModal').modal('hide');
+    });
   }
 });
 
@@ -1242,6 +1367,12 @@ function populateModal(){
      <li class="nav-item" role="presentation">
        <button class="nav-link" id="tab3-tab" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab" aria-controls="tab3" aria-selected="false">Повідомлення</button>
      </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="viber-tab" data-bs-toggle="tab" data-bs-target="#viber" type="button" role="tab" aria-controls="viber" aria-selected="false">Viber</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab" aria-controls="email" aria-selected="false">Email</button>
+    </li>
    </ul>
 
    <div class="tab-content" id="myTabContent">
@@ -1290,25 +1421,23 @@ function populateModal(){
                <div class="text-end">
                <button type="button" class="btn btn-primary" id="addProductBtn">Додати товар</button>
               </div>
-              <div class="client-tags">
-
-          
-              <!-- Кнопка "+" для добавления тегов -->
-              <div class="dropdown">
-              <button class="add-tag-btn dropdown-toggle" type="button" id="addCustomStatusBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                +
-              </button>
-              <div class="dropdown-menu">
-                <div class="dropdown-item">
-                  <input type="text" class="form-control" id="newCustomStatusInput" placeholder="Новий статус">
+                  <div class="dropdown">
+                  <button class="add-tag-btn dropdown-toggle" type="button" id="addCustomStatusBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                    +
+                  </button>
+                  <div class="dropdown-menu">
+                    <div class="dropdown-item">
+                      <input type="text" class="form-control" id="newCustomStatusInput" placeholder="Новий статус">
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <div id="customStatusList">
+                      <!-- Список кастомных статусов будет динамически заполнен -->
+                    </div>
+                  </div>
                 </div>
-                <div class="dropdown-divider"></div>
-                <div id="customStatusList">
-                  <!-- Список кастомных статусов будет динамически заполнен -->
+                <div class="client-tags">
+                  <!-- Теги будут добавляться сюда -->
                 </div>
-              </div>
-            </div>
-            </div>
 
                <li>Дата створення: ${orderData.date_created}</li>
                <li>Замовник: ${orderData.billing.last_name + " " + orderData.billing.first_name + " " + orderData.billing.company}</li>
@@ -1349,18 +1478,13 @@ function populateModal(){
          <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample" style="">
            <div class="accordion-body">
              <li>Метод доставки: ${orderData.shipping_lines[0].method_title}</li>
-             <li>Адреса доставки: ${
-               (orderData.shipping.state ? orderData.shipping.state + " " : "") +
-               (orderData.shipping.city ? orderData.shipping.city + " " : "") +
-               (orderData.shipping.postcode ? orderData.shipping.postcode + " " : "") +
-               (orderData.shipping.address_1 ? orderData.shipping.address_1 + " " : "") +
-               (orderData.shipping.address_2 ? orderData.shipping.address_2 : "") ||
-               (orderData.billing.state ? orderData.billing.state + " " : "") +
-               (orderData.billing.city ? orderData.billing.city + " " : "") +
-               (orderData.billing.postcode ? orderData.billing.postcode + " " : "") +
-               (orderData.billing.address_1 ? orderData.billing.address_1 + " " : "") +
-               (orderData.billing.address_2 ? orderData.billing.address_2 : "")
-             }</li>
+            <li>Адреса доставки: ${
+              (orderData.billing.state ? orderData.billing.state + "обл, " : "") +
+              (orderData.billing.city ? "м." + orderData.billing.city + " (" : "") +
+              (orderData.billing.postcode ? orderData.billing.postcode + "), " : "") +
+              (orderData.billing.address_1 ? orderData.billing.address_1 + " ," : "") +
+              (orderData.billing.address_2 ? orderData.billing.address_2 : "")
+            }</li>
              <li>Отримувач: ${orderData.shipping.last_name + " " + orderData.shipping.first_name + " " + orderData.shipping.company}</li>
            </div>
          </div>
@@ -1436,14 +1560,144 @@ function populateModal(){
   </div>
   <button type="button" class="btn btn-primary" id="sendSMSBtn">Відправити SMS</button>
 </div>
+    <div class="tab-pane fade" id="viber" role="tabpanel" aria-labelledby="viber-tab">
+    <div class="container" id='sms-cont' style="max-height: 300px; overflow-y: auto;">
+        <table class="table" id='ViberTable'>
+          <thead>
+            <tr>
+              <th>Текст</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+    </div>
+    <div class="mb-3">
+      <label for="viberPhone" class="form-label">Номер телефона для Viber</label>
+      <input type="tel" class="form-control bg-light" id="viberPhone" readonly>
+    </div>
+    <div class="mb-3">
+      <label for="viberMessage" class="form-label">Повідомлення Viber</label>
+      <textarea class="form-control" id="viberMessage" rows="3"></textarea>
+    </div>
+    <button type="button" class="btn btn-primary" id="sendViberBtn">Відправити Viber</button>
+  </div>
+  <div class="tab-pane fade" id="email" role="tabpanel" aria-labelledby="email-tab">
+      <div class="container" id='email-cont' style="max-height: 300px; overflow-y: auto;">
+      <table class="table" id='emailTable'>
+        <thead>
+          <tr>
+            <th style="width: 30%;">Статус</th>
+            <th style="width: 70%;">Текст</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    <div class="mb-3">
+      <label for="emailAddress" class="form-label">Email адрес</label>
+      <input type="email" class="form-control" id="emailAddress">
+    </div>
+    <div class="mb-3">
+      <label for="emailSubject" class="form-label">Тема листа</label>
+      <input type="text" class="form-control" id="emailSubject">
+    </div>
+    <div class="mb-3">
+      <label for="emailMessage" class="form-label">Текст листа</label>
+      <textarea class="form-control" id="emailMessage" rows="3"></textarea>
+    </div>
+    <button type="button" class="btn btn-primary" id="sendEmailBtn">Відправити Email</button>
+  </div>
    </div>
+   
  `);
+ 
+ $('#viberPhone').val(orderData.billing.phone);
+ $('#emailAddress').val(orderData.billing.email);
+ 
+// Загрузка статистики клиента
+fetch(`/customer/${orderData.customer_id}`)
+  .then(response => response.json())
+  .then(data => {
+    if(orderData.customer_id>0){
+    $('#orderOrderCount').text(data.order_count);
+    $('#ordertotalAmount').text(data.total_amount.toFixed(2));
+  }
+  else{
+    $('#orderOrderCount').text("Немає замовлень ");
+    $('#ordertotalAmount').text("0");
+  }
+  })
+  .catch(error => {
+    console.error('Ошибка при получении статистики клиента:', error);
+  });
+
+
+
 
  let customerInfoHtml = `
  <li>Замовник: ${orderData.customer_id === 0 ? 
    `${orderData.billing.last_name} ${orderData.billing.first_name} ${orderData.billing.company}` : 
    `<a href="#" class="customer-link" data-customer-id="${orderData.customer_id}">${orderData.billing.last_name} ${orderData.billing.first_name} ${orderData.billing.company}</a>`}
 `;
+
+
+
+
+const productIds = orderData.line_items.map(item => item.product_id);
+
+fetch('/productbyid_extend', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({ ids: productIds }),
+})
+.then(response => response.json())
+.then(productsInfo => {
+  const productsMap = new Map(productsInfo.map(p => [p.id, p]));
+
+  const tableBody = document.querySelector('#inModalTable tbody');
+  tableBody.innerHTML = '';
+
+  orderData.line_items.forEach((item, index) => {
+    const product = productsMap.get(item.product_id);
+    let remainingInfo;
+
+    if (product && product.stock_quantity !== undefined && product.stock_quantity !== null && product.stock_quantity !== "") {
+      const remaining = product.stock_quantity - item.quantity;
+      remainingInfo = `Залишок: ${remaining} м.`;
+    } else {
+      remainingInfo = "Немає інформації про залишок";
+    }
+
+    const row = `
+      <tr>
+        <td>
+          <img src="${item.image.src}" width="75" height="75">
+        </td>
+        <td>${item.name}</td>
+        <td>
+          <input type="text" class="table-input" value="${item.quantity}" step="any">
+          <br>
+          <span style="font-size: 0.8em; color: #666;">${remainingInfo}</span>
+        </td>
+        <td>
+          ${item.price}
+        </td>
+        <td>
+          ${item.total}
+        </td>
+      </tr>
+    `;
+    tableBody.innerHTML += row;
+  });
+})
+.catch(error => {
+  console.error('Error fetching product information:', error);
+});
 
 if (orderData.customer_id !== 0) {
  fetch(`/customerbyid?id=${orderData.customer_id}`)
@@ -1478,8 +1732,11 @@ if (orderData.customer_id !== 0) {
      const customerInfoElement = document.querySelector('#customerInfoContent');
      customerInfoElement.innerHTML = `
        ${customerInfoHtml}
+        <li>Кількість замовлень: <span id="orderOrderCount"></span></li>
+        <li>Загальна сума замовлень: <span id="ordertotalAmount"></span> грн</li>
        <li>Номер телефону: ${orderData.billing.phone}</li>
        <li>Email: ${orderData.billing.email}</li>
+
      `;
    })
    .catch(error => {
@@ -1495,18 +1752,29 @@ function finishCustomerInfoHtml() {
  const customerInfoElement = document.querySelector('#customerInfoContent');
  customerInfoElement.innerHTML = `
    ${customerInfoHtml}
+  
+  <li>Кількість замовлень: <span id="orderOrderCount"></span></li>
+  <li>Загальна сума замовлень: <span id="ordertotalAmount"></span> грн</li>
    <li>Номер телефону: ${orderData.billing.phone}</li>
    <li>Email: ${orderData.billing.email}</li>
  `;
+
+ $('#myModal .client-tags').empty();
+const customStatuses = orderData.meta_data.find(meta => meta.key === '_custom_statuses');
+if (customStatuses && Array.isArray(customStatuses.value)) {
+  customStatuses.value.forEach(status => {
+    createOrderTag(status);
+  });
+}
 }
 
-   // Отображаем ранее сохраненные кастомные статусы
-   const customStatuses = orderData.meta_data.find(meta => meta.key === '_custom_statuses');
-   if (customStatuses) {
-     customStatuses.value.forEach(status => {
-       createTag(status);
-     });
-   }
+$('#myModal .client-tags').empty();
+const customStatuses = orderData.meta_data.find(meta => meta.key === '_custom_statuses');
+if (customStatuses && Array.isArray(customStatuses.value)) {
+  customStatuses.value.forEach(status => {
+    createOrderTag(status);
+  });
+}
 
 // Сохраняем исходное количество товаров
 orderData.line_items.forEach(item => {
@@ -1514,22 +1782,47 @@ orderData.line_items.forEach(item => {
 });
  // Обновляем заголовок модального окна
  $('#myModal .modal-title').text(`Замовлення № ${orderData.id}`);
- 
+loadViberSMS();
+loadEmails();
 loadnotes();
 loadSMS();
 load_custom_status();
 displayCustomStatuses();
 }
 
+$(document).on('keypress', '#myModal #newCustomStatusInput', function(event) {
+  if (event.which === 13) {
+    const newCustomStatus = $(this).val().trim();
+    if (newCustomStatus !== '' && !orderStatusExists(newCustomStatus)) {
+      createOrderTag(newCustomStatus);
+      $(this).val('');
+
+      // Создаем новый кастомный статус
+      createCustomStatus('custom_statuses:' + newCustomStatus, newCustomStatus);
+
+      // Загружаем обновленный список кастомных статусов
+      load_custom_status();
+    }
+  }
+});
+
+function orderStatusExists(status) {
+  return $('#myModal .client-tags .toast-body').filter(function() {
+    return $(this).text().trim() === status;
+  }).length > 0;
+}
+
 $(document).on('click', '.client-tags .btn-close', function() {
   $(this).closest('.toast').remove();
 });
 
-// Функция для создания нового тега
-function createTag(text) {
-  // Проверяем, есть ли уже тег с таким текстом
-  const existingTag = $('.client-tags .toast-body').filter(function() {
-    return $(this).text().trim() === text;
+$(document).on('click', '#myModal .client-tags .btn-close', function() {
+  $(this).closest('.toast').remove();
+});
+
+function createOrderTag(text) {
+  const existingTag = $('#myModal .client-tags .toast-body').filter(function() {
+    return $(this).text().trim() === text.trim();
   });
 
   if (existingTag.length === 0) {
@@ -1541,23 +1834,74 @@ function createTag(text) {
         </div>
       </div>
     `;
-    $('.client-tags').prepend(tagElement);
+    $('#myModal .client-tags').prepend(tagElement);
   }
 }
 
-// Обработчик клика на опцию в дропдауне
-$(document).on('click', '#customStatusList .dropdown-item', function(event) {
+function createCustomerTag(text) {
+  const existingTag = $('#clientModal .client-tags .toast-body').filter(function() {
+    return $(this).text().trim() === text.trim();
+  });
+
+  if (existingTag.length === 0) {
+    const tagElement = `
+      <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-body">
+          ${text}
+          <button type="button" class="btn-close ms-2 mb-1" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+    `;
+    $('#clientModal .client-tags').prepend(tagElement);
+  }
+}
+
+// Для заказов
+$(document).on('click', '#myModal #customStatusList .dropdown-item', function(event) {
   event.stopPropagation();
-  const selectedText = $(this).text();
-  createTag(selectedText);
+  const selectedText = $(this).text().trim();
+  if (selectedText) {
+    createOrderTag(selectedText);
+  }
 });
 
-function getSelectedCustomStatuses() {
+// Для клиентов
+$(document).on('click', '#clientModal #customStatusList .dropdown-item', function(event) {
+  event.stopPropagation();
+  const selectedText = $(this).text().trim();
+  if (selectedText) {
+    createCustomerTag(selectedText);
+  }
+});
+
+function getSelectedOrderStatuses() {
   const selectedStatuses = [];
-  $('.client-tags .toast').each(function() {
+  $('#myModal .client-tags .toast').each(function() {
     selectedStatuses.push($(this).find('.toast-body').text().trim());
   });
   return selectedStatuses;
+}
+
+function getSelectedCustomerStatuses() {
+  const selectedStatuses = [];
+  $('#clientModal .client-tags .toast').each(function() {
+    selectedStatuses.push($(this).find('.toast-body').text().trim());
+  });
+  return selectedStatuses;
+}
+
+function displayOrderCustomStatuses(customStatuses) {
+  const customStatusList = $('#myModal #customStatusList');
+  customStatusList.empty();
+
+  if (customStatuses && Array.isArray(customStatuses)) {
+    customStatuses.forEach(status => {
+      const listItem = $('<div>').addClass('dropdown-item d-flex justify-content-between align-items-center');
+      listItem.append($('<span>').text(status.value));
+      listItem.append($('<img>').attr('src', '/static/images/bin.png').addClass('delete-custom-status').attr('data-key', status.key));
+      customStatusList.append(listItem);
+    });
+  }
 }
 
 // Функция для отображения кастомных статусов в дропдауне
@@ -1607,36 +1951,14 @@ function deleteCustomStatus(key) {
     });
 }
 
-// Обработчик события для добавления выбранного кастомного статуса в теги
-$(document).on('click', '#customStatusList .dropdown-item', function() {
-  const selectedStatus = $(this).text();
-  createTag(selectedStatus);
-});
 
-// Обработчик события для создания нового кастомного статуса
-$(document).on('keypress', '#newCustomStatusInput', function(event) {
-  if (event.which === 13) {
-    const newCustomStatus = $(this).val().trim();
-    if (newCustomStatus !== '') {
-      createTag(newCustomStatus);
-      $(this).val('');
-
-      // Создаем новый кастомный статус
-      createCustomStatus('custom_statuses:' + newCustomStatus, newCustomStatus);
-
-      // Загружаем обновленный список кастомных статусов
-      load_custom_status();
-    }
-  }
-});
-
-// Функция для загрузки кастомных статусов
 function load_custom_status() {
   fetch(`/custom_status_list`)
     .then(response => response.json())
     .then(data => {
       const customStatuses = data;
       displayCustomStatuses(customStatuses);
+      displayOrderCustomStatuses(customStatuses);
     })
     .catch(error => {
       console.error('Ошибка при загрузке кастомных статусов:', error);
@@ -1964,14 +2286,24 @@ function openCustomerModal(customerId) {
       $('#editClientAddress').val(`${customer.billing.address_1}, ${customer.billing.city}, ${customer.billing.state} ${customer.billing.postcode}, ${customer.billing.country}`);
 
       // Загрузка кастомных статусов клиента
-      $('.client-tags').empty();
+      $('#clientModal .client-tags').empty();
       const customStatuses = customer.meta_data.find(meta => meta.key === '_custom_statuses');
       if (customStatuses && Array.isArray(customStatuses.value)) {
         customStatuses.value.forEach(status => {
-          createTag(status);
+          createCustomerTag(status);
         });
       }
-
+      // Загрузка статистики клиента
+      fetch(`/customer/${customer.id}`)
+        .then(response => response.json())
+        .then(data => {
+          $('#orderCount').text(data.order_count);
+          $('#totalAmount').text(data.total_amount.toFixed(2));
+        })
+        .catch(error => {
+          console.error('Ошибка при получении статистики клиента:', error);
+        });
+      
       loadClientOrders(customerId);
       
       $('#clientModal').modal('show');
@@ -2137,10 +2469,8 @@ function loadClientOrders(customerId, page = 1) {
       }
 
       function updateCustomer(customerId, data) {
-        // Получаем выбранные кастомные статусы
-        const selectedCustomStatuses = getSelectedCustomStatuses();
+        const selectedCustomStatuses = getSelectedCustomerStatuses();
         
-        // Добавляем кастомные статусы в мета-данные
         if (!data.meta_data) {
           data.meta_data = [];
         }
@@ -2267,11 +2597,11 @@ $(document).on('click', '#saveChangesBtn', function() {
           alertShown = false;
         });
       });
-
       let currentPageForCopy = 1;
       let totalPagesForCopy = 1;
       let isLoadingForCopy = false;
       let selectedProductForCopy = null;
+      let searchBySkuForCopy = false;
       
       function loadProductsForCopy(searchQuery = '') {
         if (isLoadingForCopy || currentPageForCopy > totalPagesForCopy) return;
@@ -2279,7 +2609,12 @@ $(document).on('click', '#saveChangesBtn', function() {
         isLoadingForCopy = true;
         console.log('Загрузка товаров. Страница:', currentPageForCopy, 'Поисковый запрос:', searchQuery);
       
-        fetch(`/data_products?page=${currentPageForCopy}&name=${encodeURIComponent(searchQuery)}`)
+        let url = `/data_products?page=${currentPageForCopy}`;
+        if (searchQuery) {
+          url += searchBySkuForCopy ? `&sku=${encodeURIComponent(searchQuery)}` : `&name=${encodeURIComponent(searchQuery)}`;
+        }
+      
+        fetch(url)
           .then(response => response.json())
           .then(data => {
             console.log('Данные о товарах:', data);
@@ -2297,7 +2632,7 @@ $(document).on('click', '#saveChangesBtn', function() {
                   'data-price': product.price,
                   html: `
                     <img src="${product.images[0].src}" alt="${product.name}">
-                    <span>${product.name}</span>
+                    <span>${product.name} (Артикул: ${product.sku})</span>
                   `
                 });
                 optionsContainer.append(option);
@@ -2314,6 +2649,10 @@ $(document).on('click', '#saveChangesBtn', function() {
             isLoadingForCopy = false;
           });
       }
+      
+      $('#searchBySkuForCopy').on('change', function() {
+        searchBySkuForCopy = $(this).is(':checked');
+      });
       
       $('#productSearchForCopy').on('keypress', function(event) {
         if (event.which === 13) {
@@ -2335,14 +2674,17 @@ $(document).on('click', '#saveChangesBtn', function() {
         const selectedText = $(this).find('span').text();
         const selectedValue = $(this).data('value');
         const selectedPrice = $(this).data('price');
-        $('.selected-option-copy').text(selectedText);
-        $('.options-container-copy').hide();
+        const selectedImage = $(this).find('img').attr('src');
+        
         selectedProductForCopy = {
           id: selectedValue,
           name: selectedText,
           price: selectedPrice,
-          image: $(this).find('img').attr('src')
+          image: selectedImage
         };
+      
+        $('.selected-option-copy').text(selectedText);
+        $('.options-container-copy').hide();
       });
       
       $('.options-container-copy').on('scroll', function() {
@@ -2541,6 +2883,163 @@ $(document).on('click', '#saveChangesBtn', function() {
           </form>
         `);
       }
+
+// Обработчик события для кнопки отправки Viber
+$(document).on('click', '#sendViberBtn', function() {
+  const orderId = $('#myModal').data('order-id');
+  const phoneNumber = $('#viberPhone').val();
+  const messageText = $('#viberMessage').val();
+  
+  const requested_data = {
+    id: orderId,
+    message_type: 'viber',
+    phone_number: phoneNumber,
+    message_text: messageText
+  };
+  console.log(requested_data);
+  fetch('/send_phone_sms', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requested_data)
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(error => {
+        throw new Error('Помилка при відправці Viber повідомлення: ' + error.error);
+      });
+    }
+    else{
+      loadViberSMS()
+    }
+    return response.json();
+  })
+});
+
+// Обработчик события для кнопки отправки Email
+$(document).on('click', '#sendEmailBtn', function() {
+  const orderId = $('#myModal').data('order-id');
+  const emailAddress = $('#emailAddress').val();
+  const emailSubject = $('#emailSubject').val();
+  const messageText = $('#emailMessage').val();
+
+  const requested_data = {
+    id: orderId,
+    message_type: 'email',
+    email_address: emailAddress,
+    subject: emailSubject,
+    message_text: messageText
+  };
+  console.log(requested_data);
+  fetch('/send_phone_sms', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requested_data)
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(error => {
+        throw new Error('Помилка при відправці Email: ' + error.error);
+      });
+    }
+    else{
+      loadEmails();
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Email успішно відправлено:', data);
+    alert('Email успішно відправлено');
+  })
+  .catch(error => {
+    console.error('Помилка при відправці Email:', error);
+    alert('Помилка при відправці Email: ' + error.message);
+  });
+});
+
+// Функция для загрузки SMS
+function loadViberSMS() {
+  const phoneNumber = orderData.billing.phone;
+  fetch(`/get_all_sms?number=${phoneNumber}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.sms_data && data.sms_data.length > 0) {
+        // Если есть SMS, заполняем таблицу
+        const tableBody = $('#ViberTable tbody');
+        tableBody.empty(); // Очищаем существующие строки
+
+        data.sms_data.forEach(sms => {
+          const row = `
+            <tr>
+              <td>${sms.text || ''}</td>
+              <td>${sms.status || ''}</td>
+              <td>${sms.date || ''}</td>
+            </tr>
+          `;
+          tableBody.append(row);
+        });
+      } else {
+        // Если SMS нет, выводим сообщение
+        $('#ViberTable tbody').html(`
+          <tr>
+            <td colspan="3">SMS не знайдено</td>
+          </tr>
+        `);
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка при получении SMS:', error);
+      $('#ViberTable tbody').html(`
+        <tr>
+          <td colspan="3">Помилка при завантаженні SMS</td>
+        </tr>
+      `);
+    });
+}
+
+function loadEmails() {
+  const emailAddress = orderData.billing.email;
+  fetch(`/get_all_sms?number=${encodeURIComponent(emailAddress)}`)
+    .then(response => response.json())
+    .then(data => {
+      const tableBody = $('#emailTable tbody');
+      tableBody.empty(); // Очищаем существующие строки
+
+      if (data.sms_data && data.sms_data.length > 0) {
+        // Если есть письма, заполняем таблицу
+        data.sms_data.forEach(email => {
+          if (email.type === 'email') {
+            const row = `
+              <tr>
+                <td>${email.status || ''}</td>
+                <td>${email.text || ''}</td>
+              </tr>
+            `;
+            tableBody.append(row);
+          }
+        });
+      } else {
+        // Если писем нет, выводим сообщение
+        tableBody.html(`
+          <tr>
+            <td colspan="3">Листів не знайдено</td>
+          </tr>
+        `);
+      }
+    })
+    .catch(error => {
+      console.error('Помилка при отриманні листів:', error);
+      $('#emailTable tbody').html(`
+        <tr>
+          <td colspan="3">Помилка при завантаженні листів</td>
+        </tr>
+      `);
+    });
+}
+
 
 // Вызвать функцию loadOrders() при загрузке страницы
 $(document).ready(function() {

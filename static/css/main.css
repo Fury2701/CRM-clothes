@@ -493,6 +493,7 @@ z-index: 100;
   border-radius: 0.2rem;
   position: absolute;
   right: 1rem;
+  z-index: 10000;
   
 }
 
@@ -1057,4 +1058,127 @@ z-index: 100;
 
 .customer-tags .badge {
   margin-right: 5px;
+}
+
+.shipping-info, .customer-note {
+  margin-top: 10px;
+  padding: 5px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+
+.shipping-info strong, .customer-note strong {
+  color: #495057;
+}
+
+#viber, #email {
+  padding: 20px;
+}
+
+#viber .form-label, #email .form-label {
+  font-weight: bold;
+}
+
+#sendViberBtn, #sendEmailBtn {
+  margin-top: 10px;
+}
+
+#ViberTable {
+  width: 100%;
+  table-layout: fixed;
+}
+
+#ViberTable th:first-child,
+#ViberTable td:first-child {
+  width: 80%;
+}
+
+#ViberTable th:last-child,
+#ViberTable td:last-child {
+  width: 20%;
+}
+
+#ViberTable td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+#emailTable {
+  width: 100%;
+  table-layout: fixed;
+}
+
+#emailTable th,
+#emailTable td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+#emailTable th:nth-child(1),
+#emailTable td:nth-child(1) {
+  width: 20%;
+}
+
+#emailTable th:nth-child(2),
+#emailTable td:nth-child(2) {
+  width: 30%;
+}
+
+#emailTable th:nth-child(3),
+#emailTable td:nth-child(3) {
+  width: 50%;
+}
+
+#searchBySkuForCreate,
+#searchBySkuForAddProduct,
+#searchBySkuForCopy {
+  display: none; /* Скрываем стандартный чекбокс */
+}
+
+#searchBySkuForCreate + label,
+#searchBySkuForAddProduct + label,
+#searchBySkuForCopy + label {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 15px; /* Отступ вправо на 15px */
+}
+
+#searchBySkuForCreate:checked + label,
+#searchBySkuForAddProduct:checked + label,
+#searchBySkuForCopy:checked + label {
+  color: white;
+}
+
+#searchBySkuForCreate + label::before,
+#searchBySkuForAddProduct + label::before,
+#searchBySkuForCopy + label::before {
+  content: '\2610'; /* Unicode для пустого чекбокса */
+  margin-right: 5px;
+}
+
+#searchBySkuForCreate:checked + label::before,
+#searchBySkuForAddProduct:checked + label::before,
+#searchBySkuForCopy:checked + label::before {
+  content: '\2611'; /* Unicode для отмеченного чекбокса */
+}
+
+/* Специфические стили для каждого чекбокса */
+#searchBySkuForCreate:checked + label {
+  background-color: #28a745;
+  border-color: #1e7e34;
+}
+
+#searchBySkuForAddProduct:checked + label {
+  background-color: #28a745;
+  border-color: #1e7e34;
+}
+
+#searchBySkuForCopy:checked + label {
+  background-color: #28a745;
+  border-color: #1e7e34;
 }

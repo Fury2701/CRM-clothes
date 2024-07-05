@@ -528,32 +528,71 @@ def get_all_sms():
 
 @app.route("/send_phone_sms", methods=['POST'])
 def send_phone_sms():
-    # Перевірка чи користувач залогінений в сесії
     if "login" not in session:
-        return redirect(url_for("login_page"))  # Повертаємо 401, щоб показати, що користувач не має доступу
+        return redirect(url_for("login_page"))
 
-    requsted_data=request.get_json()
-    ord_id = requsted_data['id']
-    phone_number = requsted_data['phone_number']
-    message_text = requsted_data['message_text']
+    requested_data = request.get_json()
+    ord_id = requested_data.get('id')
+    message_text = requested_data.get('message_text')
+    message_type = requested_data.get('message_type')
     
-    if not phone_number or not message_text:
-        return jsonify({"error": "Invalid data"}), 400
+    if message_type == 'sms':
+        phone_number = requested_data.get('phone_number')
+        if not phone_number or not message_text:
+            return jsonify({"error": "Invalid data"}), 400
+        
+        try:
+            response = send_sms(phone_number, message_text)
+            history = create_note(ord_id, {"note": f"Замовлення оновлено менеджером {session.get('name')}, відправлене SMS: {message_text}"})
+        except Exception as e:
+            return jsonify({"error": "Internal error"}), 400
+        
+        if isinstance(response, tuple) and response[0] == "Well done!":
+            status = "Not delivered"
+            update_sms(phone_number=phone_number, message_text=message_text, message_id=response[1], status=status, message_type=message_type)  
+            return jsonify({"success": "SMS sent successfully and processed in the database.", "message_id": response[1]}), 200
+        else:
+            return jsonify({"error": response}), 400
+    
+    elif message_type == 'viber':
+        phone_number = requested_data.get('phone_number')
+        if not phone_number or not message_text:
+            return jsonify({"error": "Invalid data"}), 400
+        
+        try:
+            response = send_viber(phone_number, message_text)
+            if isinstance(response, tuple) and response[0] == "Well done!":
+                status = "Відправлено"
+                history = create_note(ord_id, {"note": f"Замовлення оновлено менеджером {session.get('name')}, відправлене Viber повідомлення: {message_text}"})
+                update_sms(phone_number=phone_number, message_text=message_text, message_id=response[1], status=status, message_type=message_type)
+                return jsonify({"success": "Viber message sent successfully and processed in the database.", "message_id": response[1]}), 200
+            else:
+                return jsonify({"error": response}), 400
+        except Exception as e:
+            return jsonify({"error": f"Internal error: {str(e)}"}), 400
+    
+    elif message_type == 'email':
+        email_address = requested_data.get('email_address')
+        subject = requested_data.get('subject', 'Notification')
+        if not email_address or not message_text:
+            return jsonify({"error": "Invalid data"}), 400
+        
+        try:
+            response = send_email(email_address, subject, message_text)
+            if response == "Email sent successfully":
+                history = create_note(ord_id, {"note": f"Замовлення оновлено менеджером {session.get('name')}, відправлений Email: {message_text}"})
+                status="Відправлено"
+                update_sms(phone_number=phone_number, message_text=message_text, status=status, message_type=message_type)
+            else:
+                return jsonify({"error": response}), 400
+        except Exception as e:
+            return jsonify({"error": "Internal error"}), 400
+        
+        return jsonify({"success": response}), 200
 
-    # Відправлення SMS
-    try:
-        response = send_sms(phone_number, message_text)
-        history = create_note(ord_id, {"note": f"Замовлення оновлено менеджером {session.get('name')}, відправлене повідомлення: {message_text}"})
-    except Exception as e:
-        return jsonify({"error":"Internal error"}), 400
-
-    if isinstance(response, tuple) and response[0] == "Well done!":
-        # Виклик функції для обробки запису в базу даних
-        status = "Not delivered"
-        update_sms(phone_number, message_text,response[1],status)  
-        return jsonify({"success": "SMS sent successfully and processed in the database.", "message_id": response[1]}), 200
     else:
-        return jsonify({"error": response}), 400
+        return jsonify({"error": "Invalid message type"}), 400
+
 
 @app.route("/custom_status_list", methods=['GET'])
 def custom_status():
@@ -761,6 +800,33 @@ def delivery_data():
     
     return jsonify(response)
 #Оновлення статусу SMS
+
+@app.route("/update_viber_status/<message_id>", methods=['GET'])
+def update_viber_status_info(message_id):
+    # Перевірка чи користувач залогінений в сесії
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    
+    if not message_id:
+        return jsonify({"error": "Invalid data"}), 400
+
+    try:
+        response = check_viber_status(message_id)
+        print(response)
+    except Exception as e:
+        return jsonify({"error": f"Problem with Kyivstar server: {str(e)}"}), 400
+
+    if "status" in response:
+        # Припускаємо, що "delivered" - це статус успішної доставки для Viber
+        if response["status"] == "delivered":
+            # Оновіть статус в базі даних
+            update_sms_status(message_id)
+            return jsonify({"Viber message status updated in the database": response}), 200
+        else:
+            # Якщо статус не "delivered", все одно повертаємо інформацію
+            return jsonify({"Viber message status": response}), 200
+    else:
+        return jsonify({"error": response}), 400
 
 @app.route("/update_sms_status/<message_id>", methods=['GET'])
 def update_sms_status_info(message_id):
@@ -1119,7 +1185,4 @@ def sort_customers(sort_key):
         'current_page': page,
         'total_pages': total_pages
     })
-
-
-
 

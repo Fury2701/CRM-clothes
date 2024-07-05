@@ -19,9 +19,10 @@ class Sms_history(Base):
     user = Column(String(255), nullable=False)
     phone_number = Column(String(255), nullable=False)
     message_text = Column(String(255), nullable=False)
-    message_id = Column(String(255), nullable=False)
+    message_id = Column(String(255), nullable=True)
     status = Column(String(255), nullable=False)
     date = Column(DateTime, nullable=False)
+    message_type= Column(String(255), nullable=False)
 
 class custom_status(Base):
     __tablename__ = 'custom_status'

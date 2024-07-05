@@ -13,6 +13,9 @@ from wooapi import *
 import redis
 from flask_session import Session
 from math import ceil
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 

@@ -185,22 +185,45 @@ $(document).ready(function() {
   });
 });
 
-  let currentPage = 1;
+
   let orderData;
-// Функция для загрузки клиентов с учетом параметров поиска и пагинации
-function loadCustomers(page = 1, name = '') {
-const url = `/data_customers?page=${page}&name=${encodeURIComponent(name)}`;
-fetch(url)
-  .then(response => response.json())
-  .then(data => {
-    console.log(data);
-    populateCustomersTable(data.customers);
-    updatePagination(data.current_page, data.total_pages);
-  })
-  .catch(error => {
-    console.error('Ошибка при загрузке клиентов:', error);
-  });
-}
+  let currentPage = 1;
+  let currentSort = 'none';
+  
+  function loadCustomers(page = 1, sortBy = 'none') {
+    currentPage = page;
+    currentSort = sortBy;
+  
+    let url = '/data_customers?page=' + page;
+  
+    if (sortBy === 'order_count') {
+      url = '/customers/sort-by-orders?page=' + page;
+    } else if (sortBy === 'order_total') {
+      url = '/customers/sort-by-total?page=' + page;
+    }
+  
+    const searchQuery = $('#searchInput').val().trim();
+    if (searchQuery) {
+      url ='/data_customers?page=' + page + '&name=' + encodeURIComponent(searchQuery);
+    }
+  
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        populateCustomersTable(data.customers);
+        updatePagination(data.current_page, data.total_pages);
+      })
+      .catch(error => {
+        console.error('Ошибка при загрузке клиентов:', error);
+      });
+  }
+
+// Обработчик изменения селекта сортировки
+$(document).on('change', '#sortSelect', function() {
+  const sortBy = $(this).val();
+  loadCustomers(1, sortBy);
+});
 
   function updatePagination(currentPage, totalPages) {
     try {
@@ -247,12 +270,11 @@ fetch(url)
     }
   }
 
-// Обработчик события клика по ссылке пагинации
+// Обработчик клика по ссылкам пагинации
 $(document).on('click', '.pagination .page-link', function(e) {
-e.preventDefault();
-const page = $(this).data('page');
-const searchQuery = $('#searchInput').val().trim();
-loadCustomers(page, searchQuery);
+  e.preventDefault();
+  const page = $(this).data('page');
+  loadCustomers(page, currentSort, isSearching);
 });
 
   function populateCustomersTable(customers) {
@@ -345,6 +367,29 @@ loadCustomers(page, searchQuery);
               createTag(status);
             });
           }
+    
+          // Загрузка статистики клиента
+          fetch(`/customer/${customer.id}`)
+            .then(response => response.json())
+            .then(data => {
+              console.log(data);
+              if(!data.order_count) {
+                $('#orderCount').text("Немає замовлень"); 
+              }
+              else{
+               $('#orderCount').text(data.order_count); 
+              }
+              if(!data.total_amount) {
+                $('#totalAmount').text("0 грн"); 
+              }
+              else{
+               $('#totalAmount').text(data.total_amount.toFixed(2));
+              }
+             
+            })
+            .catch(error => {
+              console.error('Ошибка при получении статистики клиента:', error);
+            });
     
           loadClientOrders(customerId);
           
@@ -574,18 +619,16 @@ const searchQuery = $('#searchInput').val().trim();
 loadCustomers(1, searchQuery);
 });
 
-// Обработчик события нажатия кнопки поиска
+// Обработчик клика по кнопке поиска
 $(document).on('click', '#searchButton', function() {
-const searchQuery = $('#searchInput').val().trim();
-loadCustomers(1, searchQuery);
+  loadCustomers(1, 'none', true);
 });
 
-// Обработчик события нажатия клавиши Enter в поле ввода поиска
+// Обработчик нажатия Enter в поле поиска
 $(document).on('keypress', '#searchInput', function(e) {
-if (e.which === 13) {
-  const searchQuery = $(this).val().trim();
-  loadCustomers(1, searchQuery);
-}
+  if (e.which === 13) {
+    loadCustomers(1, 'none', true);
+  }
 });
 
 function loadClientOrders(customerId, page = 1) {
@@ -1384,7 +1427,8 @@ function populateOrderModal(orderData) {
   populateOrderTab1(orderData);
   populateOrderTab2(orderData);
   populateOrderTab3(orderData);
-
+  $('#viberPhone').val(orderData.billing.phone);
+  $('#emailAddress').val(orderData.billing.email);
 }
 
 
@@ -1499,11 +1543,6 @@ const tab1Content = `
         <div class="accordion-body">
           <li>Метод доставки: ${orderData.shipping_lines[0].method_title}</li>
           <li>Адреса доставки: ${
-            (orderData.shipping.state ? orderData.shipping.state + " " : "") +
-            (orderData.shipping.city ? orderData.shipping.city + " " : "") +
-            (orderData.shipping.postcode ? orderData.shipping.postcode + " " : "") +
-            (orderData.shipping.address_1 ? orderData.shipping.address_1 + " " : "") +
-            (orderData.shipping.address_2 ? orderData.shipping.address_2 : "") ||
             (orderData.billing.state ? orderData.billing.state + " " : "") +
             (orderData.billing.city ? orderData.billing.city + " " : "") +
             (orderData.billing.postcode ? orderData.billing.postcode + " " : "") +
@@ -1682,9 +1721,166 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+// Обработчик события для кнопки отправки Viber
+$(document).on('click', '#sendViberBtn', function() {
+  const orderId = $('#myModal').data('order-id');
+  const phoneNumber = $('#viberPhone').val();
+  const messageText = $('#viberMessage').val();
+  
+  const requested_data = {
+    id: orderId,
+    message_type: 'viber',
+    phone_number: phoneNumber,
+    message_text: messageText
+  };
+  console.log(requested_data);
+  fetch('/send_phone_sms', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requested_data)
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(error => {
+        throw new Error('Помилка при відправці Viber повідомлення: ' + error.error);
+      });
+    }
+    else{
+      loadViberSMS()
+    }
+    return response.json();
+  })
+});
+
+// Обработчик события для кнопки отправки Email
+$(document).on('click', '#sendEmailBtn', function() {
+  const orderId = $('#myModal').data('order-id');
+  const emailAddress = $('#emailAddress').val();
+  const emailSubject = $('#emailSubject').val();
+  const messageText = $('#emailMessage').val();
+
+  const requested_data = {
+    id: orderId,
+    message_type: 'email',
+    email_address: emailAddress,
+    subject: emailSubject,
+    message_text: messageText
+  };
+  console.log(requested_data);
+  fetch('/send_phone_sms', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requested_data)
+  })
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(error => {
+        throw new Error('Помилка при відправці Email: ' + error.error);
+      });
+    }
+    else{
+      loadEmails();
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Email успішно відправлено:', data);
+    alert('Email успішно відправлено');
+  })
+  .catch(error => {
+    console.error('Помилка при відправці Email:', error);
+    alert('Помилка при відправці Email: ' + error.message);
+  });
+});
+
+// Функция для загрузки SMS
+function loadViberSMS() {
+  const phoneNumber = orderData.billing.phone;
+  fetch(`/get_all_sms?number=${phoneNumber}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.sms_data && data.sms_data.length > 0) {
+        // Если есть SMS, заполняем таблицу
+        const tableBody = $('#ViberTable tbody');
+        tableBody.empty(); // Очищаем существующие строки
+
+        data.sms_data.forEach(sms => {
+          const row = `
+            <tr>
+              <td>${sms.text || ''}</td>
+              <td>${sms.status || ''}</td>
+              <td>${sms.date || ''}</td>
+            </tr>
+          `;
+          tableBody.append(row);
+        });
+      } else {
+        // Если SMS нет, выводим сообщение
+        $('#ViberTable tbody').html(`
+          <tr>
+            <td colspan="3">SMS не знайдено</td>
+          </tr>
+        `);
+      }
+    })
+    .catch(error => {
+      console.error('Ошибка при получении SMS:', error);
+      $('#ViberTable tbody').html(`
+        <tr>
+          <td colspan="3">Помилка при завантаженні SMS</td>
+        </tr>
+      `);
+    });
+}
+
+function loadEmails() {
+  const emailAddress = orderData.billing.email;
+  fetch(`/get_all_sms?number=${encodeURIComponent(emailAddress)}`)
+    .then(response => response.json())
+    .then(data => {
+      const tableBody = $('#emailTable tbody');
+      tableBody.empty(); // Очищаем существующие строки
+
+      if (data.sms_data && data.sms_data.length > 0) {
+        // Если есть письма, заполняем таблицу
+        data.sms_data.forEach(email => {
+          if (email.type === 'email') {
+            const row = `
+              <tr>
+                <td>${email.status || ''}</td>
+                <td>${email.text || ''}</td>
+              </tr>
+            `;
+            tableBody.append(row);
+          }
+        });
+      } else {
+        // Если писем нет, выводим сообщение
+        tableBody.html(`
+          <tr>
+            <td colspan="3">Листів не знайдено</td>
+          </tr>
+        `);
+      }
+    })
+    .catch(error => {
+      console.error('Помилка при отриманні листів:', error);
+      $('#emailTable tbody').html(`
+        <tr>
+          <td colspan="3">Помилка при завантаженні листів</td>
+        </tr>
+      `);
+    });
+}
+
+
 $(document).ready(function() {
   
-  loadCustomers();
+  loadCustomers(1, 'none');
   loadManagers();
   load_custom_status();
 

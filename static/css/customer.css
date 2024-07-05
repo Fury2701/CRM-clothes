@@ -176,7 +176,7 @@
     position: absolute;
     display: flex;
     height: 38px;
-    left: 170px;
+    left: 380px;
     width: auto;
     margin-right: 185px;
     right: 50px;
@@ -666,4 +666,8 @@
 
 .customer-tags .badge {
   margin-right: 5px;
+}
+
+#sortSelect{
+  margin-top: 15px;
 }

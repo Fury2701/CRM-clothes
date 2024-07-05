@@ -103,10 +103,10 @@ def user_validy(login, password):
                 return False
 
 
-def update_sms(phone_number, message_text, message_id, status):
+def update_sms(phone_number, message_text, status, message_type, message_id="-"):
     try:
         with Session() as db_session:
-            sms = Sms_history(user=session["login"], phone_number=phone_number, message_text=message_text, message_id=message_id, status=status, date=datetime.now())
+            sms = Sms_history(user=session["login"], phone_number=phone_number, message_text=message_text, message_id=message_id, status=status, message_type=message_type, date=datetime.now())
             db_session.add(sms)
             db_session.commit()
     except Exception as e:
@@ -116,7 +116,7 @@ def update_sms_status(message_id):
     try:
         with Session() as db_session:
             sms = db_session.query(Sms_history).filter(Sms_history.message_id == message_id).first()
-            sms.status = "Доставлено"
+            sms.status = "Відправлено"
             db_session.commit()
     except Exception as e:
         return "Database error" + str(e)
@@ -135,7 +135,8 @@ def get_sms(number):
                     'phone_number': sms.phone_number,
                     'message_id': sms.message_id,
                     'text': sms.message_text,
-                    'status': sms.status
+                    'status': sms.status,
+                    'type': sms.message_type
                 }
                 sms_data.append(sms_dict)
             
@@ -563,6 +564,31 @@ def create_discount_coupon(data):
 def delete_discount_coupon(id):
     orders = get_woocomerce()
     return orders.delete_discount_coupon(id)
+
+# Функція для відправки Viber повідомлення (заглушка)
+def send_viber(phone_number, message_text):
+    # Заглушка для Viber
+    return "Viber message sent successfully"
+
+# Функція для відправки Email
+def send_email(email_address, subject, message_text):
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = 'a95.mail.ru@gmail.com'
+        msg['To'] = email_address
+        msg['Subject'] = subject
+
+        msg.attach(MIMEText(message_text, 'plain'))
+
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login('a95.mail.ru@gmail.com', 'jptg fnyr szwd qrzp')
+        text = msg.as_string()
+        server.sendmail('a95.mail.ru@gmail.com', email_address, text)
+        server.quit()
+        return "Email sent successfully"
+    except Exception as e:
+        return str(e)
 
 # Функції прослуховання бази даних Events
 

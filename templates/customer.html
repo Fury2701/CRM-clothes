@@ -70,9 +70,16 @@
         <div class="main-conent-div">
             <div class="rectangle-5">
                 <div class="navi">
+
+                  <select id="sortSelect" class="form-select me-2" style="width: auto;">
+                    <option value="none">Без сортування</option>
+                    <option value="order_count">Сортування по заг. кількості замовлень</option>
+                    <option value="order_total">Сортування по заг. суммі замовлень</option>
+                  </select>
+
                     <div class="input-group mb-3">
                         <button class="btn btn-outline-secondary" type="button" id="searchButton">Пошук</button>
-                        <input type="text" class="form-control flex-grow-1" id="searchInput" placeholder="Введіть ім'я клієнта" aria-label="Пошук по імені клієнта" aria-describedby="searchButton">
+                        <input type="text" class="form-control flex-grow-1" id="searchInput" placeholder="Введіть email клієнта" aria-label="Пошук по імені клієнта" aria-describedby="searchButton">
                     </div>
                 </div>
 
@@ -225,6 +232,12 @@
                       </div>
                     </div>
                   </div>
+
+                  <div id="customerStats" class="mt-3">
+                    <p>Кількість замовлень: <span id="orderCount"></span></p>
+                    <p>Загальна сума замовлень: <span id="totalAmount"></span> грн</p>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -287,6 +300,12 @@
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="tab3-tab" data-bs-toggle="tab" data-bs-target="#tab3" type="button" role="tab" aria-controls="tab3" aria-selected="false">СМС</button>
           </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="viber-tab" data-bs-toggle="tab" data-bs-target="#viber" type="button" role="tab" aria-controls="viber" aria-selected="false">Viber</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab" aria-controls="email" aria-selected="false">Email</button>
+          </li>
         </ul>
         <!-- Содержимое табов -->
         <div class="tab-content" id="orderTabContent">
@@ -299,7 +318,59 @@
           <div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3-tab">
             <!-- Содержимое вкладки 3 -->
           </div>
+          <div class="tab-pane fade" id="viber" role="tabpanel" aria-labelledby="viber-tab">
+            <div class="container" id='sms-cont' style="max-height: 300px; overflow-y: auto;">
+                <table class="table" id='ViberTable'>
+                  <thead>
+                    <tr>
+                      <th>Текст</th>
+                      <th>Статус</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+            </div>
+            <div class="mb-3">
+              <label for="viberPhone" class="form-label">Номер телефона для Viber</label>
+              <input type="tel" class="form-control bg-light" id="viberPhone" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="viberMessage" class="form-label">Повідомлення Viber</label>
+              <textarea class="form-control" id="viberMessage" rows="3"></textarea>
+            </div>
+            <button type="button" class="btn btn-primary" id="sendViberBtn">Відправити Viber</button>
+          </div>
+          <div class="tab-pane fade" id="email" role="tabpanel" aria-labelledby="email-tab">
+              <div class="container" id='email-cont' style="max-height: 300px; overflow-y: auto;">
+              <table class="table" id='emailTable'>
+                <thead>
+                  <tr>
+                    <th style="width: 30%;">Статус</th>
+                    <th style="width: 70%;">Текст</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
+            </div>
+            <div class="mb-3">
+              <label for="emailAddress" class="form-label">Email адрес</label>
+              <input type="email" class="form-control" id="emailAddress">
+            </div>
+            <div class="mb-3">
+              <label for="emailSubject" class="form-label">Тема листа</label>
+              <input type="text" class="form-control" id="emailSubject">
+            </div>
+            <div class="mb-3">
+              <label for="emailMessage" class="form-label">Текст листа</label>
+              <textarea class="form-control" id="emailMessage" rows="3"></textarea>
+            </div>
+            <button type="button" class="btn btn-primary" id="sendEmailBtn">Відправити Email</button>
+          </div>
+           </div>
         </div>
+        
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-danger" id="deleteOrderBtn">Видалити замовлення</button>
