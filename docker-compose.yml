@@ -11,9 +11,9 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       - FLASK_ENV=development
-      - DATABASE_URL=postgresql://postgres:2701172004@host.docker.internal:5432/Crm
+      - DATABASE_URL=postgresql://postgres:-@host.docker.internal:5432/Crm
       - SESSION_REDIS_URL=redis://host.docker.internal:6379
-      - SECRET_KEY=5313b16ca203b539824a13add8495dcd
+      - SECRET_KEY=-
     volumes:
       - .:/app
 
@@ -28,9 +28,9 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       - FLASK_ENV=development
-      - DATABASE_URL=postgresql://postgres:2701172004@host.docker.internal:5432/Crm
+      - DATABASE_URL=postgresql://postgres:-@host.docker.internal:5432/Crm
       - SESSION_REDIS_URL=redis://host.docker.internal:6379
-      - SECRET_KEY=5313b16ca203b539824a13add8495dcd
+      - SECRET_KEY=-
     volumes:
       - .:/app
 
