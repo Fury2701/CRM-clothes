@@ -93,3 +93,73 @@ class counteragents(Base):
             'ref': self.ref,
             'contact_ref': self.contact_ref
         }
+
+class Order(Base):
+    __tablename__ = 'orders'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    order_id = Column(BigInteger, nullable=False)
+    date_created = Column(TIMESTAMP, nullable=False)
+    client_first_name = Column(String(255), nullable=True)
+    client_second_name = Column(String(255), nullable=True)
+    client_last_name = Column(String(255), nullable=True)
+    client_id = Column(Integer, nullable=True)
+    client_notes = Column(String(255), nullable=True)
+    phone = Column(String(50), nullable=True)
+    email = Column(String(255), nullable=True)
+    price = Column(String, nullable=True)
+    full_price = Column(String, nullable=True)
+    delivery_option_id = Column(Integer, nullable=True)
+    delivery_option_name = Column(String(255), nullable=True)
+    delivery_shipping_service = Column(String(255), nullable=True)
+    delivery_provider = Column(String(50), nullable=True)
+    delivery_type = Column(String(50), nullable=True)
+    delivery_sender_warehouse_id = Column(String(255), nullable=True)
+    delivery_recipient_warehouse_id = Column(String(255), nullable=True)
+    delivery_declaration_number = Column(String(255), nullable=True)
+    delivery_unified_status = Column(String(255), nullable=True)
+    delivery_address = Column(String(255), nullable=True)
+    delivery_cost = Column(DECIMAL(10, 2), nullable=True)
+    payment_option_id = Column(Integer, nullable=True)
+    payment_option_name = Column(String(255), nullable=True)
+    payment_type = Column(String(50), nullable=True)
+    payment_status = Column(String(50), nullable=True)
+    payment_status_modified = Column(TIMESTAMP, nullable=True)
+    status = Column(String(50), nullable=True)
+    status_name = Column(String(255), nullable=True)
+    source = Column(String(50), nullable=True)
+    has_order_promo_free_delivery = Column(Boolean, nullable=True)
+    cpa_commission_amount = Column(DECIMAL(10, 2), nullable=True)
+    cpa_commission_is_refunded = Column(Boolean, nullable=True)
+    utm_medium = Column(String(255), nullable=True)
+    utm_source = Column(String(255), nullable=True)
+    utm_campaign = Column(String(255), nullable=True)
+    dont_call_customer_back = Column(Boolean, nullable=True)
+    ps_promotion_name = Column(String(255), nullable=True)
+    ps_promotion_conditions = Column(ARRAY(String(255)), nullable=True)
+    cancellation_title = Column(String(255), nullable=True)
+    cancellation_initiator = Column(String(50), nullable=True)
+
+    products = relationship('OrderProduct', back_populates='order')
+
+
+class OrderProduct(Base):
+    __tablename__ = 'order_products'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    order_id = Column(BigInteger, ForeignKey('orders.order_id'), nullable=False)
+    product_id = Column(BigInteger, nullable=False)
+    product_external_id = Column(String(255), nullable=True)
+    product_image = Column(String(255), nullable=True)
+    product_quantity = Column(Integer, nullable=True)
+    product_price = Column(String, nullable=True)
+    product_url = Column(String(255), nullable=True)
+    product_name = Column(String(255), nullable=True)
+    product_name_ru = Column(String(255), nullable=True)
+    product_name_uk = Column(String(255), nullable=True)
+    product_total_price = Column(String, nullable=True)
+    product_measure_unit = Column(String(50), nullable=True)
+    product_sku = Column(String(255), nullable=True)
+    product_cpa_commission_amount = Column(DECIMAL(10, 2), nullable=True)
+
+    order = relationship('Order', back_populates='products')

@@ -1,6 +1,6 @@
 from models import *
 from config import *
-import time
+
 
 
 # Створення таблиць
@@ -589,6 +589,276 @@ def send_email(email_address, subject, message_text):
         return "Email sent successfully"
     except Exception as e:
         return str(e)
+
+def add_order(order_data: dict, products_data: list):
+    with Session() as session:
+        try:
+            # Перевіряємо, чи існує замовлення з тим самим order_id
+            existing_order = session.query(exists().where(Order.order_id == order_data['order_id'])).scalar()
+            
+            if existing_order:
+                print(f"Order {order_data['order_id']} already exists in the database. Skipping...")
+                return False
+            
+            # Створюємо новий об'єкт замовлення
+            new_order = Order(**order_data)
+            
+            # Додаємо продукти до замовлення
+            for product_data in products_data:
+                new_product = OrderProduct(**product_data)
+                new_order.products.append(new_product)
+            
+            session.add(new_order)
+            session.commit()
+            return True
+        except SQLAlchemyError as e:
+            session.rollback()
+            print(f"Failed to add order: {e}")
+            return False
+
+def delete_order(order_id: int):
+    with Session() as session:
+        try:
+            # Знаходимо замовлення за order_id
+            order = session.query(Order).filter_by(order_id=order_id).first()
+            
+            if order:
+                session.delete(order)
+                session.commit()
+                return True
+            else:
+                print("Order not found.")
+                return False
+        except SQLAlchemyError as e:
+            session.rollback()
+            print(f"Failed to delete order: {e}")
+            return False
+
+def update_order(order_id: int, updated_data: dict):
+    with Session() as session:
+        try:
+            # Знаходимо замовлення за order_id
+            order = session.query(Order).filter_by(order_id=order_id).first()
+            
+            if order:
+                # Оновлюємо поля замовлення
+                for key, value in updated_data.items():
+                    setattr(order, key, value)
+                
+                session.commit()
+                return True
+            else:
+                print("Order not found.")
+                return False
+        except SQLAlchemyError as e:
+            session.rollback()
+            print(f"Failed to update order: {e}")
+            return False
+
+def add_product_to_order(order_id: int, product_data: dict):
+    with Session() as session:
+        try:
+            # Знаходимо замовлення за order_id
+            order = session.query(Order).filter_by(order_id=order_id).first()
+            
+            if order:
+                new_product = OrderProduct(**product_data)
+                order.products.append(new_product)
+                
+                session.commit()
+                return True
+            else:
+                print("Order not found.")
+                return False
+        except SQLAlchemyError as e:
+            session.rollback()
+            print(f"Failed to add product to order: {e}")
+            return False
+
+def delete_product(product_id: int):
+    with Session() as session:
+        try:
+            # Знаходимо продукт за product_id
+            product = session.query(OrderProduct).filter_by(id=product_id).first()
+            
+            if product:
+                session.delete(product)
+                session.commit()
+                return True
+            else:
+                print("Product not found.")
+                return False
+        except SQLAlchemyError as e:
+            session.rollback()
+            print(f"Failed to delete product: {e}")
+            return False
+
+def update_product(product_id: int, updated_data: dict):
+    with Session() as session:
+        try:
+            # Знаходимо продукт за product_id
+            product = session.query(OrderProduct).filter_by(id=product_id).first()
+            
+            if product:
+                # Оновлюємо поля продукту
+                for key, value in updated_data.items():
+                    setattr(product, key, value)
+                
+                session.commit()
+                return True
+            else:
+                print("Product not found.")
+                return False
+        except SQLAlchemyError as e:
+            session.rollback()
+            print(f"Failed to update product: {e}")
+            return False
+
+
+def get_order_by_id(order_id: int):
+    with Session() as session:
+        try:
+            # Отримуємо замовлення з товарами за order_id
+            order = session.query(Order).filter_by(order_id=order_id).first()
+            
+            if order:
+                # Перетворюємо дані замовлення в словник
+                order_data = {
+                    'order_id': order.order_id,
+                    'date_created': order.date_created,
+                    'client_first_name': order.client_first_name,
+                    'client_second_name': order.client_second_name,
+                    'client_last_name': order.client_last_name,
+                    'client_id': order.client_id,
+                    'client_notes': order.client_notes,
+                    'phone': order.phone,
+                    'email': order.email,
+                    'price': order.price,
+                    'full_price': order.full_price,
+                    'delivery_option_id': order.delivery_option_id,
+                    'delivery_option_name': order.delivery_option_name,
+                    'delivery_shipping_service': order.delivery_shipping_service,
+                    'delivery_provider': order.delivery_provider,
+                    'delivery_type': order.delivery_type,
+                    'delivery_sender_warehouse_id': order.delivery_sender_warehouse_id,
+                    'delivery_recipient_warehouse_id': order.delivery_recipient_warehouse_id,
+                    'delivery_declaration_number': order.delivery_declaration_number,
+                    'delivery_unified_status': order.delivery_unified_status,
+                    'delivery_address': order.delivery_address,
+                    'delivery_cost': order.delivery_cost,
+                    'payment_option_id': order.payment_option_id,
+                    'payment_option_name': order.payment_option_name,
+                    'payment_type': order.payment_type,
+                    'payment_status': order.payment_status,
+                    'payment_status_modified': order.payment_status_modified,
+                    'status': order.status,
+                    'status_name': order.status_name,
+                    'source': order.source,
+                    'has_order_promo_free_delivery': order.has_order_promo_free_delivery,
+                    'cpa_commission_amount': order.cpa_commission_amount,
+                    'cpa_commission_is_refunded': order.cpa_commission_is_refunded,
+                    'utm_medium': order.utm_medium,
+                    'utm_source': order.utm_source,
+                    'utm_campaign': order.utm_campaign,
+                    'dont_call_customer_back': order.dont_call_customer_back,
+                    'ps_promotion_name': order.ps_promotion_name,
+                    'ps_promotion_conditions': order.ps_promotion_conditions,
+                    'cancellation_title': order.cancellation_title,
+                    'cancellation_initiator': order.cancellation_initiator
+                }
+                
+                # Додаємо інформацію про продукти
+                order_data['products'] = []
+                for product in order.products:
+                    product_data = {
+                        'product_id': product.product_id,
+                        'product_external_id': product.product_external_id,
+                        'product_image': product.product_image,
+                        'product_quantity': product.product_quantity,
+                        'product_price': product.product_price,
+                        'product_url': product.product_url,
+                        'product_name': product.product_name,
+                        'product_name_ru': product.product_name_ru,
+                        'product_name_uk': product.product_name_uk,
+                        'product_total_price': product.product_total_price,
+                        'product_measure_unit': product.product_measure_unit,
+                        'product_sku': product.product_sku,
+                        'product_cpa_commission_amount': product.product_cpa_commission_amount
+                    }
+                    order_data['products'].append(product_data)
+                
+                return order_data
+            else:
+                print("Order not found.")
+                return None
+        except SQLAlchemyError as e:
+            print(f"Failed to retrieve order: {e}")
+            return None
+
+def get_orders(page: int = 1, limit: int = 20, search_query: str = None):
+    with Session() as session:
+        try:
+            query = session.query(Order)
+            
+            if search_query:
+                search_pattern = f"%{search_query}%"
+                query = query.filter(or_(
+                    Order.client_first_name.ilike(search_pattern),
+                    Order.client_last_name.ilike(search_pattern),
+                    cast(Order.phone, String).ilike(search_pattern),
+                    cast(Order.order_id, String).ilike(search_pattern)
+                ))
+
+            query = query.order_by(Order.date_created.desc())
+            
+            total_orders = query.count()
+            orders = query.offset((page - 1) * limit).limit(limit).all()
+            
+            orders_data = []
+            for order in orders:
+                order_data = {
+                    'order_id': order.order_id,
+                    'date_created': order.date_created,
+                    'client_first_name': order.client_first_name,
+                    'client_last_name': order.client_last_name,
+                    'phone': order.phone,
+                    'email': order.email,
+                    'price': order.price,
+                    'status': order.status,
+                    'status_name': order.status_name,
+                }
+                orders_data.append(order_data)
+            
+            return {
+                'total_orders': total_orders,
+                'orders': orders_data,
+                'page': page,
+                'pages': (total_orders + limit - 1) // limit
+            }
+        except SQLAlchemyError as e:
+            print(f"Failed to retrieve orders: {e}")
+            return None
+
+
+
+def get_last_order_created_time():
+    with Session() as session:
+        try:
+            # Отримуємо час створення останнього замовлення
+            last_order = session.query(Order.date_created).order_by(Order.date_created.desc()).first()
+            
+            if last_order:
+                # Додаємо часовий пояс UTC до дати
+                timezone = pytz.UTC
+                return timezone.localize(last_order.date_created)
+            else:
+                print("No orders found.")
+                return None
+        except SQLAlchemyError as e:
+            print(f"Failed to retrieve last order creation time: {e}")
+            return None
+
+
 
 # Функції прослуховання бази даних Events
 

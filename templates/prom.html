@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prom</title>
+    <link rel="stylesheet" href="../static/css/prom.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <style>
+        .editable-field {
+            position: relative;
+        }
+        .edit-marker {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #007bff;
+        }
+        .product-photo {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Замовлення Prom</h1>
+        
+        <div class="mb-3 search-container">
+            <input type="text" id="searchInput" class="form-control" placeholder="Пошук...">
+            <button id="searchButton" class="btn btn-primary">Пошук</button>
+        </div>        
+
+        <table class="table" id="ordersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Дата створення</th>
+                    <th>Ім'я</th>
+                    <th>Телефон</th>
+                    <th>Email</th>
+                    <th>Ціна</th>
+                    <th>Статус</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Orders will be dynamically added here -->
+            </tbody>
+        </table>
+
+        <nav aria-label="Page navigation">
+            <ul class="pagination" id="pagination">
+                <!-- Pagination will be dynamically added here -->
+            </ul>
+        </nav>
+
+        <!-- Modal for order details -->
+        <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="orderModalLabel">Інформація про замовлення</h5>
+                        <button id="deleteOrderButton" class="btn btn-danger">Видалити замовлення</button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+                    </div>
+                    <div class="modal-body" id="orderDetails">
+                        <!-- Order details will be dynamically added here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button id="saveOrderButton" class="btn btn-primary">Зберегти зміни</button>
+                    </div>
+                </div>  
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        const limit = 20;
+
+        function loadOrders(page = 1, searchQuery = '') {
+            $.ajax({
+                url: `/orders?page=${page}&limit=${limit}&search=${searchQuery}`,
+                method: 'GET',
+                success: function(response) {
+                    const ordersTableBody = $('#ordersTable tbody');
+                    ordersTableBody.empty();
+
+                    response.orders.forEach(order => {
+                        ordersTableBody.append(`
+                            <tr>
+                                <td>${order.order_id}</td>
+                                <td>${new Date(order.date_created).toLocaleString()}</td>
+                                <td>${order.client_first_name} ${order.client_last_name}</td>
+                                <td>${order.phone}</td>
+                                <td>${order.email}</td>
+                                <td>${order.price} грн</td>
+                                <td>${order.status_name}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info view-order" data-order-id="${order.order_id}">Перегляд</button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+
+                    updatePagination(response.page, response.pages);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading orders:', error);
+                }
+            });
+        }
+
+        function updatePagination(currentPage, totalPages) {
+            const pagination = $('#pagination');
+            pagination.empty();
+
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            if (startPage > 1) {
+                pagination.append(`
+                    <li class="page-item">
+                        <a class="page-link" href="#" data-page="1">1</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                `);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pagination.append(`
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>
+                `);
+            }
+
+            if (endPage < totalPages) {
+                pagination.append(`
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
+                    </li>
+                `);
+            }
+        }
+
+        function calculateTotal() {
+            let total = 0;
+            $('#productsTableBody tr').each(function() {
+                const quantity = parseFloat($(this).find('.product-quantity').val()) || 0;
+                const price = parseFloat($(this).find('.product-price').val()) || 0;
+                total += quantity * price;
+            });
+
+            const discountType = $('#discountType').val();
+            const discountValue = parseFloat($('#discountValue').val()) || 0;
+
+            let discountAmount = 0;
+            if (discountType === 'percentage') {
+                discountAmount = (total * discountValue) / 100;
+            } else if (discountType === 'amount') {
+                discountAmount = discountValue;
+            }
+
+            const finalTotal = total - discountAmount;
+            $('#totalAmount').text(`${finalTotal.toFixed(2)} грн`);
+        }
+
+        function viewOrder(orderId) {
+            $.ajax({
+                url: `/order/${orderId}`,
+                method: 'GET',
+                success: function(response) {
+                    console.log("Order data received:", response);
+                    const orderDetails = $('#orderDetails');
+                    orderDetails.empty();
+
+                    if (!response || !Array.isArray(response.products)) {
+                        console.error("Invalid response structure:", response);
+                        orderDetails.append('<p>Помилка: Не вдалося завантажити дані замовлення.</p>');
+                        return;
+                    }
+
+                    const safeNumber = (value) => {
+                        const num = parseFloat(value);
+                        return isNaN(num) ? 0 : num;
+                    };
+
+                    let totalBeforeDiscount = response.products.reduce((sum, product) => 
+                        sum + safeNumber(product.product_price) * safeNumber(product.product_quantity), 0);
+
+                    orderDetails.append(`
+                        <h4>Замовлення #${response.order_id}</h4>
+                        <p><strong>Дата створення:</strong> ${new Date(response.date_created).toLocaleString()}</p>
+                        <div class="mb-3">
+                            <label for="clientFirstName" class="form-label"><strong>Ім'я:</strong></label>
+                            <input type="text" class="form-control" id="clientFirstName" value="${response.client_first_name || ''}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="clientLastName" class="form-label"><strong>Прізвище:</strong></label>
+                            <input type="text" class="form-control" id="clientLastName" value="${response.client_last_name || ''}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="clientPhone" class="form-label"><strong>Телефон:</strong></label>
+                            <input type="text" class="form-control" id="clientPhone" value="${response.phone || ''}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="clientEmail" class="form-label"><strong>Email:</strong></label>
+                            <input type="email" class="form-control" id="clientEmail" value="${response.email || ''}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="orderStatus" class="form-label"><strong>Статус:</strong></label>
+                            <input type="text" class="form-control" id="orderStatus" value="${response.status_name || ''}">
+                        </div>
+                        <div class="mb-3 row">
+                            <div class="col-md-3">
+                                <label for="discountType" class="form-label"><strong>Тип знижки:</strong></label>
+                                <select class="form-select" id="discountType">
+                                    <option value="percentage">Відсотки (%)</option>
+                                    <option value="amount">Сума (грн)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="discountValue" class="form-label"><strong>Знижка:</strong></label>
+                                <input type="number" class="form-control" id="discountValue" value="0" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><strong>Загальна сума:</strong></label>
+                                <p id="totalBeforeDiscount" class="form-control-plaintext">До знижки: ${totalBeforeDiscount.toFixed(2)} грн</p>
+                                <p id="totalAfterDiscount" class="form-control-plaintext">Після знижки: ${totalBeforeDiscount.toFixed(2)} грн</p>
+                            </div>
+                        </div>
+                        <h5>Товари:</h5>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Фото</th>
+                                    <th>SKU</th>
+                                    <th>Товар</th>
+                                    <th>Кількість</th>
+                                    <th>Ціна за одиницю (грн)</th>
+                                    <th>Сума (грн)</th>
+                                    <th>Дії</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                ${response.products.map(product => {
+                                    const quantity = safeNumber(product.product_quantity);
+                                    const price = safeNumber(product.product_price);
+                                    const totalPrice = price * quantity;
+                                    return `
+                                        <tr data-product-id="${product.id}">
+                                            <td>
+                                                <img src="${product.product_image || ''}" alt="${product.product_name || ''}" class="product-photo" style="max-width: 100px; max-height: 100px;">
+                                            </td>
+                                            <td>${product.product_sku || ''}</td>
+                                            <td>
+                                                <span class="product-name">${product.product_name || ''}</span>
+                                                <input class="form-control d-none product-name-input" type="text" value="${product.product_name || ''}">
+                                            </td>
+                                            <td>
+                                                <span class="product-quantity">${quantity}</span>
+                                                <input class="form-control d-none product-quantity-input" type="number" value="${quantity}" min="1">
+                                            </td>
+                                            <td>
+                                                <span class="product-price">${price.toFixed(2)}</span>
+                                                <input class="form-control d-none product-price-input" type="number" step="0.01" value="${price}" min="0">
+                                            </td>
+                                            <td>
+                                                <span class="product-total">${totalPrice.toFixed(2)}</span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning edit-product">Редагувати</button>
+                                                <button class="btn btn-sm btn-success save-product d-none">Зберегти</button>
+                                                <button class="btn btn-sm btn-secondary cancel-edit d-none">Скасувати</button>
+                                                <button class="btn btn-sm btn-danger delete-product">Видалити</button>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    `);
+
+                    $('#orderModal').data('order-id', response.order_id);
+                    $('#orderModal').modal('show');
+
+                    // Add event listeners for discount and quantity changes
+                    $('#discountType, #discountValue').on('change input', updateTotalWithDiscount);
+                    $('#productsTableBody').on('input', '.product-quantity-input', updateProductTotal);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading order:', error);
+                    $('#orderDetails').html('<p>Помилка завантаження даних замовлення. Будь ласка, спробуйте ще раз пізніше.</p>');
+                    $('#orderModal').modal('show');
+                }
+            });
+        }
+
+        // Fixed JavaScript functions for handling products and discounts
+        function updateProductTotal(event) {
+            const row = $(event.target).closest('tr');
+            const quantity = parseFloat($(event.target).val()) || 0;
+            const price = parseFloat(row.find('.product-price-input').val() || row.find('.product-price').text()) || 0;
+            const newTotal = (quantity * price).toFixed(2);
+            row.find('.product-total').text(newTotal);
+            updateTotalWithDiscount();
+        }
+
+        function updateTotalWithDiscount() {
+            let subtotal = 0;
+            $('#productsTableBody tr').each(function() {
+                const quantity = parseFloat($(this).find('.product-quantity').text() || $(this).find('.product-quantity-input').val()) || 0;
+                const price = parseFloat($(this).find('.product-price').text() || $(this).find('.product-price-input').val()) || 0;
+                subtotal += quantity * price;
+            });
+
+            const discountType = $('#discountType').val();
+            const discountValue = parseFloat($('#discountValue').val()) || 0;
+
+            let discountAmount = 0;
+            if (discountType === 'percentage') {
+                discountAmount = (subtotal * (discountValue / 100));
+            } else if (discountType === 'amount') {
+                discountAmount = discountValue;
+            }
+
+            const finalTotal = Math.max(subtotal - discountAmount, 0);
+
+            $('#totalBeforeDiscount').text(`До знижки: ${subtotal.toFixed(2)} грн`);
+            $('#totalAfterDiscount').text(`Після знижки: ${finalTotal.toFixed(2)} грн`);
+        }
+
+        $(document).ready(function() {
+            loadOrders();
+
+            // Handle pagination click
+            $(document).on('click', '.pagination a', function(e) {
+                e.preventDefault();
+                currentPage = $(this).data('page');
+                loadOrders(currentPage);
+            });
+
+            // Handle search
+            $('#searchButton').on('click', function() {
+                const searchQuery = $('#searchInput').val();
+                loadOrders(1, searchQuery);
+            });
+
+            // View order details
+            $(document).on('click', '.view-order', function() {
+                const orderId = $(this).data('order-id');
+                viewOrder(orderId);
+            });
+
+            // Save order changes
+            $(document).on('click', '#saveOrderButton', function() {
+                const orderId = $('#orderModal').data('order-id');
+                const updatedData = {
+                    client_first_name: $('#clientFirstName').val(),
+                    client_last_name: $('#clientLastName').val(),
+                    phone: $('#clientPhone').val(),
+                    email: $('#clientEmail').val(),
+                    status_name: $('#orderStatus').val(),
+                    discount_type: $('#discountType').val(),
+                    discount_value: parseFloat($('#discountValue').val()) || 0,
+                };
+
+                $.ajax({
+                    url: `/order/${orderId}`,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(updatedData),
+                    success: function(response) {
+                        alert(response.message);
+                        viewOrder(orderId);
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseJSON.message);
+                    }
+                });
+            });
+
+            // Delete order
+            $(document).on('click', '#deleteOrderButton', function() {
+                const orderId = $('#orderModal').data('order-id');
+                
+                if (confirm("Ви впевнені, що хочете видалити це замовлення?")) {
+                    $.ajax({
+                        url: `/order/${orderId}`,
+                        type: 'DELETE',
+                        success: function(response) {
+                            alert(response.message);
+                            $('#orderModal').modal('hide');
+                            loadOrders(); 
+                        },
+                        error: function(xhr) {
+                            alert(xhr.responseJSON.message);
+                        }
+                    });
+                }
+            });
+
+            // Delete product
+            $(document).on('click', '.delete-product', function() {
+                const productId = $(this).closest('tr').data('product-id');
+                const row = $(this).closest('tr');
+                
+                if (confirm("Ви впевнені, що хочете видалити цей товар?")) {
+                    $.ajax({
+                        url: `/product/${productId}`,
+                        type: 'DELETE',
+                        success: function(response) {
+                            alert(response.message);
+                            row.remove();
+                            calculateTotal();
+                        },
+                        error: function(xhr) {
+                            alert(xhr.responseJSON.message);
+                        }
+                    });
+                }
+            });
+
+            // Edit product
+            $(document).on('click', '.edit-product', function() {
+                const row = $(this).closest('tr');
+                row.find('.product-name').addClass('d-none');
+                row.find('.product-quantity').addClass('d-none');
+                row.find('.product-price').addClass('d-none');
+                row.find('.product-name-input').removeClass('d-none');
+                row.find('.product-quantity-input').removeClass('d-none');
+                row.find('.product-price-input').removeClass('d-none');
+                row.find('.edit-product').addClass('d-none');
+                row.find('.delete-product').addClass('d-none');
+                row.find('.save-product').removeClass('d-none');
+                row.find('.cancel-edit').removeClass('d-none');
+            });
+
+            // Cancel edit product
+            $(document).on('click', '.cancel-edit', function() {
+                const row = $(this).closest('tr');
+                row.find('.product-name').removeClass('d-none');
+                row.find('.product-quantity').removeClass('d-none');
+                row.find('.product-price').removeClass('d-none');
+                row.find('.product-name-input').addClass('d-none');
+                row.find('.product-quantity-input').addClass('d-none');
+                row.find('.product-price-input').addClass('d-none');
+                row.find('.edit-product').removeClass('d-none');
+                row.find('.delete-product').removeClass('d-none');
+                row.find('.save-product').addClass('d-none');
+                row.find('.cancel-edit').addClass('d-none');
+            });
+
+            // Fixed save product changes handler
+            $(document).on('click', '.save-product', function() {
+                const row = $(this).closest('tr');
+                const productId = row.data('product-id');
+                if (!productId) {
+                    alert('Помилка: ID товару не знайдено');
+                    return;
+                }
+
+                const updatedData = {
+                    product_name: row.find('.product-name-input').val(),
+                    product_quantity: parseFloat(row.find('.product-quantity-input').val()) || 0,
+                    product_price: parseFloat(row.find('.product-price-input').val()) || 0,
+                };
+
+                $.ajax({
+                    url: `/product/${productId}`,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(updatedData),
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            // Update row with new data
+                            row.find('.product-name').text(updatedData.product_name).removeClass('d-none');
+                            row.find('.product-quantity').text(updatedData.product_quantity).removeClass('d-none');
+                            row.find('.product-price').text(updatedData.product_price.toFixed(2)).removeClass('d-none');
+                            row.find('.product-total').text((updatedData.product_quantity * updatedData.product_price).toFixed(2));
+                            
+                            // Hide input fields and show display fields
+                            row.find('.product-name-input, .product-quantity-input, .product-price-input').addClass('d-none');
+                            row.find('.edit-product, .delete-product').removeClass('d-none');
+                            row.find('.save-product, .cancel-edit').addClass('d-none');
+                            
+                            updateTotalWithDiscount();
+                        } else {
+                            alert('Помилка при оновленні товару');
+                        }
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseJSON?.message || 'Помилка при оновленні товару');
+                    }
+                });
+            });
+
+            // Add event listeners for discount changes
+            $('#discountType, #discountValue').on('change input', updateTotalWithDiscount);
+            $('#productsTableBody').on('input', '.product-quantity-input, .product-price-input', updateProductTotal);
+
+            // Add new product
+            $(document).on('click', '#addNewProduct', function() {
+                const tbody = $('#productsTableBody');
+                const newRow = `
+                    <tr data-product-id="new">
+                        <td>
+                            <input type="url" class="form-control" placeholder="URL фото">
+                        </td>
+                        <td><input type="text" class="form-control" placeholder="SKU"></td>
+                        <td>
+                            <input type="text" class="form-control" placeholder="Назва товару">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control" placeholder="Кількість" min="1" value="1">
+                        </td>
+                        <td>
+                            <input type="number" class="form-control" placeholder="Ціна (грн)" step="0.01" min="0" value="0">
+                        </td>
+                        <td>
+                            <span class="product-total">0.00</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-success save-new-product">Зберегти</button>
+                            <button class="btn btn-sm btn-secondary cancel-new-product">Скасувати</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.prepend(newRow);
+            });
+
+            // Cancel adding new product
+            $(document).on('click', '.cancel-new-product', function() {
+                $(this).closest('tr').remove();
+            });
+
+            // Save new product
+            $(document).on('click', '.save-new-product', function() {
+                const row = $(this).closest('tr');
+                const productData = {
+                    photo_url: row.find('td:eq(0) input').val(),
+                    sku: row.find('td:eq(1) input').val(),
+                    product_name: row.find('td:eq(2) input').val(),
+                    product_quantity: parseFloat(row.find('td:eq(3) input').val()) || 0,
+                    product_price: parseFloat(row.find('td:eq(4) input').val()) || 0,
+                };
+
+                if (!productData.product_name || !productData.product_price) {
+                    alert('Будь ласка, заповніть назву товару та ціну.');
+                    return;
+                }
+
+                $.ajax({
+                    url: `/order/${$('#orderModal').data('order-id')}/add_product`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(productData),
+                    success: function(response) {
+                        alert(response.message);
+                        // Reload order details
+                        viewOrder($('#orderModal').data('order-id'));
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseJSON.message);
+                    }
+                });
+            });
+
+            // Update total when discount type or value changes
+            $(document).on('change', '#discountType, #discountValue', function() {
+                calculateTotal();
+            });
+
+            // Function to calculate total amount
+            function calculateTotal() {
+                let total = 0;
+                $('#productsTableBody tr').each(function() {
+                    const quantity = parseFloat($(this).find('.product-quantity').val()) || parseFloat($(this).find('.product-quantity').text()) || 0;
+                    const price = parseFloat($(this).find('.product-price').val()) || parseFloat($(this).find('.product-price').text()) || 0;
+                    total += quantity * price;
+                });
+
+                const discountType = $('#discountType').val();
+                const discountValue = parseFloat($('#discountValue').val()) || 0;
+
+                let discountAmount = 0;
+                if (discountType === 'percentage') {
+                    discountAmount = (total * discountValue) / 100;
+                } else if (discountType === 'amount') {
+                    discountAmount = discountValue;
+                }
+
+                const finalTotal = total - discountAmount;
+                $('#totalAmount').text(`${finalTotal.toFixed(2)} грн`);
+            }
+        });
+    </script>
+</body>
+</html>

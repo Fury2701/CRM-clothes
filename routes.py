@@ -1186,3 +1186,70 @@ def sort_customers(sort_key):
         'total_pages': total_pages
     })
 
+@app.route('/order/<int:order_id>', methods=['GET'])  # Fixed route parameter
+def get_order(order_id):
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    
+    order_data = get_order_by_id(order_id)
+    if order_data:
+        return jsonify(order_data), 200
+    else:
+        return jsonify({"error": "Order not found"}), 404
+
+@app.route('/orders', methods=['GET'])
+def get_orders_route():
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+    
+    page = request.args.get('page', 1, type=int)
+    limit = request.args.get('limit', 20, type=int)
+    search_query = request.args.get('search', '', type=str)
+    
+    orders_data = get_orders(page=page, limit=limit, search_query=search_query)
+    if orders_data:
+        return jsonify(orders_data), 200
+    else:
+        return jsonify({"error": "Failed to retrieve orders"}), 500
+
+@app.route('/prom_page', methods=['GET'])
+def orders_page():
+
+    if "login" not in session:
+        return redirect(url_for("login_page"))
+
+    return render_template('prom.html')
+
+@app.route('/order/<int:order_id>', methods=['DELETE'])  # Fixed route parameter
+def delete_order_route(order_id):
+    if delete_order(order_id):
+        return jsonify({'success': True, 'message': 'Замовлення видалено успішно.'}), 200
+    return jsonify({'success': False, 'message': 'Замовлення не знайдено.'}), 404
+
+
+@app.route('/order/<int:order_id>', methods=['PUT'])  # Fixed route parameter
+def update_order_route(order_id):
+    updated_data = request.json
+    if update_order(order_id, updated_data):
+        return jsonify({'success': True, 'message': 'Замовлення оновлено успішно.'}), 200
+    return jsonify({'success': False, 'message': 'Замовлення не знайдено.'}), 404
+
+@app.route('/order/<int:order_id>/product', methods=['POST'])  # Fixed route parameter
+def add_product_to_order_route(order_id):
+    product_data = request.json
+    if add_product_to_order(order_id, product_data):
+        return jsonify({'success': True, 'message': 'Товар додано успішно.'}), 201
+    return jsonify({'success': False, 'message': 'Замовлення не знайдено.'}), 404
+
+@app.route('/product/<int:product_id>', methods=['DELETE'])  # Fixed route parameter
+def delete_product_route(product_id):
+    if delete_product(product_id):
+        return jsonify({'success': True, 'message': 'Товар видалено успішно.'}), 200
+    return jsonify({'success': False, 'message': 'Товар не знайдено.'}), 404
+
+@app.route('/product/<int:product_id>', methods=['PUT'])  # Fixed route parameter
+def update_product_route(product_id):
+    updated_data = request.json
+    if update_product(product_id, updated_data):
+        return jsonify({'success': True, 'message': 'Товар оновлено успішно.'}), 200
+    return jsonify({'success': False, 'message': 'Товар не знайдено.'}), 404

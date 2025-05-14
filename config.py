@@ -1,7 +1,8 @@
 from flask import Flask, request, render_template, jsonify, session, redirect, url_for, send_file
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, func, or_
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, DateTime, exists, DECIMAL,BigInteger, cast ,Boolean,ARRAY,TIMESTAMP,func, or_
 from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.exc import SQLAlchemyError
 import requests
 from base64 import b64encode
 import json
@@ -16,6 +17,10 @@ from math import ceil
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import time
+import datetime
+import http.client
+import pytz
 
 app = Flask(__name__)
 
@@ -29,6 +34,9 @@ app.config['SESSION_TYPE'] = 'redis'  # Вказуємо тип сесій (Redi
 app.config['SESSION_PERMANENT'] = False  # Вимикаємо постійні сесії (не залишаємо сесії після закриття браузера)
 app.config['SESSION_USE_SIGNER'] = True  # Використовуємо підпис сесій (безпека)
 app.config['SESSION_REDIS'] = redis.from_url(redis_url)  # Підключення до Redis
+
+
+
 
 Session(app)
 
